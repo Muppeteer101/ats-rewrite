@@ -167,35 +167,70 @@ function extractJobTitle(jobDesc) {
 
 // ─── Design Tokens ──────────────────────────────────────────────────────────────
 
-const C = {
-  bg: '#08090e',
-  surface: 'rgba(255,255,255,0.04)',
-  surfaceHover: 'rgba(255,255,255,0.07)',
-  card: 'rgba(255,255,255,0.05)',
-  cardBorder: 'rgba(255,255,255,0.08)',
-  border: 'rgba(255,255,255,0.08)',
-  text: '#f1f5f9',
-  textDim: 'rgba(255,255,255,0.45)',
-  textMid: 'rgba(255,255,255,0.7)',
+const shared = {
   accent: '#e85d75',
   accentDark: '#d14d65',
   accentGlow: 'rgba(232,93,117,0.15)',
   accentSoft: 'rgba(232,93,117,0.08)',
   green: '#34d399',
   red: '#f87171',
-  redBg: 'rgba(248,113,113,0.1)',
-  font: "'Inter', sans-serif",
-  fontHeading: "'Playfair Display', serif",
+  font: "'DM Sans', sans-serif",
+  fontHeading: "'Sora', sans-serif",
   fontMono: "'JetBrains Mono', monospace",
   radius: 16,
   radiusSm: 10,
-  // Document panel (light)
   docBg: '#ffffff',
   docText: '#1a1a2e',
   docTextDim: '#4a5568',
   docBorder: '#e2e8f0',
   docHeading: '#0f172a',
 };
+
+const darkTheme = {
+  ...shared,
+  bg: '#08090e',
+  surface: 'rgba(255,255,255,0.04)',
+  card: 'rgba(255,255,255,0.05)',
+  cardBorder: 'rgba(255,255,255,0.08)',
+  border: 'rgba(255,255,255,0.08)',
+  text: '#f1f5f9',
+  textDim: 'rgba(255,255,255,0.45)',
+  textMid: 'rgba(255,255,255,0.7)',
+  redBg: 'rgba(248,113,113,0.1)',
+  headerBg: 'rgba(8,9,14,0.85)',
+  inputBg: 'rgba(0,0,0,0.3)',
+  orbAccent: 'rgba(232,93,117,0.08)',
+  orbSecondary: 'rgba(99,102,241,0.06)',
+  orbTertiary: 'rgba(232,93,117,0.04)',
+};
+
+const lightTheme = {
+  ...shared,
+  bg: '#f5f5f7',
+  surface: 'rgba(0,0,0,0.02)',
+  card: 'rgba(255,255,255,0.85)',
+  cardBorder: 'rgba(0,0,0,0.08)',
+  border: 'rgba(0,0,0,0.08)',
+  text: '#1a1a2e',
+  textDim: 'rgba(0,0,0,0.4)',
+  textMid: 'rgba(0,0,0,0.65)',
+  redBg: 'rgba(248,113,113,0.08)',
+  headerBg: 'rgba(245,245,247,0.88)',
+  inputBg: 'rgba(0,0,0,0.04)',
+  orbAccent: 'rgba(232,93,117,0.06)',
+  orbSecondary: 'rgba(99,102,241,0.05)',
+  orbTertiary: 'rgba(232,93,117,0.03)',
+};
+
+function loadTheme() {
+  try { return localStorage.getItem('ats-theme') || 'dark'; } catch { return 'dark'; }
+}
+function saveTheme(t) {
+  try { localStorage.setItem('ats-theme', t); } catch {}
+}
+
+// Global ref that components read — updated by App on toggle
+let C = darkTheme;
 
 // ─── Ambient Background ─────────────────────────────────────────────────────────
 
@@ -205,22 +240,41 @@ function AmbientOrbs() {
       <div style={{
         position: 'absolute', width: 600, height: 600,
         borderRadius: '50%', top: '-10%', left: '-10%',
-        background: 'radial-gradient(circle, rgba(232,93,117,0.08) 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${C.orbAccent} 0%, transparent 70%)`,
         animation: 'orbFloat1 25s ease-in-out infinite',
       }} />
       <div style={{
         position: 'absolute', width: 500, height: 500,
         borderRadius: '50%', bottom: '-5%', right: '-10%',
-        background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${C.orbSecondary} 0%, transparent 70%)`,
         animation: 'orbFloat2 30s ease-in-out infinite',
       }} />
       <div style={{
         position: 'absolute', width: 400, height: 400,
         borderRadius: '50%', top: '40%', left: '60%',
-        background: 'radial-gradient(circle, rgba(232,93,117,0.04) 0%, transparent 70%)',
+        background: `radial-gradient(circle, ${C.orbTertiary} 0%, transparent 70%)`,
         animation: 'orbFloat3 20s ease-in-out infinite',
       }} />
     </div>
+  );
+}
+
+// ─── Theme Toggle Button ────────────────────────────────────────────────────────
+
+function ThemeToggle({ isDark, onToggle }) {
+  return (
+    <button onClick={onToggle} aria-label="Toggle theme" style={{
+      background: 'none', border: `1px solid ${C.border}`,
+      borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
+      color: C.textMid, fontSize: 18, lineHeight: 1,
+      display: 'flex', alignItems: 'center', gap: 6,
+      transition: 'all 0.2s',
+    }}>
+      {isDark ? '☀️' : '🌙'}
+      <span style={{ fontSize: 11, fontFamily: C.font, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+        {isDark ? 'Light' : 'Dark'}
+      </span>
+    </button>
   );
 }
 
@@ -230,7 +284,7 @@ function Spinner({ size = 18 }) {
   return (
     <span style={{
       display: 'inline-block', width: size, height: size,
-      border: '2px solid rgba(255,255,255,0.1)', borderTopColor: C.accent,
+      border: `2px solid ${C.border}`, borderTopColor: C.accent,
       borderRadius: '50%', animation: 'ats-spin 0.6s linear infinite',
     }} />
   );
@@ -260,7 +314,7 @@ function Btn({ children, variant = 'primary', disabled, onClick, style }) {
     });
   } else {
     Object.assign(base, {
-      background: hover ? 'rgba(255,255,255,0.06)' : 'transparent',
+      background: hover ? C.surface : 'transparent',
       color: C.textMid, padding: '8px 14px', fontSize: 13, borderRadius: 8,
     });
   }
@@ -356,10 +410,10 @@ function DropZone({ onText, label, onError }) {
           inp.click();
         }}
         style={{
-          border: `2px dashed ${over ? C.accent : 'rgba(255,255,255,0.1)'}`,
+          border: `2px dashed ${over ? C.accent : C.border}`,
           borderRadius: C.radiusSm, padding: '28px 16px',
           textAlign: 'center', cursor: 'pointer',
-          background: over ? C.accentSoft : 'rgba(255,255,255,0.02)',
+          background: over ? C.accentSoft : C.surface,
           transition: 'all 0.25s', marginBottom: 10,
           color: C.textDim, fontSize: 14,
         }}
@@ -393,7 +447,7 @@ function StepIndicator({ steps, activeStep }) {
                 width: 36, height: 36, borderRadius: '50%',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: 14, fontWeight: 700, fontFamily: C.font,
-                background: done ? C.accent : active ? C.accentSoft : 'rgba(255,255,255,0.04)',
+                background: done ? C.accent : active ? C.accentSoft : C.surface,
                 color: done ? '#fff' : active ? C.accent : C.textDim,
                 border: active ? `2px solid ${C.accent}` : done ? 'none' : `1px solid ${C.border}`,
                 transition: 'all 0.3s',
@@ -494,7 +548,7 @@ function DocumentPreview({ title, emoji, content, loading }) {
       {/* Document Panel */}
       {loading && !content ? (
         <div style={{
-          background: 'rgba(255,255,255,0.03)', border: `1px solid ${C.cardBorder}`,
+          background: C.surface, border: `1px solid ${C.cardBorder}`,
           borderRadius: '0 0 12px 12px', textAlign: 'center', padding: 60,
         }}>
           <Spinner size={28} />
@@ -586,7 +640,7 @@ function HistoryCard({ item, onView, onDelete }) {
       padding: 18, marginBottom: 12,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       flexWrap: 'wrap', gap: 10,
-      borderColor: hover ? 'rgba(255,255,255,0.12)' : C.cardBorder,
+      borderColor: hover ? C.border : C.cardBorder,
       transition: 'all 0.2s',
     }}>
       <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{ flex: 1 }}>
@@ -613,6 +667,22 @@ function HistoryCard({ item, onView, onDelete }) {
 // ─── Main App ──────────────────────────────────────────────────────────────────
 
 export default function App() {
+  const [theme, setTheme] = useState(loadTheme);
+  const isDark = theme === 'dark';
+  C = isDark ? darkTheme : lightTheme;
+
+  const toggleTheme = () => {
+    const next = isDark ? 'light' : 'dark';
+    setTheme(next);
+    saveTheme(next);
+  };
+
+  // Apply body bg
+  useEffect(() => {
+    document.body.style.background = C.bg;
+    document.body.style.color = C.text;
+  }, [theme]);
+
   const [tab, setTab] = useState('input');
   const [cvText, setCvText] = useState('');
   const [jobText, setJobText] = useState('');
@@ -736,7 +806,7 @@ export default function App() {
 
   const textareaStyle = {
     width: '100%', fontFamily: C.fontMono, fontSize: 13,
-    background: 'rgba(0,0,0,0.3)', color: C.textMid,
+    background: C.inputBg, color: C.textMid,
     border: `1px solid ${C.border}`, borderRadius: C.radiusSm,
     padding: 16, resize: 'vertical', lineHeight: 1.7, outline: 'none',
     transition: 'border-color 0.2s, box-shadow 0.2s',
@@ -764,17 +834,22 @@ export default function App() {
       {/* Header */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(8,9,14,0.85)',
+        background: C.headerBg,
         backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${C.border}`, padding: '18px 24px',
       }}>
         <div style={{ maxWidth: 820, margin: '0 auto' }}>
-          <h1 style={{ fontFamily: C.fontHeading, fontSize: 30, fontWeight: 800, color: C.text, letterSpacing: '-0.01em', marginBottom: 4 }}>
-            ATS<span style={{ color: C.accent }}>.</span>rewrite
-          </h1>
-          <p style={{ fontSize: 13, color: C.textDim, marginBottom: 18, letterSpacing: '0.02em' }}>
-            Tailored CVs & cover letters that get past the bots — and impress the humans.
-          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <div>
+              <h1 style={{ fontFamily: C.fontHeading, fontSize: 28, fontWeight: 800, color: C.text, letterSpacing: '-0.02em', marginBottom: 4 }}>
+                ATS<span style={{ color: C.accent }}>.</span>rewrite
+              </h1>
+              <p style={{ fontSize: 13, color: C.textDim, marginBottom: 18, letterSpacing: '0.02em' }}>
+                Tailored CVs & cover letters that get past the bots — and impress the humans.
+              </p>
+            </div>
+            <ThemeToggle isDark={isDark} onToggle={toggleTheme} />
+          </div>
           <nav style={{ display: 'flex', gap: 4 }}>
             {tabs.map(t => {
               const active = tab === t.id;
