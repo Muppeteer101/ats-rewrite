@@ -1,4 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import mammoth from 'mammoth';
+import * as pdfjsLib from 'pdfjs-dist';
 
 // ─── System Prompts ────────────────────────────────────────────────────────────
 
@@ -104,7 +106,34 @@ function saveHistory(history) {
 
 // ─── File Reader ───────────────────────────────────────────────────────────────
 
-function readFileAsText(file) {
+// Set pdf.js worker
+pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
+
+async function readFileAsText(file) {
+  const name = file.name.toLowerCase();
+  const ext = name.substring(name.lastIndexOf('.'));
+
+  // .docx — use mammoth
+  if (ext === '.docx') {
+    const arrayBuf = await file.arrayBuffer();
+    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuf });
+    return result.value;
+  }
+
+  // .pdf — use pdf.js
+  if (ext === '.pdf') {
+    const arrayBuf = await file.arrayBuffer();
+    const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+    const pages = [];
+    for (let i = 1; i <= pdf.numPages; i++) {
+      const page = await pdf.getPage(i);
+      const content = await page.getTextContent();
+      pages.push(content.items.map(item => item.str).join(' '));
+    }
+    return pages.join('\n\n');
+  }
+
+  // .doc, .rtf, .txt and anything else — read as text
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
