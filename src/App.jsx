@@ -106,34 +106,47 @@ function saveHistory(history) {
 
 // ─── File Reader ───────────────────────────────────────────────────────────────
 
-// Set pdf.js worker
 pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.mjs`;
 
 async function readFileAsText(file) {
   const name = file.name.toLowerCase();
   const ext = name.substring(name.lastIndexOf('.'));
 
-  // .docx — use mammoth
   if (ext === '.docx') {
-    const arrayBuf = await file.arrayBuffer();
-    const result = await mammoth.extractRawText({ arrayBuffer: arrayBuf });
-    return result.value;
-  }
-
-  // .pdf — use pdf.js
-  if (ext === '.pdf') {
-    const arrayBuf = await file.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
-    const pages = [];
-    for (let i = 1; i <= pdf.numPages; i++) {
-      const page = await pdf.getPage(i);
-      const content = await page.getTextContent();
-      pages.push(content.items.map(item => item.str).join(' '));
+    try {
+      const arrayBuf = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer: arrayBuf });
+      if (result.value && result.value.trim().length > 0) {
+        return result.value;
+      }
+      throw new Error('Empty extraction');
+    } catch (e) {
+      console.error('Mammoth .docx extraction failed:', e);
+      throw new Error('Could not extract text from .docx file. Please try saving as .txt or .pdf and re-uploading.');
     }
-    return pages.join('\n\n');
   }
 
-  // .doc, .rtf, .txt and anything else — read as text
+  if (ext === '.pdf') {
+    try {
+      const arrayBuf = await file.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: arrayBuf }).promise;
+      const pages = [];
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        pages.push(content.items.map(item => item.str).join(' '));
+      }
+      return pages.join('\n\n');
+    } catch (e) {
+      console.error('PDF extraction failed:', e);
+      throw new Error('Could not extract text from PDF. Please try a different format.');
+    }
+  }
+
+  if (ext === '.doc') {
+    throw new Error('.doc format is not supported in the browser. Please save as .docx, .pdf, or .txt and re-upload.');
+  }
+
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result);
@@ -153,26 +166,61 @@ function extractJobTitle(jobDesc) {
   return 'Untitled Role';
 }
 
-// ─── Styles ────────────────────────────────────────────────────────────────────
+// ─── Design Tokens ──────────────────────────────────────────────────────────────
 
 const C = {
-  bg: '#0c0f1a',
-  surface: '#141827',
-  surfaceHover: '#1a1f35',
-  border: '#1e2540',
-  borderFocus: '#f59e0b',
-  text: '#e2e8f0',
-  textDim: '#94a3b8',
-  amber: '#f59e0b',
-  amberDark: '#d97706',
-  amberGlow: 'rgba(245,158,11,0.15)',
-  green: '#22c55e',
-  red: '#ef4444',
-  redBg: 'rgba(239,68,68,0.12)',
-  font: "'DM Sans', sans-serif",
+  bg: '#08090e',
+  surface: 'rgba(255,255,255,0.04)',
+  surfaceHover: 'rgba(255,255,255,0.07)',
+  surfaceSolid: '#12141c',
+  card: 'rgba(255,255,255,0.05)',
+  cardBorder: 'rgba(255,255,255,0.08)',
+  border: 'rgba(255,255,255,0.08)',
+  borderFocus: '#e85d75',
+  text: '#f1f5f9',
+  textDim: 'rgba(255,255,255,0.45)',
+  textMid: 'rgba(255,255,255,0.7)',
+  accent: '#e85d75',
+  accentDark: '#d14d65',
+  accentGlow: 'rgba(232,93,117,0.15)',
+  accentSoft: 'rgba(232,93,117,0.08)',
+  green: '#34d399',
+  greenGlow: 'rgba(52,211,153,0.15)',
+  red: '#f87171',
+  redBg: 'rgba(248,113,113,0.1)',
+  font: "'Inter', sans-serif",
   fontHeading: "'Playfair Display', serif",
   fontMono: "'JetBrains Mono', monospace",
+  radius: 16,
+  radiusSm: 10,
 };
+
+// ─── Ambient Background ─────────────────────────────────────────────────────────
+
+function AmbientOrbs() {
+  return (
+    <div style={{ position: 'fixed', inset: 0, zIndex: 0, overflow: 'hidden', pointerEvents: 'none' }}>
+      <div style={{
+        position: 'absolute', width: 600, height: 600,
+        borderRadius: '50%', top: '-10%', left: '-10%',
+        background: 'radial-gradient(circle, rgba(232,93,117,0.08) 0%, transparent 70%)',
+        animation: 'orbFloat1 25s ease-in-out infinite',
+      }} />
+      <div style={{
+        position: 'absolute', width: 500, height: 500,
+        borderRadius: '50%', bottom: '-5%', right: '-10%',
+        background: 'radial-gradient(circle, rgba(99,102,241,0.06) 0%, transparent 70%)',
+        animation: 'orbFloat2 30s ease-in-out infinite',
+      }} />
+      <div style={{
+        position: 'absolute', width: 400, height: 400,
+        borderRadius: '50%', top: '40%', left: '60%',
+        background: 'radial-gradient(circle, rgba(232,93,117,0.04) 0%, transparent 70%)',
+        animation: 'orbFloat3 20s ease-in-out infinite',
+      }} />
+    </div>
+  );
+}
 
 // ─── Sub-components ────────────────────────────────────────────────────────────
 
@@ -180,7 +228,7 @@ function Spinner({ size = 18 }) {
   return (
     <span style={{
       display: 'inline-block', width: size, height: size,
-      border: `2px solid ${C.border}`, borderTopColor: C.amber,
+      border: `2px solid rgba(255,255,255,0.1)`, borderTopColor: C.accent,
       borderRadius: '50%',
       animation: 'ats-spin 0.6s linear infinite',
     }} />
@@ -188,82 +236,132 @@ function Spinner({ size = 18 }) {
 }
 
 function Btn({ children, variant = 'primary', disabled, onClick, style }) {
+  const [hover, setHover] = useState(false);
   const base = {
     fontFamily: C.font, fontSize: 14, fontWeight: 600,
-    padding: '10px 20px', borderRadius: 8, cursor: 'pointer',
-    border: 'none', transition: 'all 0.2s',
-    opacity: disabled ? 0.5 : 1,
+    padding: '12px 28px', borderRadius: 50, cursor: 'pointer',
+    border: 'none', transition: 'all 0.25s ease',
+    opacity: disabled ? 0.4 : 1,
     pointerEvents: disabled ? 'none' : 'auto',
     display: 'inline-flex', alignItems: 'center', gap: 8,
+    letterSpacing: '0.01em',
     ...style,
   };
   if (variant === 'primary') {
     Object.assign(base, {
-      background: `linear-gradient(135deg, ${C.amber}, ${C.amberDark})`,
-      color: '#0c0f1a', fontWeight: 700,
+      background: hover ? C.accentDark : C.accent,
+      color: '#ffffff', fontWeight: 700,
+      boxShadow: hover
+        ? '0 4px 24px rgba(232,93,117,0.4)'
+        : '0 2px 16px rgba(232,93,117,0.25)',
+      transform: hover ? 'translateY(-1px)' : 'none',
     });
   } else if (variant === 'secondary') {
     Object.assign(base, {
-      background: 'transparent', color: C.text,
-      border: `1px solid ${C.border}`,
+      background: hover ? 'rgba(232,93,117,0.12)' : 'rgba(232,93,117,0.06)',
+      color: C.accent,
+      border: `1.5px solid ${hover ? C.accent : 'rgba(232,93,117,0.3)'}`,
     });
   } else {
     Object.assign(base, {
-      background: 'transparent', color: C.textDim,
-      padding: '8px 14px', fontSize: 13,
+      background: hover ? 'rgba(255,255,255,0.06)' : 'transparent',
+      color: C.textMid,
+      padding: '8px 14px', fontSize: 13, borderRadius: 8,
     });
   }
-  return <button style={base} disabled={disabled} onClick={onClick}>{children}</button>;
+  return (
+    <button
+      style={base} disabled={disabled} onClick={onClick}
+      onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+    >{children}</button>
+  );
 }
 
-function DropZone({ onText, label }) {
-  const [over, setOver] = useState(false);
-  const [fileName, setFileName] = useState('');
-
-  const handleFile = async (file) => {
-    if (!file) return;
-    try {
-      const text = await readFileAsText(file);
-      setFileName(file.name);
-      onText(text);
-    } catch {
-      setFileName('Error reading file');
-    }
-  };
-
+function GlassCard({ children, style, glow }) {
   return (
-    <div
-      onDragOver={(e) => { e.preventDefault(); setOver(true); }}
-      onDragLeave={() => setOver(false)}
-      onDrop={(e) => { e.preventDefault(); setOver(false); handleFile(e.dataTransfer.files[0]); }}
-      onClick={() => {
-        const inp = document.createElement('input');
-        inp.type = 'file';
-        inp.accept = '.txt,.doc,.docx,.rtf,.pdf';
-        inp.onchange = () => handleFile(inp.files[0]);
-        inp.click();
-      }}
-      style={{
-        border: `2px dashed ${over ? C.amber : C.border}`,
-        borderRadius: 8, padding: '20px 16px',
-        textAlign: 'center', cursor: 'pointer',
-        background: over ? C.amberGlow : 'transparent',
-        transition: 'all 0.2s', marginBottom: 10,
-        color: C.textDim, fontSize: 13,
-      }}
-    >
-      {fileName
-        ? <span style={{ color: C.amber }}>{fileName}</span>
-        : (label || 'Drop a file here or click to upload (.txt, .doc, .docx, .rtf, .pdf)')
-      }
+    <div style={{
+      background: C.card,
+      border: `1px solid ${C.cardBorder}`,
+      borderRadius: C.radius,
+      backdropFilter: 'blur(12px)',
+      WebkitBackdropFilter: 'blur(12px)',
+      boxShadow: glow
+        ? `0 0 40px ${C.accentGlow}, 0 4px 20px rgba(0,0,0,0.2)`
+        : '0 4px 20px rgba(0,0,0,0.15)',
+      ...style,
+    }}>
+      {children}
     </div>
   );
 }
 
-function ResultBlock({ title, content, loading }) {
-  if (!content && !loading) return null;
+function DropZone({ onText, label, onError }) {
+  const [over, setOver] = useState(false);
+  const [fileName, setFileName] = useState('');
+  const [fileError, setFileError] = useState('');
 
-  const copy = () => { navigator.clipboard.writeText(content); };
+  const handleFile = async (file) => {
+    if (!file) return;
+    setFileError('');
+    try {
+      const text = await readFileAsText(file);
+      setFileName(file.name);
+      onText(text);
+    } catch (e) {
+      setFileName('');
+      setFileError(e.message);
+      if (onError) onError(e.message);
+    }
+  };
+
+  return (
+    <div>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setOver(true); }}
+        onDragLeave={() => setOver(false)}
+        onDrop={(e) => { e.preventDefault(); setOver(false); handleFile(e.dataTransfer.files[0]); }}
+        onClick={() => {
+          const inp = document.createElement('input');
+          inp.type = 'file';
+          inp.accept = '.txt,.docx,.rtf,.pdf';
+          inp.onchange = () => handleFile(inp.files[0]);
+          inp.click();
+        }}
+        style={{
+          border: `2px dashed ${over ? C.accent : 'rgba(255,255,255,0.1)'}`,
+          borderRadius: C.radiusSm, padding: '28px 16px',
+          textAlign: 'center', cursor: 'pointer',
+          background: over ? C.accentSoft : 'rgba(255,255,255,0.02)',
+          transition: 'all 0.25s', marginBottom: 10,
+          color: C.textDim, fontSize: 14,
+        }}
+      >
+        {fileName
+          ? <span style={{ color: C.accent, fontWeight: 600 }}>{fileName}</span>
+          : (label || 'Drop a file or click to upload (.txt, .docx, .rtf, .pdf)')
+        }
+      </div>
+      {fileError && (
+        <div style={{
+          fontSize: 12, color: C.red, marginBottom: 8,
+          padding: '8px 12px', background: C.redBg, borderRadius: 8,
+        }}>
+          {fileError}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function ResultBlock({ title, emoji, content, loading }) {
+  if (!content && !loading) return null;
+  const [copied, setCopied] = useState(false);
+
+  const copy = () => {
+    navigator.clipboard.writeText(content);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const download = () => {
     const blob = new Blob([content], { type: 'text/plain' });
     const a = document.createElement('a');
@@ -274,39 +372,48 @@ function ResultBlock({ title, content, loading }) {
   };
 
   return (
-    <div style={{
-      background: C.surface, border: `1px solid ${C.border}`,
-      borderRadius: 10, padding: 20, marginBottom: 16,
-    }}>
+    <GlassCard style={{ padding: 0, marginBottom: 20, overflow: 'hidden' }}>
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-        marginBottom: 12,
+        padding: '16px 20px',
+        borderBottom: content ? `1px solid ${C.border}` : 'none',
       }}>
         <h3 style={{
-          fontFamily: C.fontHeading, fontSize: 18, color: C.text, fontWeight: 700,
-        }}>{title}</h3>
+          fontFamily: C.font, fontSize: 15, color: C.text, fontWeight: 700,
+          display: 'flex', alignItems: 'center', gap: 8,
+          letterSpacing: '0.02em', textTransform: 'uppercase',
+        }}>
+          <span style={{ fontSize: 18 }}>{emoji}</span>
+          {title}
+        </h3>
         {content && (
-          <div style={{ display: 'flex', gap: 8 }}>
-            <Btn variant="ghost" onClick={copy}>Copy</Btn>
-            <Btn variant="ghost" onClick={download}>Download .txt</Btn>
+          <div style={{ display: 'flex', gap: 6 }}>
+            <Btn variant="ghost" onClick={copy}>
+              {copied ? 'Copied!' : 'Copy'}
+            </Btn>
+            <Btn variant="ghost" onClick={download}>Download</Btn>
           </div>
         )}
       </div>
       {loading && !content ? (
-        <div style={{ textAlign: 'center', padding: 30 }}><Spinner size={24} /></div>
+        <div style={{ textAlign: 'center', padding: 40 }}>
+          <Spinner size={24} />
+          <p style={{ fontSize: 13, color: C.textDim, marginTop: 12 }}>Generating...</p>
+        </div>
       ) : (
         <pre style={{
-          fontFamily: C.fontMono, fontSize: 13, lineHeight: 1.7,
-          color: C.text, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
+          fontFamily: C.fontMono, fontSize: 13, lineHeight: 1.75,
+          color: C.textMid, whiteSpace: 'pre-wrap', wordBreak: 'break-word',
           maxHeight: 500, overflowY: 'auto', margin: 0,
-          padding: 16, background: C.bg, borderRadius: 8,
+          padding: 20, background: 'rgba(0,0,0,0.2)',
         }}>{content}</pre>
       )}
-    </div>
+    </GlassCard>
   );
 }
 
 function HistoryCard({ item, onView, onDelete }) {
+  const [hover, setHover] = useState(false);
   const date = new Date(item.date).toLocaleDateString('en-GB', {
     day: 'numeric', month: 'short', year: 'numeric',
   });
@@ -317,29 +424,31 @@ function HistoryCard({ item, onView, onDelete }) {
   ].filter(Boolean);
 
   return (
-    <div style={{
-      background: C.surface, border: `1px solid ${C.border}`,
-      borderRadius: 10, padding: 16, marginBottom: 10,
+    <GlassCard style={{
+      padding: 18, marginBottom: 12,
       display: 'flex', justifyContent: 'space-between', alignItems: 'center',
       flexWrap: 'wrap', gap: 10,
+      borderColor: hover ? 'rgba(255,255,255,0.12)' : C.cardBorder,
+      transition: 'all 0.2s',
     }}>
-      <div>
-        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 4 }}>{item.jobTitle}</div>
-        <div style={{ fontSize: 12, color: C.textDim, display: 'flex', gap: 8, alignItems: 'center' }}>
+      <div onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)} style={{ flex: 1 }}>
+        <div style={{ fontWeight: 600, fontSize: 15, marginBottom: 6, color: C.text }}>{item.jobTitle}</div>
+        <div style={{ fontSize: 12, color: C.textDim, display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
           <span>{date}</span>
           {badges.map(b => (
             <span key={b} style={{
-              background: C.amberGlow, color: C.amber,
-              padding: '2px 8px', borderRadius: 4, fontSize: 11, fontWeight: 600,
+              background: C.accentSoft, color: C.accent,
+              padding: '2px 10px', borderRadius: 20, fontSize: 11, fontWeight: 600,
+              letterSpacing: '0.04em', textTransform: 'uppercase',
             }}>{b}</span>
           ))}
         </div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        <Btn variant="secondary" onClick={onView} style={{ padding: '6px 14px', fontSize: 13 }}>View</Btn>
+        <Btn variant="secondary" onClick={onView} style={{ padding: '8px 16px', fontSize: 13 }}>View</Btn>
         <Btn variant="ghost" onClick={onDelete} style={{ color: C.red, fontSize: 13 }}>Delete</Btn>
       </div>
-    </div>
+    </GlassCard>
   );
 }
 
@@ -352,7 +461,6 @@ export default function App() {
   const [savedCV, setSavedCV] = useState('');
   const [error, setError] = useState('');
 
-  // Results
   const [rewrittenCV, setRewrittenCV] = useState('');
   const [changeSummary, setChangeSummary] = useState('');
   const [coverLetter, setCoverLetter] = useState('');
@@ -360,23 +468,19 @@ export default function App() {
   const [loadingChanges, setLoadingChanges] = useState(false);
   const [loadingCover, setLoadingCover] = useState(false);
 
-  // Library
   const [history, setHistory] = useState([]);
   const [viewingItem, setViewingItem] = useState(null);
   const [crossAnalysis, setCrossAnalysis] = useState('');
   const [loadingCross, setLoadingCross] = useState(false);
 
-  // Loading flag
   const isLoading = loadingCV || loadingChanges || loadingCover;
 
-  // Init
   useEffect(() => {
     const saved = loadBaseCV();
     if (saved) { setSavedCV(saved); setCvText(saved); }
     setHistory(loadHistory());
   }, []);
 
-  // Save to history helper
   const addToHistory = useCallback((entry) => {
     setHistory(prev => {
       const next = [entry, ...prev].slice(0, 50);
@@ -423,7 +527,6 @@ export default function App() {
       setCoverLetter(coverResult);
       setLoadingCover(false);
 
-      // Now get change summary
       setLoadingChanges(true);
       const changesPrompt = `ORIGINAL CV:\n${cvText}\n\nREWRITTEN CV:\n${cvResult}\n\nJOB DESCRIPTION:\n${jobText}`;
       const changesResult = await callAPI(PROMPT_CHANGES, changesPrompt);
@@ -497,7 +600,6 @@ export default function App() {
       setCoverLetter(coverResult);
       setLoadingCover(false);
 
-      // Attach to most recent if it lacks a cover, else new entry
       const recent = history[0];
       if (recent && !recent.hasCover) {
         updateHistoryItem(recent.id, { coverLetter: coverResult, hasCover: true });
@@ -555,139 +657,209 @@ export default function App() {
   // ── Render ───────────────────────────────────────────────────────────────────
 
   const hasResults = rewrittenCV || changeSummary || coverLetter;
+  const tabs = [
+    { id: 'input', label: 'Input', icon: '01' },
+    { id: 'results', label: 'Results', icon: '02' },
+    { id: 'library', label: 'Library', icon: '03' },
+  ];
+
+  const textareaStyle = {
+    width: '100%', fontFamily: C.fontMono, fontSize: 13,
+    background: 'rgba(0,0,0,0.3)', color: C.textMid,
+    border: `1px solid ${C.border}`,
+    borderRadius: C.radiusSm, padding: 16, resize: 'vertical',
+    lineHeight: 1.7, outline: 'none',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
+  };
 
   return (
     <>
       <style>{`
         @keyframes ats-spin { to { transform: rotate(360deg); } }
-        textarea:focus { outline: none; border-color: ${C.amber} !important; box-shadow: 0 0 0 3px ${C.amberGlow} !important; }
+        @keyframes orbFloat1 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(60px, 40px) scale(1.1); }
+          66% { transform: translate(-30px, 70px) scale(0.95); }
+        }
+        @keyframes orbFloat2 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          33% { transform: translate(-50px, -30px) scale(1.05); }
+          66% { transform: translate(40px, -60px) scale(0.9); }
+        }
+        @keyframes orbFloat3 {
+          0%, 100% { transform: translate(0, 0) scale(1); }
+          50% { transform: translate(-70px, 30px) scale(1.15); }
+        }
+        @keyframes fadeUp {
+          from { opacity: 0; transform: translateY(12px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        textarea:focus {
+          border-color: ${C.accent} !important;
+          box-shadow: 0 0 0 3px ${C.accentGlow} !important;
+        }
       `}</style>
+
+      <AmbientOrbs />
 
       {/* Header */}
       <header style={{
         position: 'sticky', top: 0, zIndex: 100,
-        background: 'rgba(12,15,26,0.92)', backdropFilter: 'blur(12px)',
+        background: 'rgba(8,9,14,0.85)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
         borderBottom: `1px solid ${C.border}`,
-        padding: '16px 20px',
+        padding: '18px 24px',
       }}>
-        <div style={{ maxWidth: 800, margin: '0 auto' }}>
-          <h1 style={{
-            fontFamily: C.fontHeading, fontSize: 28, fontWeight: 800,
-            color: C.text, marginBottom: 4,
+        <div style={{ maxWidth: 820, margin: '0 auto' }}>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 12, marginBottom: 4 }}>
+            <h1 style={{
+              fontFamily: C.fontHeading, fontSize: 30, fontWeight: 800,
+              color: C.text, letterSpacing: '-0.01em',
+            }}>
+              ATS<span style={{ color: C.accent }}>.</span>rewrite
+            </h1>
+          </div>
+          <p style={{
+            fontSize: 13, color: C.textDim, marginBottom: 18,
+            letterSpacing: '0.02em',
           }}>
-            ATS<span style={{ color: C.amber, margin: '0 2px' }}>.</span>rewrite
-          </h1>
-          <p style={{ fontSize: 13, color: C.textDim, marginBottom: 14 }}>
             Tailored CVs & cover letters that get past the bots — and impress the humans.
           </p>
-          <div style={{ display: 'flex', gap: 6 }}>
-            {['input', 'results', 'library'].map(t => (
-              <button key={t} onClick={() => setTab(t)} style={{
-                fontFamily: C.font, fontSize: 13, fontWeight: 600,
-                padding: '8px 18px', borderRadius: 6, border: 'none',
-                cursor: 'pointer', transition: 'all 0.2s',
-                background: tab === t ? C.amberGlow : 'transparent',
-                color: tab === t ? C.amber : C.textDim,
-                borderBottom: tab === t ? `2px solid ${C.amber}` : '2px solid transparent',
-                boxShadow: tab === t ? `0 0 12px ${C.amberGlow}` : 'none',
-                position: 'relative',
-              }}>
-                {t.charAt(0).toUpperCase() + t.slice(1)}
-                {t === 'results' && hasResults && (
+          <nav style={{ display: 'flex', gap: 4 }}>
+            {tabs.map(t => {
+              const active = tab === t.id;
+              return (
+                <button key={t.id} onClick={() => setTab(t.id)} style={{
+                  fontFamily: C.font, fontSize: 13, fontWeight: 600,
+                  padding: '10px 20px', borderRadius: 8, border: 'none',
+                  cursor: 'pointer', transition: 'all 0.2s',
+                  background: active ? C.accentSoft : 'transparent',
+                  color: active ? C.accent : C.textDim,
+                  position: 'relative',
+                  letterSpacing: '0.04em', textTransform: 'uppercase',
+                }}>
                   <span style={{
-                    width: 7, height: 7, borderRadius: '50%', background: C.green,
-                    position: 'absolute', top: 6, right: 6,
-                  }} />
-                )}
-              </button>
-            ))}
-          </div>
+                    fontSize: 10, fontWeight: 700, marginRight: 6,
+                    opacity: 0.5,
+                  }}>{t.icon}</span>
+                  {t.label}
+                  {t.id === 'results' && hasResults && (
+                    <span style={{
+                      width: 7, height: 7, borderRadius: '50%', background: C.green,
+                      position: 'absolute', top: 7, right: 7,
+                      boxShadow: `0 0 8px ${C.green}`,
+                    }} />
+                  )}
+                </button>
+              );
+            })}
+          </nav>
         </div>
       </header>
 
       {/* Body */}
-      <main style={{ maxWidth: 800, margin: '0 auto', padding: '24px 20px 60px' }}>
+      <main style={{
+        maxWidth: 820, margin: '0 auto', padding: '28px 24px 80px',
+        position: 'relative', zIndex: 1,
+        animation: 'fadeUp 0.4s ease',
+      }}>
 
         {/* Error Banner */}
         {error && (
-          <div style={{
-            background: C.redBg, border: `1px solid ${C.red}`,
-            borderRadius: 8, padding: '12px 16px', marginBottom: 16,
+          <GlassCard style={{
+            padding: '14px 18px', marginBottom: 18,
             display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-            fontSize: 14, color: '#fca5a5',
+            fontSize: 14, color: C.red,
+            borderColor: 'rgba(248,113,113,0.2)',
+            background: C.redBg,
           }}>
             <span>{error}</span>
             <button onClick={() => setError('')} style={{
-              background: 'none', border: 'none', color: '#fca5a5',
-              cursor: 'pointer', fontSize: 18, lineHeight: 1,
+              background: 'none', border: 'none', color: C.red,
+              cursor: 'pointer', fontSize: 20, lineHeight: 1, padding: '0 4px',
             }}>&times;</button>
-          </div>
+          </GlassCard>
         )}
 
         {/* ── Input Tab ─────────────────────────────────────────────────── */}
         {tab === 'input' && (
           <>
-            <section style={{ marginBottom: 28 }}>
-              <h2 style={{ fontFamily: C.fontHeading, fontSize: 20, marginBottom: 12 }}>Your CV</h2>
-              <DropZone onText={setCvText} />
-              <textarea
-                value={cvText}
-                onChange={e => setCvText(e.target.value)}
-                placeholder="Or paste your CV here..."
-                rows={10}
-                style={{
-                  width: '100%', fontFamily: C.fontMono, fontSize: 13,
-                  background: C.surface, color: C.text, border: `1px solid ${C.border}`,
-                  borderRadius: 8, padding: 14, resize: 'vertical',
-                  lineHeight: 1.6,
-                }}
-              />
-              <div style={{ marginTop: 10, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-                {savedCV ? (
-                  <>
-                    <span style={{ color: C.green, fontSize: 13, fontWeight: 600 }}>Saved &#10003;</span>
-                    <Btn variant="ghost" onClick={handleClearCV}>Clear saved</Btn>
-                  </>
-                ) : cvText.trim() ? (
-                  <Btn variant="secondary" onClick={handleSaveCV} style={{ fontSize: 13 }}>
-                    Save for next time
-                  </Btn>
-                ) : null}
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 22 }}>&#128196;</span>
+                <h2 style={{
+                  fontFamily: C.fontHeading, fontSize: 22, fontWeight: 700,
+                  color: C.text,
+                }}>Your CV</h2>
               </div>
-              {savedCV && (
-                <p style={{ fontSize: 12, color: C.textDim, marginTop: 8 }}>
-                  Your CV is saved in this browser. Next time, just paste a new job description and hit go.
-                </p>
-              )}
+              <GlassCard style={{ padding: 20 }}>
+                <DropZone onText={setCvText} onError={setError} />
+                <textarea
+                  value={cvText}
+                  onChange={e => setCvText(e.target.value)}
+                  placeholder="Or paste your CV here..."
+                  rows={10}
+                  style={textareaStyle}
+                />
+                <div style={{ marginTop: 12, display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
+                  {savedCV ? (
+                    <>
+                      <span style={{
+                        color: C.green, fontSize: 13, fontWeight: 600,
+                        display: 'flex', alignItems: 'center', gap: 4,
+                      }}>
+                        <span style={{
+                          width: 8, height: 8, borderRadius: '50%', background: C.green,
+                          display: 'inline-block', boxShadow: `0 0 6px ${C.green}`,
+                        }} />
+                        Saved
+                      </span>
+                      <Btn variant="ghost" onClick={handleClearCV}>Clear saved</Btn>
+                    </>
+                  ) : cvText.trim() ? (
+                    <Btn variant="secondary" onClick={handleSaveCV} style={{ fontSize: 13 }}>
+                      Save for next time
+                    </Btn>
+                  ) : null}
+                </div>
+                {savedCV && (
+                  <p style={{ fontSize: 12, color: C.textDim, marginTop: 10 }}>
+                    Your CV is saved in this browser. Just paste a new job description and go.
+                  </p>
+                )}
+              </GlassCard>
             </section>
 
-            <section style={{ marginBottom: 28 }}>
-              <h2 style={{ fontFamily: C.fontHeading, fontSize: 20, marginBottom: 12 }}>Job Description</h2>
-              <DropZone onText={setJobText} label="Drop a job description file or click to upload" />
-              <textarea
-                value={jobText}
-                onChange={e => setJobText(e.target.value)}
-                placeholder="Paste the job description here..."
-                rows={8}
-                style={{
-                  width: '100%', fontFamily: C.fontMono, fontSize: 13,
-                  background: C.surface, color: C.text, border: `1px solid ${C.border}`,
-                  borderRadius: 8, padding: 14, resize: 'vertical',
-                  lineHeight: 1.6,
-                }}
-              />
+            <section style={{ marginBottom: 32 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
+                <span style={{ fontSize: 22 }}>&#127919;</span>
+                <h2 style={{
+                  fontFamily: C.fontHeading, fontSize: 22, fontWeight: 700,
+                  color: C.text,
+                }}>Job Description</h2>
+              </div>
+              <GlassCard style={{ padding: 20 }}>
+                <DropZone onText={setJobText} onError={setError} label="Drop a job description file or click to upload" />
+                <textarea
+                  value={jobText}
+                  onChange={e => setJobText(e.target.value)}
+                  placeholder="Paste the job description here..."
+                  rows={8}
+                  style={textareaStyle}
+                />
+              </GlassCard>
             </section>
 
             <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
               <Btn variant="primary" disabled={isLoading} onClick={runFullPackage}>
-                {isLoading ? <Spinner size={16} /> : null}
-                &#9889; Full Package — CV + Cover + Analysis
+                {isLoading ? <Spinner size={16} /> : <span>&#9889;</span>}
+                Full Package
               </Btn>
               <Btn variant="secondary" disabled={isLoading} onClick={runCVOnly}>
-                CV + Analysis Only
+                CV + Analysis
               </Btn>
               <Btn variant="secondary" disabled={isLoading} onClick={runCoverOnly}>
-                Cover Letter Only
+                Cover Letter
               </Btn>
             </div>
           </>
@@ -697,14 +869,14 @@ export default function App() {
         {tab === 'results' && (
           <>
             {viewingItem && (
-              <div style={{
-                background: C.amberGlow, border: `1px solid ${C.amber}`,
-                borderRadius: 8, padding: '10px 16px', marginBottom: 16,
+              <GlassCard style={{
+                padding: '12px 18px', marginBottom: 18,
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                fontSize: 13,
+                fontSize: 13, borderColor: 'rgba(232,93,117,0.2)',
+                background: C.accentSoft,
               }}>
                 <span>
-                  <strong style={{ color: C.amber }}>{viewingItem.jobTitle}</strong>
+                  <strong style={{ color: C.accent }}>{viewingItem.jobTitle}</strong>
                   <span style={{ color: C.textDim, marginLeft: 10 }}>
                     {new Date(viewingItem.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
@@ -712,19 +884,22 @@ export default function App() {
                 <Btn variant="ghost" onClick={() => { setViewingItem(null); setRewrittenCV(''); setChangeSummary(''); setCoverLetter(''); }}>
                   Close
                 </Btn>
-              </div>
+              </GlassCard>
             )}
 
             {!hasResults && !isLoading ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: C.textDim }}>
-                <p style={{ fontSize: 15, marginBottom: 8 }}>No results yet.</p>
-                <p style={{ fontSize: 13 }}>Head to <strong>Input</strong> and submit your CV + job description.</p>
+              <div style={{ textAlign: 'center', padding: '80px 20px' }}>
+                <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>&#128203;</div>
+                <p style={{ fontSize: 16, color: C.textDim, marginBottom: 8 }}>No results yet</p>
+                <p style={{ fontSize: 13, color: C.textDim, opacity: 0.6 }}>
+                  Head to <strong style={{ color: C.textMid }}>Input</strong> and submit your CV + job description.
+                </p>
               </div>
             ) : (
               <>
-                <ResultBlock title="Rewritten CV" content={rewrittenCV} loading={loadingCV} />
-                <ResultBlock title="What Changed & Why" content={changeSummary} loading={loadingChanges} />
-                <ResultBlock title="Cover Letter" content={coverLetter} loading={loadingCover} />
+                <ResultBlock title="Rewritten CV" emoji="&#128196;" content={rewrittenCV} loading={loadingCV} />
+                <ResultBlock title="What Changed & Why" emoji="&#128269;" content={changeSummary} loading={loadingChanges} />
+                <ResultBlock title="Cover Letter" emoji="&#9993;" content={coverLetter} loading={loadingCover} />
               </>
             )}
           </>
@@ -733,23 +908,38 @@ export default function App() {
         {/* ── Library Tab ───────────────────────────────────────────────── */}
         {tab === 'library' && (
           <>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, flexWrap: 'wrap', gap: 10 }}>
-              <h2 style={{ fontFamily: C.fontHeading, fontSize: 20 }}>
-                Application Library <span style={{ fontSize: 14, color: C.textDim, fontFamily: C.font }}>({history.length})</span>
-              </h2>
+            <div style={{
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              marginBottom: 20, flexWrap: 'wrap', gap: 10,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <span style={{ fontSize: 22 }}>&#128218;</span>
+                <h2 style={{ fontFamily: C.fontHeading, fontSize: 22, fontWeight: 700, color: C.text }}>
+                  Library
+                  <span style={{
+                    fontSize: 13, color: C.textDim, fontFamily: C.font,
+                    fontWeight: 400, marginLeft: 10,
+                  }}>
+                    {history.length} application{history.length !== 1 ? 's' : ''}
+                  </span>
+                </h2>
+              </div>
               {history.length >= 2 && (
                 <Btn variant="secondary" disabled={loadingCross} onClick={runCrossAnalysis}>
-                  {loadingCross ? <Spinner size={14} /> : null}
-                  &#128269; Cross-Application Analysis
+                  {loadingCross ? <Spinner size={14} /> : <span>&#128269;</span>}
+                  Cross Analysis
                 </Btn>
               )}
             </div>
 
-            <ResultBlock title="Cross-Application Analysis" content={crossAnalysis} loading={loadingCross} />
+            <ResultBlock title="Cross-Application Analysis" emoji="&#128200;" content={crossAnalysis} loading={loadingCross} />
 
             {history.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px 20px', color: C.textDim }}>
-                <p style={{ fontSize: 14 }}>Your tailored CVs will appear here. Each application is saved automatically.</p>
+              <div style={{ textAlign: 'center', padding: '60px 20px' }}>
+                <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>&#128218;</div>
+                <p style={{ fontSize: 14, color: C.textDim }}>
+                  Your tailored CVs will appear here. Each application is saved automatically.
+                </p>
               </div>
             ) : (
               history.map(item => (
