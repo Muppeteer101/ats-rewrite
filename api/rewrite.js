@@ -22,7 +22,7 @@ export default async function handler(req, res) {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         max_tokens: 4096,
         system,
         messages: [{ role: 'user', content: prompt }],
@@ -31,7 +31,8 @@ export default async function handler(req, res) {
 
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: `Claude API error: ${err}` });
+      console.error('Claude API error:', response.status, err);
+      return res.status(500).json({ error: `Claude API error (${response.status}): ${err}` });
     }
 
     const data = await response.json();
