@@ -338,41 +338,41 @@ function GlassCard({ children, style }) {
 
 // ─── Markdown Rendering ─────────────────────────────────────────────────────────
 
-const screenMdComponents = {
-  h1: ({ children }) => <h1 style={{ fontFamily: C.fontHeading, fontSize: 22, fontWeight: 700, color: C.text, margin: '20px 0 10px', borderBottom: `1px solid ${C.border}`, paddingBottom: 8 }}>{children}</h1>,
-  h2: ({ children }) => <h2 style={{ fontFamily: C.fontHeading, fontSize: 18, fontWeight: 700, color: C.text, margin: '18px 0 8px' }}>{children}</h2>,
-  h3: ({ children }) => <h3 style={{ fontFamily: C.font, fontSize: 15, fontWeight: 700, color: C.text, margin: '14px 0 6px' }}>{children}</h3>,
-  p: ({ children }) => <p style={{ fontSize: 14, lineHeight: 1.7, color: C.textMid, margin: '0 0 12px' }}>{children}</p>,
-  strong: ({ children }) => <strong style={{ color: C.text, fontWeight: 700 }}>{children}</strong>,
-  ul: ({ children }) => <ul style={{ margin: '0 0 12px', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
-  ol: ({ children }) => <ol style={{ margin: '0 0 12px', paddingLeft: 20, color: C.textMid }}>{children}</ol>,
-  li: ({ children }) => (
-    <li style={{ fontSize: 14, lineHeight: 1.7, color: C.textMid, marginBottom: 4, paddingLeft: 18, position: 'relative' }}>
-      <span style={{ position: 'absolute', left: 0, color: C.accent, fontWeight: 700 }}>›</span>
-      {children}
-    </li>
-  ),
-  hr: () => <hr style={{ border: 'none', borderTop: `1px solid ${C.border}`, margin: '16px 0' }} />,
-};
-
-const docMdComponents = {
-  h1: ({ children }) => <h1 style={{ fontFamily: C.fontHeading, fontSize: 24, fontWeight: 800, color: C.docHeading, margin: '0 0 6px', letterSpacing: '-0.01em' }}>{children}</h1>,
-  h2: ({ children }) => <h2 style={{ fontFamily: C.fontHeading, fontSize: 13, fontWeight: 700, color: C.docHeading, margin: '22px 0 8px', paddingBottom: 5, borderBottom: `1.5px solid ${C.docBorder}`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{children}</h2>,
-  h3: ({ children }) => <h3 style={{ fontFamily: C.font, fontSize: 14, fontWeight: 700, color: C.docHeading, margin: '14px 0 4px' }}>{children}</h3>,
-  p: ({ children }) => <p style={{ fontFamily: C.font, fontSize: 13, lineHeight: 1.65, color: C.docText, margin: '0 0 10px' }}>{children}</p>,
-  strong: ({ children }) => <strong style={{ color: C.docHeading, fontWeight: 700 }}>{children}</strong>,
-  ul: ({ children }) => <ul style={{ margin: '0 0 10px', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
-  ol: ({ children }) => <ol style={{ margin: '0 0 10px', paddingLeft: 18, color: C.docText, fontSize: 13 }}>{children}</ol>,
-  li: ({ children }) => (
-    <li style={{ fontSize: 13, lineHeight: 1.6, color: C.docText, marginBottom: 3, paddingLeft: 14, position: 'relative' }}>
-      <span style={{ position: 'absolute', left: 0, color: C.accent, fontSize: 8, top: 7 }}>●</span>
-      {children}
-    </li>
-  ),
-  hr: () => <hr style={{ border: 'none', borderTop: `1px solid ${C.docBorder}`, margin: '14px 0' }} />,
-};
-
 function MarkdownContent({ content, variant = 'screen' }) {
+  const screenMdComponents = {
+    h1: ({ children }) => <h1 style={{ fontFamily: C.fontHeading, fontSize: 22, fontWeight: 700, color: C.text, margin: '20px 0 10px', borderBottom: `1px solid ${C.border}`, paddingBottom: 8 }}>{children}</h1>,
+    h2: ({ children }) => <h2 style={{ fontFamily: C.fontHeading, fontSize: 18, fontWeight: 700, color: C.text, margin: '18px 0 8px' }}>{children}</h2>,
+    h3: ({ children }) => <h3 style={{ fontFamily: C.font, fontSize: 15, fontWeight: 700, color: C.text, margin: '14px 0 6px' }}>{children}</h3>,
+    p: ({ children }) => <p style={{ fontSize: 14, lineHeight: 1.7, color: C.textMid, margin: '0 0 12px' }}>{children}</p>,
+    strong: ({ children }) => <strong style={{ color: C.text, fontWeight: 700 }}>{children}</strong>,
+    ul: ({ children }) => <ul style={{ margin: '0 0 12px', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
+    ol: ({ children }) => <ol style={{ margin: '0 0 12px', paddingLeft: 20, color: C.textMid }}>{children}</ol>,
+    li: ({ children }) => (
+      <li style={{ fontSize: 14, lineHeight: 1.7, color: C.textMid, marginBottom: 4, paddingLeft: 18, position: 'relative' }}>
+        <span style={{ position: 'absolute', left: 0, color: C.accent, fontWeight: 700 }}>›</span>
+        {children}
+      </li>
+    ),
+    hr: () => <hr style={{ border: 'none', borderTop: `1px solid ${C.border}`, margin: '16px 0' }} />,
+  };
+
+  const docMdComponents = {
+    h1: ({ children }) => <h1 style={{ fontFamily: C.fontHeading, fontSize: 24, fontWeight: 800, color: C.docHeading, margin: '0 0 6px', letterSpacing: '-0.01em' }}>{children}</h1>,
+    h2: ({ children }) => <h2 style={{ fontFamily: C.fontHeading, fontSize: 13, fontWeight: 700, color: C.docHeading, margin: '22px 0 8px', paddingBottom: 5, borderBottom: `1.5px solid ${C.docBorder}`, textTransform: 'uppercase', letterSpacing: '0.06em' }}>{children}</h2>,
+    h3: ({ children }) => <h3 style={{ fontFamily: C.font, fontSize: 14, fontWeight: 700, color: C.docHeading, margin: '14px 0 4px' }}>{children}</h3>,
+    p: ({ children }) => <p style={{ fontFamily: C.font, fontSize: 13, lineHeight: 1.65, color: C.docText, margin: '0 0 10px' }}>{children}</p>,
+    strong: ({ children }) => <strong style={{ color: C.docHeading, fontWeight: 700 }}>{children}</strong>,
+    ul: ({ children }) => <ul style={{ margin: '0 0 10px', paddingLeft: 0, listStyle: 'none' }}>{children}</ul>,
+    ol: ({ children }) => <ol style={{ margin: '0 0 10px', paddingLeft: 18, color: C.docText, fontSize: 13 }}>{children}</ol>,
+    li: ({ children }) => (
+      <li style={{ fontSize: 13, lineHeight: 1.6, color: C.docText, marginBottom: 3, paddingLeft: 14, position: 'relative' }}>
+        <span style={{ position: 'absolute', left: 0, color: C.accent, fontSize: 8, top: 7 }}>●</span>
+        {children}
+      </li>
+    ),
+    hr: () => <hr style={{ border: 'none', borderTop: `1px solid ${C.docBorder}`, margin: '14px 0' }} />,
+  };
+
   return <ReactMarkdown components={variant === 'document' ? docMdComponents : screenMdComponents}>{content}</ReactMarkdown>;
 }
 
@@ -476,10 +476,13 @@ function StepIndicator({ steps, activeStep }) {
 
 // ─── Document Preview (A4-style panel) ──────────────────────────────────────────
 
-function DocumentPreview({ title, emoji, content, loading }) {
+function DocumentPreview({ title, emoji, content, loading, onRefine }) {
   const contentRef = useRef(null);
   const [copied, setCopied] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [tweakOpen, setTweakOpen] = useState(false);
+  const [tweakText, setTweakText] = useState('');
+  const [refining, setRefining] = useState(false);
 
   if (!content && !loading) return null;
 
@@ -487,6 +490,17 @@ function DocumentPreview({ title, emoji, content, loading }) {
     navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleDocRefine = async () => {
+    if (!tweakText.trim() || !onRefine) return;
+    setRefining(true);
+    try {
+      await onRefine(tweakText.trim());
+      setTweakText('');
+      setTweakOpen(false);
+    } catch (e) { /* error handled by parent */ }
+    setRefining(false);
   };
 
   const downloadPDF = async () => {
@@ -533,6 +547,11 @@ function DocumentPreview({ title, emoji, content, loading }) {
         </h3>
         {content && (
           <div style={{ display: 'flex', gap: 6 }}>
+            {onRefine && (
+              <Btn variant="ghost" onClick={() => setTweakOpen(o => !o)} style={{ fontSize: 12 }}>
+                {tweakOpen ? '✕ Close' : '✏️ Refine'}
+              </Btn>
+            )}
             <Btn variant="ghost" onClick={copy} style={{ fontSize: 12 }}>
               {copied ? '✓ Copied' : 'Copy'}
             </Btn>
@@ -549,33 +568,55 @@ function DocumentPreview({ title, emoji, content, loading }) {
       {loading && !content ? (
         <div style={{
           background: C.surface, border: `1px solid ${C.cardBorder}`,
-          borderRadius: '0 0 12px 12px', textAlign: 'center', padding: 60,
+          borderRadius: tweakOpen ? '0' : '0 0 12px 12px', textAlign: 'center', padding: 60,
         }}>
           <Spinner size={28} />
           <p style={{ fontSize: 13, color: C.textDim, marginTop: 14 }}>Generating your {title.toLowerCase()}...</p>
         </div>
       ) : (
         <div style={{
-          background: C.docBg, borderRadius: '0 0 12px 12px',
+          background: C.docBg,
+          borderRadius: tweakOpen ? '0' : '0 0 12px 12px',
           boxShadow: '0 8px 40px rgba(0,0,0,0.3), 0 0 0 1px rgba(255,255,255,0.05)',
           position: 'relative',
         }}>
-          {/* Subtle page edge effect */}
           <div style={{
             position: 'absolute', top: 0, left: 0, right: 0, height: 3,
             background: `linear-gradient(90deg, ${C.accent}, #6366f1, ${C.accent})`,
-            borderRadius: '0 0 0 0', opacity: 0.7,
+            opacity: 0.7,
           }} />
-          <div
-            ref={contentRef}
-            style={{
-              padding: '40px 44px', maxHeight: 700, overflowY: 'auto',
-              fontFamily: C.font,
-            }}
-          >
+          <div ref={contentRef} style={{ padding: '40px 44px', fontFamily: C.font }}>
             <MarkdownContent content={content} variant="document" />
           </div>
         </div>
+      )}
+
+      {/* Tweak / Refine box */}
+      {tweakOpen && content && (
+        <GlassCard style={{ borderRadius: '0 0 12px 12px', borderTop: 'none', padding: '14px 20px' }}>
+          <p style={{ fontSize: 12, color: C.textDim, marginBottom: 8 }}>Refine or challenge this output — ask for changes, question a decision, or give new instructions:</p>
+          <textarea
+            value={tweakText}
+            onChange={e => setTweakText(e.target.value)}
+            placeholder="e.g. Make the summary shorter / Move the skills section up / Why did you change X?"
+            rows={3}
+            style={{
+              width: '100%', fontFamily: C.font, fontSize: 13,
+              background: C.inputBg, color: C.textMid,
+              border: `1px solid ${C.border}`, borderRadius: C.radiusSm,
+              padding: 12, resize: 'vertical', lineHeight: 1.6, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleDocRefine(); }}
+          />
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="ghost" onClick={() => { setTweakOpen(false); setTweakText(''); }} style={{ fontSize: 12 }}>Cancel</Btn>
+            <Btn variant="secondary" onClick={handleDocRefine} disabled={!tweakText.trim() || refining} style={{ fontSize: 12, padding: '8px 16px' }}>
+              {refining ? <Spinner size={12} /> : null}
+              Send
+            </Btn>
+          </div>
+        </GlassCard>
       )}
     </div>
   );
@@ -583,14 +624,30 @@ function DocumentPreview({ title, emoji, content, loading }) {
 
 // ─── Analysis Result Block (glass card, screen variant) ─────────────────────────
 
-function ResultBlock({ title, emoji, content, loading }) {
+function ResultBlock({ title, emoji, content, loading, onRefine }) {
   if (!content && !loading) return null;
   const [copied, setCopied] = useState(false);
+  const [tweakOpen, setTweakOpen] = useState(false);
+  const [tweakText, setTweakText] = useState('');
+  const [refining, setRefining] = useState(false);
 
   const copy = () => {
     navigator.clipboard.writeText(content);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleRefine = async () => {
+    if (!tweakText.trim() || !onRefine) return;
+    setRefining(true);
+    try {
+      await onRefine(tweakText.trim());
+      setTweakText('');
+      setTweakOpen(false);
+    } catch (e) {
+      // error handled by parent
+    }
+    setRefining(false);
   };
 
   return (
@@ -609,9 +666,16 @@ function ResultBlock({ title, emoji, content, loading }) {
           {title}
         </h3>
         {content && (
-          <Btn variant="ghost" onClick={copy} style={{ fontSize: 12 }}>
-            {copied ? '✓ Copied' : 'Copy'}
-          </Btn>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {onRefine && (
+              <Btn variant="ghost" onClick={() => setTweakOpen(o => !o)} style={{ fontSize: 12 }}>
+                {tweakOpen ? '✕ Close' : '✏️ Refine'}
+              </Btn>
+            )}
+            <Btn variant="ghost" onClick={copy} style={{ fontSize: 12 }}>
+              {copied ? '✓ Copied' : 'Copy'}
+            </Btn>
+          </div>
         )}
       </div>
       {loading && !content ? (
@@ -620,8 +684,34 @@ function ResultBlock({ title, emoji, content, loading }) {
           <p style={{ fontSize: 13, color: C.textDim, marginTop: 12 }}>Analysing...</p>
         </div>
       ) : (
-        <div style={{ padding: 20, maxHeight: 500, overflowY: 'auto' }}>
+        <div style={{ padding: 20 }}>
           <MarkdownContent content={content} variant="screen" />
+        </div>
+      )}
+      {tweakOpen && content && (
+        <div style={{ padding: '14px 20px', borderTop: `1px solid ${C.border}`, background: C.surface }}>
+          <p style={{ fontSize: 12, color: C.textDim, marginBottom: 8 }}>Challenge or refine this analysis — ask a question, request changes, or push back:</p>
+          <textarea
+            value={tweakText}
+            onChange={e => setTweakText(e.target.value)}
+            placeholder="e.g. Why did you remove X? / Make it more focused on leadership / I disagree with..."
+            rows={3}
+            style={{
+              width: '100%', fontFamily: C.font, fontSize: 13,
+              background: C.inputBg, color: C.textMid,
+              border: `1px solid ${C.border}`, borderRadius: C.radiusSm,
+              padding: 12, resize: 'vertical', lineHeight: 1.6, outline: 'none',
+              boxSizing: 'border-box',
+            }}
+            onKeyDown={e => { if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleRefine(); }}
+          />
+          <div style={{ marginTop: 8, display: 'flex', gap: 8, justifyContent: 'flex-end' }}>
+            <Btn variant="ghost" onClick={() => { setTweakOpen(false); setTweakText(''); }} style={{ fontSize: 12 }}>Cancel</Btn>
+            <Btn variant="secondary" onClick={handleRefine} disabled={!tweakText.trim() || refining} style={{ fontSize: 12, padding: '8px 16px' }}>
+              {refining ? <Spinner size={12} /> : null}
+              Send
+            </Btn>
+          </div>
         </div>
       )}
     </GlassCard>
@@ -802,6 +892,42 @@ export default function App() {
   const handleSaveCV = () => { saveBaseCV(cvText); setSavedCV(cvText); };
   const handleClearCV = () => { clearBaseCV(); setSavedCV(''); };
 
+  const refineCV = async (instruction) => {
+    setLoadingCV(true);
+    try {
+      const result = await callAPI(
+        'You are an expert CV writer. You have previously written a tailored CV. The user has additional instructions. Apply them exactly and return the full updated CV. Respond with ONLY the CV in clean structured text with ## headings, **bold**, and - bullets.',
+        `CURRENT CV:\n${rewrittenCV}\n\nUSER INSTRUCTION:\n${instruction}`
+      );
+      setRewrittenCV(result);
+    } catch (err) { setError(err.message); }
+    setLoadingCV(false);
+  };
+
+  const refineCover = async (instruction) => {
+    setLoadingCover(true);
+    try {
+      const result = await callAPI(
+        'You are an expert cover letter writer. You have previously written a cover letter. The user has additional instructions. Apply them and return the full updated cover letter.',
+        `CURRENT COVER LETTER:\n${coverLetter}\n\nUSER INSTRUCTION:\n${instruction}`
+      );
+      setCoverLetter(result);
+    } catch (err) { setError(err.message); }
+    setLoadingCover(false);
+  };
+
+  const refineChanges = async (instruction) => {
+    setLoadingChanges(true);
+    try {
+      const result = await callAPI(
+        'You are an expert CV consultant. You have provided a change analysis. The user has a follow-up question or challenge. Respond directly and honestly.',
+        `PREVIOUS ANALYSIS:\n${changeSummary}\n\nUSER:\n${instruction}`
+      );
+      setChangeSummary(result);
+    } catch (err) { setError(err.message); }
+    setLoadingChanges(false);
+  };
+
   const hasResults = rewrittenCV || changeSummary || coverLetter;
 
   const textareaStyle = {
@@ -827,6 +953,10 @@ export default function App() {
         @keyframes orbFloat3 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-70px,30px) scale(1.15)} }
         @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
         textarea:focus { border-color: ${C.accent} !important; box-shadow: 0 0 0 3px ${C.accentGlow} !important; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: ${C.surface}; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: ${isDark ? 'rgba(255,255,255,0.25)' : 'rgba(0,0,0,0.25)'}; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: ${isDark ? 'rgba(255,255,255,0.4)' : 'rgba(0,0,0,0.4)'}; }
       `}</style>
 
       <AmbientOrbs />
@@ -985,9 +1115,9 @@ export default function App() {
               </div>
             ) : (
               <>
-                <DocumentPreview title="Rewritten CV" emoji="📄" content={rewrittenCV} loading={loadingCV} />
-                <DocumentPreview title="Cover Letter" emoji="✉️" content={coverLetter} loading={loadingCover} />
-                <ResultBlock title="What Changed & Why" emoji="🔍" content={changeSummary} loading={loadingChanges} />
+                <ResultBlock title="What Changed & Why" emoji="🔍" content={changeSummary} loading={loadingChanges} onRefine={refineChanges} />
+                <DocumentPreview title="Rewritten CV" emoji="📄" content={rewrittenCV} loading={loadingCV} onRefine={refineCV} />
+                <DocumentPreview title="Cover Letter" emoji="✉️" content={coverLetter} loading={loadingCover} onRefine={refineCover} />
               </>
             )}
           </>
