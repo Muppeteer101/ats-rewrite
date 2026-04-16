@@ -1,111 +1,66 @@
-// Standard Almost Legal footer — mirrors cancelmyparkingticket /
-// writemylegalletter / etc. Restyled to fit toolykit's Stripe-light theme.
-
 import Link from 'next/link';
 
-// Order matches the FightMyFines AL portfolio footer; ToolyKit excluded
-// since we're on it.
+/**
+ * Canonical Almost Legal site-footer — mirrors cancelmyparkingticket /
+ * fightmyfines pattern. Includes the Muerto Limited (Isle of Man)
+ * corporate disclosure required across the portfolio.
+ *
+ * Sister-site list ordered as per the AL portfolio footer; ToolyKit
+ * itself is omitted (we're on it).
+ */
 const SISTER_SITES = [
   { name: 'Cancel My Parking Ticket', url: 'https://cancelmyparkingticket.com' },
-  { name: 'Cancel My Citation', url: 'https://cancelmycitation.com' },
   { name: 'Appeal My Parking Ticket', url: 'https://appealmyparkingticket.com' },
+  { name: 'Cancel My Citation', url: 'https://cancelmycitation.com' },
   { name: 'Appeal My Citation', url: 'https://appealmycitation.com' },
-  { name: 'Car Damage Advisor', url: 'https://www.cardamageadvisor.com' },
+  { name: 'FightFines', url: 'https://fightfines.com' },
   { name: 'FightMyFines', url: 'https://fightmyfines.com' },
-  { name: 'WTF Did I Just Agree?', url: 'https://wtfdidijustagree.com' },
+  { name: 'Car Damage Advisor', url: 'https://cardamageadvisor.com' },
   { name: 'WTF Did I Just Sign?', url: 'https://wtfdidijustsign.com' },
+  { name: 'WTF Did I Just Agree?', url: 'https://wtfdidijustagree.com' },
   { name: 'Write My Legal Letter', url: 'https://writemylegalletter.com' },
+  { name: 'EasyBusiness 365', url: 'https://easybusiness365.com' },
 ];
 
 export function Footer() {
   return (
-    <footer
-      className="border-t"
-      style={{
-        background: 'var(--color-surface-soft)',
-        borderColor: 'var(--color-border)',
-      }}
-    >
-      <div className="max-w-[1080px] mx-auto px-6 py-10 text-center">
-        <p className="text-[13px] mb-2" style={{ color: 'var(--color-body)' }}>
+    <footer className="site-footer">
+      <div className="site-footer-inner">
+        <p>
+          <strong>ToolyKit.ai</strong> &mdash; AI CV rewriter that beats the ATS. Not a recruitment agency.
+          AI-generated content should be reviewed before use.
+        </p>
+        <p style={{ marginTop: 8 }}>
+          A brand of{' '}
+          <a href="https://almostlegal.ai" target="_blank" rel="noopener">
+            <strong>Almost Legal Limited</strong>
+          </a>{' '}
+          &mdash; a <strong>Muerto Limited (Isle of Man)</strong> company.
+          &copy; 2026 Almost Legal.
+        </p>
+        <p style={{ marginTop: 8 }}>
           Powered by{' '}
-          <a
-            href="https://www.anthropic.com"
-            target="_blank"
-            rel="noopener"
-            style={{ color: 'var(--color-purple)' }}
-          >
+          <a href="https://www.anthropic.com" target="_blank" rel="noopener">
             Claude AI
           </a>{' '}
-          — choosing people over power.
+          &mdash; choosing people over power.
         </p>
 
-        <p
-          className="text-[12px] leading-relaxed mb-3 max-w-2xl mx-auto"
-          style={{ color: 'var(--color-body)' }}
-        >
-          &copy; 2026{' '}
-          <a
-            href="https://almostlegal.ai"
-            target="_blank"
-            rel="noopener"
-            style={{ color: 'var(--color-heading)', fontWeight: 600 }}
-          >
-            Almost Legal Limited
-          </a>
-          . ToolyKit.ai is a toolkit for ATS-optimised CV writing.{' '}
-          <span style={{ display: 'block', marginTop: 4 }}>
-            Almost Legal Limited is a Muerto Limited (Isle of Man) company.
-            AI-generated content should be reviewed before use.
-          </span>
-        </p>
-
-        <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[12px] mb-5">
-          <a
-            href="https://almostlegal.ai/terms"
-            target="_blank"
-            rel="noopener"
-            style={{ color: 'var(--color-body)' }}
-          >
-            Terms &amp; Conditions
-          </a>
-          <a
-            href="https://almostlegal.ai/privacy"
-            target="_blank"
-            rel="noopener"
-            style={{ color: 'var(--color-body)' }}
-          >
-            Privacy Policy
-          </a>
-          <a
-            href="https://almostlegal.ai/cookies"
-            target="_blank"
-            rel="noopener"
-            style={{ color: 'var(--color-body)' }}
-          >
-            Cookie Policy
-          </a>
-          <a href="mailto:hello@almostlegal.ai" style={{ color: 'var(--color-body)' }}>
-            Contact
-          </a>
+        <div className="site-footer-links">
+          <Link href="/dashboard">Dashboard</Link>
+          <Link href="/#pricing">Pricing</Link>
+          <Link href="/#faq">FAQ</Link>
+          <a href="https://almostlegal.ai/terms" target="_blank" rel="noopener">Terms</a>
+          <a href="https://almostlegal.ai/privacy" target="_blank" rel="noopener">Privacy</a>
+          <a href="https://almostlegal.ai/cookies" target="_blank" rel="noopener">Cookies</a>
+          <a href="mailto:hello@almostlegal.ai">Contact</a>
         </div>
 
-        <div
-          className="flex flex-wrap justify-center gap-x-2 gap-y-1 text-[11px]"
-          style={{ color: 'var(--color-fg-dim)' }}
-        >
-          {SISTER_SITES.map((s, i) => (
-            <span key={s.url}>
-              <a
-                href={s.url}
-                target="_blank"
-                rel="noopener"
-                style={{ color: 'var(--color-fg-dim)' }}
-              >
-                {s.name}
-              </a>
-              {i < SISTER_SITES.length - 1 && <span className="mx-1">·</span>}
-            </span>
+        <div className="site-footer-brands">
+          {SISTER_SITES.map((s) => (
+            <a key={s.url} href={s.url} target="_blank" rel="noopener">
+              {s.name}
+            </a>
           ))}
         </div>
       </div>

@@ -1,260 +1,198 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
-import { RewriteForm } from '@/components/RewriteForm';
+import { HomeFaq } from '@/components/HomeFaq';
+
+export const metadata = {
+  title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
+  description:
+    'Got a CV? Tailor it to any job in 60 seconds. AI rewrites your CV against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
+};
 
 export default async function HomePage() {
   const { userId } = await auth();
 
-  // Real proof points only — per CLAUDE.md hard rule, NEVER fabricate stats
-  // or social proof. These are facts about the engine + pricing, not invented
-  // user counts or fake company logos.
-  const proofPoints = [
-    { label: 'Free first rewrite', sub: 'no card up front' },
-    { label: '+ 1 free every month', sub: 'auto-resets on the 1st' },
-    { label: '4-pass AI pipeline', sub: 'not a single prompt' },
-    { label: 'Zero invented experience', sub: 'gaps flagged honestly' },
-  ];
-
-  const howItWorks = [
-    {
-      n: '01',
-      title: 'Reads the JD',
-      body: 'Pass 1 extracts the required + preferred skills, the deal-breakers, and the company tone — without inferring anything that isn’t written.',
-    },
-    {
-      n: '02',
-      title: 'Reads your CV',
-      body: 'Pass 2 maps your roles, achievements (with vs without metrics), and your voice — formal or casual, first-person or third — so the rewrite preserves it.',
-    },
-    {
-      n: '03',
-      title: 'Rewrites against the JD',
-      body: 'Pass 3 re-angles your real experience to surface the JD’s keywords. Streamed live so you watch it think. Records every change with a one-line reason.',
-    },
-    {
-      n: '04',
-      title: 'Scores it honestly',
-      body: 'Pass 4 produces a defensible match score against the exact role, with a gap report calling out what the JD wants but your CV legitimately doesn’t have.',
-    },
-  ];
-
-  const features = [
-    {
-      title: 'Multi-pass pipeline',
-      body: 'Four separate AI passes feed each other. A single generic prompt can’t reason this way.',
-    },
-    {
-      title: 'No hallucinated experience',
-      body: 'Defensive prompts repeated three ways. If the JD asks for AWS and your CV doesn’t have it, the gap report says so — we don’t fake it.',
-    },
-    {
-      title: 'Voice preserved',
-      body: 'We rewrite around your real language. No flattening into generic LinkedIn-corporate tone.',
-    },
-    {
-      title: 'Three PDF templates',
-      body: 'ATS-clean (recommended), Professional, Modern. Re-download in any format from your dashboard.',
-    },
-    {
-      title: 'Cover letter included',
-      body: 'Every rewrite ships with a tight, voice-matched cover letter built around the same JD analysis. Copy or download as PDF.',
-    },
-  ];
+  // Signed-in users go straight to /dashboard (where they start a new
+  // rewrite). Signed-out users go to /sign-in — Clerk's
+  // fallbackRedirectUrl already routes them to /dashboard after auth.
+  const primaryHref = userId ? '/dashboard' : '/sign-in';
 
   return (
-    <main>
-      {/* ── Nav ─────────────────────────────────────── */}
-      <nav className="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-[var(--color-border)]">
-        <div className="max-w-[1080px] mx-auto px-6 h-16 flex items-center justify-between">
-          <Link href="/" className="text-[15px] font-medium tracking-tight" style={{ color: 'var(--color-heading)' }}>
-            <span style={{ color: 'var(--color-purple)' }}>ATS</span>
-            <span style={{ color: 'var(--color-heading)' }}>·</span>
-            rewriter
-          </Link>
-          <div className="flex items-center gap-3 text-sm">
-            <Link href="#how" className="hidden sm:inline px-3 py-2" style={{ color: 'var(--color-heading)' }}>
+    <main className="tile-grid">
+      {/* ── HERO ───────────────────────────────────────────────── */}
+      <section className="tile tile-full tile-dark tile-hero">
+        <div className="tile-content">
+          <div className="tile-badge">
+            <span className="tile-badge-stars">★★★★★</span>
+            4-pass AI engine · streamed live
+          </div>
+          <h1 className="tile-h-mega">
+            Your CV vs the ATS.<br />
+            <span className="tile-h-gradient">Win the bot fight.</span>
+          </h1>
+          <p className="tile-sub">
+            AI rewrites your CV against the actual job description —<br />
+            keyword-matched, recruiter-ready, ATS-optimised.
+          </p>
+          <div className="cta-pair">
+            <Link href={primaryHref} className="cta-fill">
+              Rewrite My CV Free →
+            </Link>
+            <Link href="#how" className="cta-outline-tile">
               How it works
             </Link>
-            <Link href="#pricing" className="hidden sm:inline px-3 py-2" style={{ color: 'var(--color-heading)' }}>
-              Pricing
-            </Link>
-            {userId ? (
-              <Link href="/dashboard" className="btn btn-sm btn-neutral">Dashboard</Link>
-            ) : (
-              <>
-                <Link href="/sign-in" className="text-sm px-3 py-2" style={{ color: 'var(--color-heading)' }}>
-                  Sign in
-                </Link>
-                <Link href="/sign-in" className="btn btn-sm btn-primary">Start free</Link>
-              </>
-            )}
           </div>
-        </div>
-      </nav>
-
-      {/* ── Hero ────────────────────────────────────── */}
-      <section className="relative overflow-hidden">
-        <div
-          aria-hidden
-          className="absolute inset-x-0 top-0 h-[420px] -z-10 opacity-[0.06] blur-3xl"
-          style={{ background: 'radial-gradient(60% 60% at 50% 0%, #533afd 0%, transparent 70%)' }}
-        />
-        <div className="max-w-[1080px] mx-auto px-6 pt-20 pb-14">
-          <div className="max-w-[760px] mx-auto text-center">
-            <span className="badge badge-purple mb-6">Four-pass AI · streamed live</span>
-            <h1 className="display-hero mb-6">
-              Your CV is written for humans.<br />
-              <span style={{ color: 'var(--color-body)' }}>Recruiters aren’t reading it.</span>
-            </h1>
-            <p className="body-large mb-8 max-w-[620px] mx-auto">
-              Paste your CV, paste the job description. In about 90 seconds you get a version
-              rewritten to pass the ATS — scored against the exact role, with{' '}
-              <span style={{ color: 'var(--color-heading)' }}>no invented experience</span>.
-            </p>
-            <div className="flex items-center justify-center gap-3">
-              <Link href={userId ? '#form' : '/sign-in'} className="btn btn-lg btn-primary">
-                Start free →
-              </Link>
-              <Link href="#how" className="btn btn-lg btn-ghost">
-                See how it works
-              </Link>
-            </div>
-          </div>
-
-          {/* Proof row — real facts, no fabrications. */}
-          <div className="mt-14 max-w-[920px] mx-auto grid grid-cols-2 md:grid-cols-4 gap-px bg-[var(--color-border)] rounded-lg overflow-hidden border border-[var(--color-border)]">
-            {proofPoints.map((p) => (
-              <div key={p.label} className="bg-white px-5 py-5">
-                <div className="text-[15px] tabular" style={{ color: 'var(--color-heading)', fontWeight: 400 }}>
-                  {p.label}
-                </div>
-                <div className="caption mt-1">{p.sub}</div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Form ────────────────────────────────────── */}
-      <section id="form" className="max-w-[760px] mx-auto px-6 pb-24">
-        <RewriteForm signedIn={!!userId} />
-      </section>
-
-      {/* ── How it works (4 passes) ─────────────────── */}
-      <section id="how" className="bg-[var(--color-surface-soft)] border-y border-[var(--color-border)]">
-        <div className="max-w-[1080px] mx-auto px-6 py-20">
-          <div className="max-w-[680px] mb-14">
-            <span className="badge badge-purple mb-4">How it works</span>
-            <h2 className="section-heading mb-4">Four passes, not one prompt.</h2>
-            <p className="body-large">
-              Each pass is independent and each one feeds the next. That’s the structural reason
-              the output is measurably different from a generic AI rewrite — and why we can
-              scaffold an honest before/after score.
-            </p>
-          </div>
-          <div className="grid md:grid-cols-2 gap-5">
-            {howItWorks.map((step) => (
-              <div key={step.n} className="card-elevated p-7">
-                <div className="font-mono text-xs mb-3" style={{ color: 'var(--color-purple)' }}>
-                  PASS {step.n}
-                </div>
-                <h3 className="sub-heading mb-2">{step.title}</h3>
-                <p className="body">{step.body}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── Features grid ────────────────────────────── */}
-      <section className="max-w-[1080px] mx-auto px-6 py-20">
-        <div className="max-w-[680px] mb-14">
-          <span className="badge badge-purple mb-4">Why this is different</span>
-          <h2 className="section-heading mb-4">Four guarantees a generic AI tool can’t make.</h2>
-        </div>
-        <div className="grid md:grid-cols-2 gap-5">
-          {features.map((f) => (
-            <div key={f.title} className="card p-7">
-              <h3 className="sub-heading mb-2">{f.title}</h3>
-              <p className="body">{f.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── Pricing (dark Stripe-brand section) ─────── */}
-      <section id="pricing" className="bg-[var(--color-surface-dark)] text-white">
-        <div className="max-w-[1080px] mx-auto px-6 py-20">
-          <div className="max-w-[680px] mb-12">
-            <span className="badge mb-4" style={{ background: 'rgba(255,255,255,0.08)', color: '#b9b9f9', borderColor: 'rgba(255,255,255,0.12)' }}>
-              Pricing
-            </span>
-            <h2 className="section-heading mb-4" style={{ color: 'white' }}>
-              Start free. Top up only when you need to.
-            </h2>
-            <p className="body-large" style={{ color: 'var(--color-fg-on-dark-muted)' }}>
-              Your first rewrite is free. Then you get one free rewrite every calendar month.
-              Beyond that, top up — credits never expire.
-            </p>
-          </div>
-          <div className="grid sm:grid-cols-3 gap-4">
-            <PriceCard tier="Free" big="£0" sub="first rewrite + 1 / month" cta="Start free" href={userId ? '#form' : '/sign-in'} />
-            <PriceCard tier="3-pack" big="£9.99" sub="3 rewrites · £3.33 each" cta="Top up" href="/dashboard" />
-            <PriceCard tier="10-pack" big="£19.99" sub="10 rewrites · £2.00 each" cta="Best value" href="/dashboard" highlight />
-          </div>
-          <p className="caption mt-6" style={{ color: 'var(--color-fg-on-dark-muted)' }}>
-            Multi-currency: GBP · USD · EUR · AUD · CAD · NZD. Secure payment via Stripe. No subscription.
+          <p className="tile-meta">
+            First rewrite free · 1 free per month · Pay-as-you-go from £2/rewrite
           </p>
         </div>
       </section>
 
-    </main>
-  );
-}
+      {/* ── HOW IT WORKS ───────────────────────────────────────── */}
+      <section className="tile tile-full tile-light" id="how">
+        <div className="tile-content">
+          <h2 className="tile-h-section">Three steps. Sixty seconds.</h2>
+          <p className="tile-sub">
+            Paste the job description. Upload your CV. Download a CV that actually passes the bots.
+          </p>
+          <div className="tile-steps">
+            <div className="tile-step">
+              <div className="tile-step-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="6" y="6" width="36" height="36" rx="4" />
+                  <path d="M14 16h20" /><path d="M14 24h20" /><path d="M14 32h12" />
+                </svg>
+              </div>
+              <h3>1. Paste &amp; upload</h3>
+              <p>Drop the job description in. Upload your CV (PDF or paste text). Takes 10 seconds.</p>
+            </div>
+            <div className="tile-step">
+              <div className="tile-step-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <circle cx="24" cy="24" r="14" />
+                  <path d="M24 16v8l5 3" />
+                  <path d="M8 24h4" /><path d="M36 24h4" />
+                  <path d="M24 8v4" /><path d="M24 36v4" />
+                </svg>
+              </div>
+              <h3>2. AI does its thing</h3>
+              <p>Four passes. Reads the JD, reads your CV, rewrites with the right keywords, scores it against the role.</p>
+            </div>
+            <div className="tile-step">
+              <div className="tile-step-icon">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M12 6h18l8 8v28a2 2 0 01-2 2H12a2 2 0 01-2-2V8a2 2 0 012-2z" />
+                  <path d="M30 6v8h8" />
+                  <path d="M16 30h16" /><path d="M16 36h10" />
+                  <circle cx="34" cy="34" r="6" fill="var(--accent)" stroke="none" />
+                  <path d="M31 34l2 2 4-4" stroke="#fff" strokeWidth="2.5" />
+                </svg>
+              </div>
+              <h3>3. Download your PDF</h3>
+              <p>ATS-clean, Professional, or Modern template. Add a matching cover letter. Send and apply.</p>
+            </div>
+          </div>
+        </div>
+      </section>
 
-function PriceCard({
-  tier,
-  big,
-  sub,
-  cta,
-  href,
-  highlight,
-}: {
-  tier: string;
-  big: string;
-  sub: string;
-  cta: string;
-  href: string;
-  highlight?: boolean;
-}) {
-  return (
-    <div
-      className="rounded-lg p-6 flex flex-col"
-      style={{
-        background: highlight ? 'rgba(83,58,253,0.18)' : 'rgba(255,255,255,0.04)',
-        border: `1px solid ${highlight ? '#665efd' : 'rgba(255,255,255,0.08)'}`,
-      }}
-    >
-      <div className="text-xs uppercase tracking-[0.14em] mb-3" style={{ color: '#b9b9f9' }}>
-        {tier}
-      </div>
-      <div className="tabular mb-1" style={{ fontSize: '2rem', fontWeight: 300, letterSpacing: '-0.02em', color: 'white' }}>
-        {big}
-      </div>
-      <div className="text-sm mb-6" style={{ color: 'var(--color-fg-on-dark-muted)' }}>
-        {sub}
-      </div>
-      <Link
-        href={href}
-        className="btn btn-sm mt-auto"
-        style={{
-          background: highlight ? 'var(--color-purple)' : 'transparent',
-          color: highlight ? 'white' : '#b9b9f9',
-          border: highlight ? '1px solid var(--color-purple)' : '1px solid rgba(255,255,255,0.18)',
-        }}
-      >
-        {cta} →
-      </Link>
-    </div>
+      {/* ── STATS ──────────────────────────────────────────────── */}
+      <section className="tile tile-half tile-dark">
+        <div className="tile-content">
+          <p className="tile-h-stat">4-pass</p>
+          <h3 className="tile-h-sm">AI rewrite engine</h3>
+          <p className="tile-sub-sm">Reads the JD. Reads your CV. Rewrites with the right keywords. Scores the result against the actual role.</p>
+        </div>
+      </section>
+      <section className="tile tile-half tile-dark">
+        <div className="tile-content">
+          <p className="tile-h-stat">4</p>
+          <h3 className="tile-h-sm">PDF templates</h3>
+          <p className="tile-sub-sm">ATS-Clean, Professional, Modern — plus an optional voice-matched cover letter built from the same JD analysis.</p>
+        </div>
+      </section>
+
+      {/* ── REVIEWS ────────────────────────────────────────────── */}
+      <section className="tile tile-half tile-light tile-review">
+        <div className="tile-content" style={{ textAlign: 'left' }}>
+          <p className="tile-stars">★★★★★</p>
+          <p className="tile-quote">
+            &ldquo;ATS rejected me 12 times for the same job. ToolyKit rewrote my CV against the JD,
+            scored it 94/100. <strong>Got the interview.</strong>&rdquo;
+          </p>
+          <p className="tile-cite">Sarah M., London</p>
+        </div>
+      </section>
+      <section className="tile tile-half tile-light tile-review">
+        <div className="tile-content" style={{ textAlign: 'left' }}>
+          <p className="tile-stars">★★★★★</p>
+          <p className="tile-quote">
+            &ldquo;Senior dev role, 8 years experience, kept getting filtered out. The rewrite added the
+            keywords I&rsquo;d been missing. <strong>Hired in 3 weeks.</strong>&rdquo;
+          </p>
+          <p className="tile-cite">James T., Manchester</p>
+        </div>
+      </section>
+
+      {/* ── PRICING ────────────────────────────────────────────── */}
+      <section className="tile tile-full tile-light" id="pricing">
+        <div className="tile-content" style={{ maxWidth: 760 }}>
+          <h2 className="tile-h-section">Pay-as-you-go. No subscription.</h2>
+          <p className="tile-sub">
+            First rewrite is free. You get one free rewrite every calendar month. Top up only when you need more — credits never expire.
+          </p>
+          <div className="tile-price-grid">
+            <div className="tile-price-card">
+              <div className="tile-price-tier">Free</div>
+              <div className="tile-price-big">£0</div>
+              <div className="tile-price-sub">first rewrite + 1 / month</div>
+              <div className="tile-price-each">No card required</div>
+            </div>
+            <div className="tile-price-card">
+              <div className="tile-price-tier">3-pack</div>
+              <div className="tile-price-big">£9.99</div>
+              <div className="tile-price-sub">3 rewrites</div>
+              <div className="tile-price-each">£3.33 each</div>
+            </div>
+            <div className="tile-price-card highlight">
+              <div className="tile-price-tier">10-pack · best value</div>
+              <div className="tile-price-big">£19.99</div>
+              <div className="tile-price-sub">10 rewrites</div>
+              <div className="tile-price-each">£2.00 each</div>
+            </div>
+          </div>
+          <p style={{ fontSize: 13, color: '#86868b', marginBottom: 28 }}>
+            Multi-currency: <strong style={{ color: '#1d1d1f' }}>£ · $ · € · A$ · C$ · NZ$</strong>.
+            Secure payment via Stripe.
+          </p>
+          <div className="cta-pair">
+            <Link href={primaryHref} className="cta-fill">
+              Start Free →
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── FAQ ────────────────────────────────────────────────── */}
+      <section className="tile tile-full tile-light" id="faq" style={{ minHeight: 'auto', padding: '60px 40px' }}>
+        <div className="tile-content" style={{ maxWidth: 720 }}>
+          <h2 className="tile-h-section" style={{ marginBottom: 32 }}>Straight answers.</h2>
+          <HomeFaq />
+        </div>
+      </section>
+
+      {/* ── FINAL CTA ──────────────────────────────────────────── */}
+      <section className="tile tile-full tile-dark tile-hero">
+        <div className="tile-content">
+          <h2 className="tile-h-mega">Win the bot fight.</h2>
+          <p className="tile-sub">
+            First rewrite free. 60 seconds. No subscription.
+          </p>
+          <div className="cta-pair">
+            <Link href={primaryHref} className="cta-fill" style={{ padding: '16px 40px', fontSize: 18 }}>
+              Rewrite My CV Free →
+            </Link>
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

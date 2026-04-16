@@ -1,9 +1,13 @@
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────────────
-   STRIPE-INSPIRED DESIGN SYSTEM
-   Source: ./DESIGN.md (lifted from getdesign@latest add stripe)
-   White canvas · weight-300 display · blue-tinted multi-layer shadows
+   STRIPE-INSPIRED DESIGN SYSTEM (funnel — DO NOT REMOVE)
+   The /rewrite, /dashboard, /sign-in, /sign-up routes and every
+   funnel component (RewriteForm, RewriteRunner, ScoreGauge, etc.)
+   depend on these tokens and component classes (`.btn`, `.card`,
+   `.badge`, `.input`, `.textarea`, `.feed`, `.display-hero`,
+   `.section-heading`, `.body-large`, etc.). Mutating any of these
+   would break the live revenue flow.
 ─────────────────────────────────────────────────────────────────── */
 
 @theme inline {
@@ -28,8 +32,8 @@
   --color-fg-on-dark: #ffffff;
   --color-fg-on-dark-muted: rgba(255, 255, 255, 0.72);
 
-  /* Brand accent */
-  --color-purple: #533afd;                /* signature */
+  /* Brand accent (funnel — Stripe-style purple, NOT touched) */
+  --color-purple: #533afd;
   --color-purple-hover: #4434d4;
   --color-purple-deep: #2e2b8c;
   --color-purple-light: #b9b9f9;
@@ -55,6 +59,13 @@
   --font-mono: var(--font-jetbrains), 'SourceCodePro', 'SFMono-Regular', monospace;
 }
 
+/* Aliases consumed by app/rewrite/[id]/page.tsx (previously undefined). */
+:root {
+  --color-accent: #533afd;
+  --color-fg: #061b31;
+  --color-fg-muted: #64748d;
+}
+
 /* ── Base ───────────────────────────────────────────────────────── */
 
 :root {
@@ -71,7 +82,7 @@ body {
   color: var(--color-body);
   font-family: var(--font-sans);
   font-weight: 300;                       /* Stripe signature: weight 300 default */
-  font-feature-settings: "ss01";          /* approximate the sohne-var ss01 character */
+  font-feature-settings: "ss01";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -81,38 +92,38 @@ body {
   color: white;
 }
 
-/* ── Display typography (per DESIGN.md §3) ──────────────────────── */
+/* ── Display typography (per DESIGN.md §3 — funnel) ─────────────── */
 
 .display-hero {
-  font-size: clamp(2rem, 5vw, 3.5rem);    /* 32 → 56px */
+  font-size: clamp(2rem, 5vw, 3.5rem);
   font-weight: 300;
   line-height: 1.03;
-  letter-spacing: -0.025em;               /* approximates -1.4px @ 56px */
+  letter-spacing: -0.025em;
   color: var(--color-heading);
 }
 .display-large {
-  font-size: clamp(1.75rem, 4vw, 3rem);   /* 28 → 48px */
+  font-size: clamp(1.75rem, 4vw, 3rem);
   font-weight: 300;
   line-height: 1.15;
   letter-spacing: -0.02em;
   color: var(--color-heading);
 }
 .section-heading {
-  font-size: clamp(1.5rem, 3vw, 2rem);    /* 24 → 32px */
+  font-size: clamp(1.5rem, 3vw, 2rem);
   font-weight: 300;
   line-height: 1.10;
   letter-spacing: -0.02em;
   color: var(--color-heading);
 }
 .sub-heading {
-  font-size: 1.375rem;                    /* 22px */
+  font-size: 1.375rem;
   font-weight: 300;
   line-height: 1.10;
   letter-spacing: -0.01em;
   color: var(--color-heading);
 }
 .body-large {
-  font-size: 1.125rem;                    /* 18px */
+  font-size: 1.125rem;
   font-weight: 300;
   line-height: 1.5;
   color: var(--color-body);
@@ -121,7 +132,7 @@ body {
 .caption { font-size: 0.8125rem; color: var(--color-body); }
 .tabular { font-feature-settings: "tnum"; letter-spacing: -0.01em; }
 
-/* ── Cards & elevation (per DESIGN.md §6) ───────────────────────── */
+/* ── Cards & elevation (funnel) ─────────────────────────────────── */
 
 .card {
   background: var(--color-surface);
@@ -143,7 +154,7 @@ body {
   box-shadow: rgba(23, 23, 23, 0.08) 0px 15px 35px 0px;
 }
 
-/* ── Buttons (per DESIGN.md §4) ─────────────────────────────────── */
+/* ── Buttons (funnel — .btn family is Stripe purple) ────────────── */
 
 .btn {
   display: inline-flex;
@@ -186,7 +197,7 @@ body {
 }
 .btn-neutral:hover { background: var(--color-surface-soft); }
 
-/* ── Inputs ─────────────────────────────────────────────────────── */
+/* ── Inputs (funnel) ────────────────────────────────────────────── */
 
 .input,
 .textarea {
@@ -212,7 +223,7 @@ body {
 }
 .textarea { font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.6; }
 
-/* ── Badges ─────────────────────────────────────────────────────── */
+/* ── Badges (funnel) ────────────────────────────────────────────── */
 
 .badge {
   display: inline-flex;
@@ -241,19 +252,15 @@ body {
   border-color: var(--color-border-soft-purple);
 }
 
-/* ── Terminal-style narration feed ─────────────────────────────────
-   The "watch the model think" UX. Keeps a dark surface inside a light
-   card so the engine output reads like a real terminal — high contrast
-   against the rest of the Stripe-light page.
-─────────────────────────────────────────────────────────────────── */
+/* ── Terminal narration feed (funnel — RewriteRunner) ───────────── */
 
 .feed {
-  background: #061b31;                    /* deep navy — matches heading colour */
+  background: #061b31;
   color: #d6d9fc;
   border-radius: 6px;
   font-family: var(--font-mono);
   font-size: 0.75rem;
-  line-height: 2;                         /* DESIGN.md spec: 2.0 line-height for code */
+  line-height: 2;
   font-weight: 500;
   padding: 0.5rem 0;
   font-feature-settings: normal;
@@ -264,7 +271,7 @@ body {
 .feed-line.ok { color: #15be53; }
 .feed-line.warn { color: #fbbf24; }
 
-/* ── Decorative ─────────────────────────────────────────────────── */
+/* ── Decorative (funnel) ────────────────────────────────────────── */
 
 .gradient-ruby-magenta {
   background: linear-gradient(135deg, #ea2261 0%, #f96bee 100%);
@@ -280,3 +287,274 @@ body {
 ::-webkit-scrollbar-track { background: var(--color-surface-soft); }
 ::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 5px; }
 ::-webkit-scrollbar-thumb:hover { background: var(--color-border-soft-purple); }
+
+
+/* ════════════════════════════════════════════════════════════════════
+   ALMOST LEGAL PORTFOLIO — Apple-style chrome (homepage + nav + footer)
+   Ported verbatim from cancelmyparkingticket.com / fightmyfines.com.
+   ToolyKit accent = Apple Blue #0071e3 (canonical software blue).
+   These classes are SCOPED to the homepage / global nav / global footer
+   — they intentionally do not collide with the Stripe `.btn` / `.card`
+   / `.badge` / `.input` family used by the funnel.
+   ════════════════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #fafafa;
+  --surface: rgba(0,0,0,0.03);
+  --surface-hover: rgba(0,0,0,0.06);
+  --border: rgba(0,0,0,0.08);
+  --border-hover: rgba(0,0,0,0.16);
+  --fg: #1d1d1f;
+  --fg-muted: #6e6e73;
+  --accent: #0071e3;                       /* Apple Blue */
+  --accent-glow: rgba(0,113,227,0.2);
+  --accent-bg: rgba(0,113,227,0.06);
+  --nav-bg: rgba(250,250,250,0.85);
+  --nav-border: rgba(0,0,0,0.06);
+  --max-w: 1100px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.06);
+  --shadow-lg: 0 8px 30px rgba(0,0,0,0.08);
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Pill nav ───────────────────────────────────────────────────── */
+
+.pill-nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  height: 52px;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 24px;
+  background: var(--nav-bg);
+  backdrop-filter: blur(20px) saturate(1.8);
+  -webkit-backdrop-filter: blur(20px) saturate(1.8);
+  border-bottom: 1px solid var(--nav-border);
+}
+.pill-nav-logo {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 15px; font-weight: 700; color: var(--fg);
+  text-decoration: none; letter-spacing: -0.02em;
+}
+.pill-nav-logo span { color: var(--fg-muted); font-weight: 400; }
+.pill-nav-links { display: flex; gap: 24px; align-items: center; }
+.pill-nav-links a {
+  color: var(--fg-muted); text-decoration: none;
+  font-size: 13px; font-weight: 500; transition: color 0.2s;
+}
+.pill-nav-links a:hover { color: var(--fg); }
+.pill-nav-links a.btn-coral { color: #fff; }
+.pill-nav-links a.btn-coral:hover { color: #fff; }
+@media (max-width: 768px) {
+  .pill-nav { padding: 0 16px; }
+  .pill-nav-links a:not(.btn-coral) { display: none; }
+}
+
+/* Pill-nav coral button (Apple-blue pill, scoped — not the funnel .btn) */
+.btn-coral {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  background: var(--accent); color: #fff; border: none;
+  padding: 11px 24px; border-radius: 980px;
+  font-size: 15px; font-weight: 500; font-family: inherit;
+  cursor: pointer; text-decoration: none; transition: all 0.2s; white-space: nowrap;
+}
+.btn-coral:hover { filter: brightness(1.1); transform: translateY(-1px); }
+.btn-coral:active { transform: translateY(0); }
+.btn-coral-sm { padding: 7px 16px; font-size: 13px; }
+
+/* ── Apple-style tile grid (homepage only) ──────────────────────── */
+
+.tile-grid {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 12px;
+  padding: 12px 12px 12px; max-width: 100%;
+}
+.tile {
+  border-radius: 20px; overflow: hidden; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; min-height: 500px; padding: 80px 40px;
+}
+.tile-full { grid-column: 1 / -1; }
+.tile-half { grid-column: span 1; }
+@media (max-width: 734px) {
+  .tile-half { grid-column: 1 / -1; }
+  .tile { padding: 60px 24px; min-height: 400px; }
+}
+
+.tile-dark { background: #1d1d1f; color: #f5f5f7; }
+.tile-light { background: #f5f5f7; color: #1d1d1f; }
+
+.tile-hero { min-height: 85vh; }
+.tile-content { max-width: 680px; margin: 0 auto; }
+
+/* Tile badge */
+.tile-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 6px 16px; border-radius: 980px;
+  border: 1px solid rgba(255,255,255,0.12);
+  font-size: 13px; font-weight: 500; color: #86868b; margin-bottom: 28px;
+}
+.tile-badge-stars { color: #f59e0b; letter-spacing: 1px; }
+
+/* Tile typography */
+/* Tile typography color inheritance — every heading and paragraph
+   inside a tile must inherit color from the parent .tile-dark (#f5f5f7)
+   or .tile-light (#1d1d1f). Without this, any pre-existing global
+   h1/h2/h3 { color: var(--something) } rule from this repo would override
+   the tile palette and produce invisible dark-on-dark text in light mode. */
+.tile h1, .tile h2, .tile h3, .tile p,
+.tile-h-mega, .tile-h-section, .tile-h-sm, .tile-h-stat {
+  color: inherit;
+}
+
+.tile-h-mega {
+  font-size: clamp(2.8rem, 7vw, 5rem); font-weight: 600;
+  line-height: 1.05; letter-spacing: -0.025em; margin-bottom: 16px;
+}
+.tile-h-gradient {
+  background: linear-gradient(135deg, #60a5fa, #38bdf8, #818cf8, #c084fc);
+  background-size: 300% 300%;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  animation: tile-grad 6s ease-in-out infinite;
+}
+@keyframes tile-grad {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+.tile-h-section {
+  font-size: clamp(2rem, 5vw, 3.5rem); font-weight: 600;
+  line-height: 1.08; letter-spacing: -0.02em; margin-bottom: 12px;
+}
+.tile-h-sm {
+  font-size: clamp(1.2rem, 2.5vw, 1.6rem); font-weight: 600;
+  line-height: 1.15; margin-bottom: 8px;
+}
+.tile-h-stat {
+  font-size: clamp(3.5rem, 9vw, 6rem); font-weight: 600;
+  line-height: 1; letter-spacing: -0.03em; margin-bottom: 8px;
+}
+.tile-sub {
+  font-size: clamp(1rem, 2vw, 1.3rem); color: #6e6e73;
+  line-height: 1.5; margin-bottom: 24px;
+}
+.tile-dark .tile-sub { color: #86868b; }
+.tile-sub-sm { font-size: 15px; color: #86868b; line-height: 1.5; }
+.tile-meta { font-size: 13px; color: #86868b; margin-top: 24px; }
+
+/* Tile CTAs */
+.cta-pair { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; }
+.cta-fill {
+  background: var(--accent); color: #fff;
+  padding: 12px 28px; border-radius: 980px;
+  font-size: 1rem; font-weight: 400; transition: all 0.2s; text-decoration: none;
+}
+.cta-fill:hover { filter: brightness(1.1); }
+.cta-outline-tile {
+  padding: 12px 28px; border-radius: 980px;
+  font-size: 1rem; font-weight: 400;
+  border: 2px solid currentColor; transition: all 0.2s; text-decoration: none;
+}
+.cta-outline-tile:hover { opacity: 0.7; }
+
+/* Tile steps */
+.tile-steps {
+  display: flex; gap: 40px; justify-content: center; flex-wrap: wrap; margin-top: 40px;
+}
+.tile-step { text-align: center; max-width: 220px; }
+.tile-step-icon {
+  margin-bottom: 16px; display: flex; justify-content: center; align-items: center;
+}
+.tile-step h3 { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+.tile-step p { font-size: 13px; color: #6e6e73; line-height: 1.5; }
+.tile-dark .tile-step p { color: #86868b; }
+
+/* Tile reviews */
+.tile-review { min-height: 300px; justify-content: flex-start; padding-top: 48px; }
+.tile-stars { color: #f59e0b; font-size: 16px; letter-spacing: 2px; margin-bottom: 16px; }
+.tile-quote {
+  font-size: clamp(1rem, 2vw, 1.2rem); line-height: 1.6; margin-bottom: 16px;
+}
+.tile-quote strong { font-weight: 600; }
+.tile-cite { font-size: 14px; color: #6e6e73; }
+
+/* Pricing tile cards */
+.tile-price-grid {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  gap: 12px; margin: 32px auto; max-width: 640px;
+}
+@media (max-width: 640px) { .tile-price-grid { grid-template-columns: 1fr; } }
+.tile-price-card {
+  background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.08);
+  border-radius: 14px; padding: 22px 18px; text-align: center;
+}
+.tile-price-card.highlight {
+  background: rgba(0,113,227,0.06);
+  border-color: rgba(0,113,227,0.3);
+}
+.tile-price-tier {
+  font-size: 12px; font-weight: 600; color: var(--accent);
+  text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px;
+}
+.tile-price-big {
+  font-size: 28px; font-weight: 700; color: #1d1d1f; letter-spacing: -0.02em;
+}
+.tile-price-sub { font-size: 13px; color: #6e6e73; margin-top: 4px; }
+.tile-price-each { font-size: 12px; color: #86868b; margin-top: 6px; font-weight: 500; }
+
+/* ── FAQ (homepage) ─────────────────────────────────────────────── */
+
+.faq-item { border-bottom: 1px solid rgba(0,0,0,0.08); }
+.faq-trigger {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 100%; padding: 20px 0;
+  background: none; border: none; color: #1d1d1f;
+  font-size: 16px; font-weight: 600; font-family: inherit;
+  cursor: pointer; text-align: left; letter-spacing: -0.01em;
+}
+.faq-trigger:hover { color: var(--accent); }
+.faq-answer { padding: 0 0 20px; color: #6e6e73; line-height: 1.7; font-size: 15px; }
+
+/* ── Site footer (canonical Almost Legal) ───────────────────────── */
+
+.site-footer {
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding: 32px 24px;
+  color: #6e6e73; font-size: 12px; line-height: 1.7;
+  background: #fafafa;
+}
+.site-footer-inner { max-width: var(--max-w); margin: 0 auto; text-align: center; }
+.site-footer strong { color: #1d1d1f; }
+.site-footer a { color: #6e6e73; text-decoration: none; transition: color 0.15s; }
+.site-footer a:hover { color: var(--accent); }
+.site-footer-links {
+  display: flex; flex-wrap: wrap; gap: 14px;
+  justify-content: center; margin: 14px 0 12px;
+  font-size: 12px;
+}
+.site-footer-brands {
+  display: flex; flex-wrap: wrap; gap: 8px 14px;
+  justify-content: center; margin-top: 10px;
+  font-size: 11px; color: #86868b;
+}
+.site-footer-brands a { color: #86868b; }
+
+/* ── Reveal animation ───────────────────────────────────────────── */
+
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity 0.5s, transform 0.5s cubic-bezier(.16,1,.3,1); }
+.reveal.visible { opacity: 1; transform: translateY(0); }
+.delay-1 { transition-delay: 0.1s; }
+.delay-2 { transition-delay: 0.2s; }
+
+/* Scroll offset for in-page anchor jumps under the fixed pill-nav. */
+[id] { scroll-margin-top: 70px; }
+
+/* Push every page's content clear of the fixed pill-nav (52px tall).
+   This applies globally to <body> so the funnel pages (/dashboard,
+   /rewrite/[id], /sign-in, /sign-up) — which we are not allowed to
+   modify — still sit clear of the canonical nav strip. Their own
+   sticky inline navs then stick at top: 52px instead of top: 0. */
+body { padding-top: 52px; }
+
+/* Funnel sticky navs use `sticky top-0` (Tailwind). With body padded
+   above, they sit just beneath the pill-nav. Bump them flush so there's
+   no visible gap of body background between the two strips. */
+nav.sticky.top-0 { top: 0 !important; }

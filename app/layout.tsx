@@ -4,10 +4,11 @@ import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { RefTracker } from '@/components/RefTracker';
 import { Footer } from '@/components/Footer';
+import { Navbar } from '@/components/Navbar';
 import './globals.css';
 
 // Inter @ weights 300/400 mirrors the sohne-var weight 300 signature from
-// DESIGN.md — never bold for headlines.
+// DESIGN.md — never bold for headlines on funnel pages.
 const inter = Inter({
   subsets: ['latin'],
   weight: ['300', '400', '500'],
@@ -24,21 +25,21 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ATS Rewriter — A CV that actually passes the bots',
+  title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
   description:
-    'Paste your CV, paste the job description. In about 90 seconds you get a version rewritten to pass the ATS — scored against the exact role, with no invented experience.',
+    'Got a CV? Tailor it to any job in 60 seconds. AI rewrites your CV against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   openGraph: {
-    title: 'ATS Rewriter — A CV that actually passes the bots',
+    title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
     description:
       'A four-pass AI pipeline that rewrites your CV against the exact job description. ATS-scored. No hallucinated experience.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ATS Rewriter',
+    title: 'ToolyKit — AI CV Rewriter',
     description:
-      'A CV rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you’re applying to.',
+      'A CV rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you\u2019re applying to.',
   },
 };
 
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Suspense fallback={null}>
             <RefTracker />
           </Suspense>
+          <Navbar />
           {children}
           <Footer />
         </body>
