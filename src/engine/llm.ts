@@ -38,6 +38,12 @@ export async function callJson<T>(opts: {
   temperature?: number;
   maxTokens?: number;
 }): Promise<T> {
+  // Assistant-prefill: force the model to continue as a JSON object rather
+  // than producing prose preambles like "Here's the JSON:\n\n{...}". This is
+  // critical for Haiku reliability — Sonnet tended to honour "no prose"
+  // instructions but Haiku is chattier without the prefill.
+  const PREFILL = '{';
+
   const res = await client().messages.create({
     model: opts.model,
     max_tokens: opts.maxTokens ?? 4096,
@@ -46,7 +52,12 @@ export async function callJson<T>(opts: {
     // for 5 min. Anthropic charges 1.25x on write, 0.1x on read — we break
     // even at 3 uses within the window.
     system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: opts.user }],
+    messages: [
+      { role: 'user', content: opts.user },
+      { role: 'assistant', content: PREFILL },
+    ],
+    // stop the model generating after it closes the outer JSON object.
+    stop_sequences: ['\n\nHuman:', '```\n'],
   });
 
   const block = res.content.find((c) => c.type === 'text');
@@ -54,7 +65,9 @@ export async function callJson<T>(opts: {
     throw new Error('LLM returned no text block.');
   }
 
-  const json = extractJson(block.text);
+  // Prepend the prefill — the model's response continues from it.
+  const raw = PREFILL + block.text;
+  const json = extractJson(raw);
   const parsed = opts.schema.safeParse(json);
   if (!parsed.success) {
     // Surface the validation error clearly — usually means the prompt
@@ -107,16 +120,22 @@ export async function* streamText(opts: {
   temperature?: number;
   maxTokens?: number;
 }): AsyncGenerator<string, string, void> {
+  const PREFILL = '{';
   const stream = client().messages.stream({
     model: opts.model,
     max_tokens: opts.maxTokens ?? 8192,
     temperature: opts.temperature ?? 0.4,
     // Prompt caching on the rewrite system prompt — biggest cache win.
     system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: opts.user }],
+    messages: [
+      { role: 'user', content: opts.user },
+      { role: 'assistant', content: PREFILL },
+    ],
   });
 
-  let full = '';
+  let full = PREFILL;
+  // Yield the prefill first so downstream JSON extraction sees the opening brace.
+  yield PREFILL;
   for await (const event of stream) {
     if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
       full += event.delta.text;
