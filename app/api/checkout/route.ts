@@ -23,18 +23,22 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = (await req.json()) as { pack?: number; currency?: string };
+  const body = (await req.json()) as { pack?: number };
   const packNum = Number(body.pack);
   const pack: PackSize | null = packNum === 3 ? 3 : packNum === 10 ? 10 : null;
   if (!pack) {
     return NextResponse.json({ error: "pack must be 3 or 10" }, { status: 400 });
   }
 
-  const currencyRaw = (body.currency ?? 'GBP').toUpperCase();
-  if (!isSupportedCurrency(currencyRaw)) {
-    return NextResponse.json({ error: `unsupported currency: ${currencyRaw}` }, { status: 400 });
+  // Currency is LOCKED to the user's geo-IP — derived from the
+  // Vercel-set `x-vercel-ip-country` header, NEVER from client input.
+  // Stops a UK visitor from picking USD to arbitrage FX.
+  const { geoFromHeaders } = await import('@/lib/geo');
+  const geo = geoFromHeaders(req.headers);
+  const currency: Currency = geo.currency;
+  if (!isSupportedCurrency(currency)) {
+    return NextResponse.json({ error: `unsupported currency: ${currency}` }, { status: 400 });
   }
-  const currency = currencyRaw as Currency;
 
   const user = await currentUser();
   const customerEmail = user?.primaryEmailAddress?.emailAddress;
