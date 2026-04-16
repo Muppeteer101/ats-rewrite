@@ -3,34 +3,30 @@
 import { useState } from 'react';
 import type { RewriteOutput } from '@/src/engine/schemas';
 
-/**
- * Per-bullet change rationale — every rewrite includes a one-sentence
- * "why this changed" explanation. This is the feature competitors don't
- * have, per ats-engine-architecture.md §6.
- */
 export function ChangeRationaleList({ rewrite }: { rewrite: RewriteOutput }) {
   const [expanded, setExpanded] = useState(true);
   const totalBullets = rewrite.roles.reduce((n, r) => n + r.bullets.length, 0);
 
   return (
-    <div className="card p-6">
+    <div className="card-elevated p-7">
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
         className="flex items-center justify-between w-full text-left"
       >
         <div>
-          <h3 className="text-lg font-semibold mb-0.5">Change report</h3>
-          <p className="text-xs text-[var(--color-fg-muted)]">
-            Every line we rewrote and why. {totalBullets} bullet
-            {totalBullets === 1 ? '' : 's'} reframed.
+          <h3 className="sub-heading mb-1">Change report</h3>
+          <p className="caption">
+            Every line we rewrote and why · {totalBullets} bullet{totalBullets === 1 ? '' : 's'} reframed
           </p>
         </div>
-        <span className="text-[var(--color-fg-muted)]">{expanded ? '−' : '+'}</span>
+        <span className="text-xl tabular" style={{ color: 'var(--color-purple)' }}>
+          {expanded ? '−' : '+'}
+        </span>
       </button>
 
       {expanded && (
-        <div className="mt-6 space-y-6">
+        <div className="mt-7 space-y-7">
           {rewrite.summary && (
             <BulletDiff
               role="Professional summary"
@@ -42,7 +38,7 @@ export function ChangeRationaleList({ rewrite }: { rewrite: RewriteOutput }) {
 
           {rewrite.roles.map((role) => (
             <div key={`${role.title}-${role.dates}`}>
-              <div className="text-xs uppercase tracking-wider text-[var(--color-accent)] mb-3">
+              <div className="text-[11px] uppercase tracking-[0.14em] mb-3" style={{ color: 'var(--color-purple)' }}>
                 {role.title} · {role.company} · {role.dates}
               </div>
               <div className="space-y-3">
@@ -70,26 +66,29 @@ function BulletDiff({
   reason: string;
 }) {
   return (
-    <div className="border border-[var(--color-border)] rounded-lg p-4 hover:border-[var(--color-fg-dim)] transition-colors">
+    <div className="border border-[var(--color-border)] rounded-[6px] p-4 hover:border-[var(--color-border-soft-purple)] transition-colors">
       {role && (
-        <div className="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] mb-2">{role}</div>
+        <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
+          {role}
+        </div>
       )}
-      <div className="grid md:grid-cols-2 gap-3 text-sm">
+      <div className="grid md:grid-cols-2 gap-4 text-sm">
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-[var(--color-fg-dim)] mb-1">
+          <div className="text-[10px] uppercase tracking-[0.14em] mb-1.5" style={{ color: 'var(--color-body)' }}>
             Before
           </div>
-          <p className="text-[var(--color-fg-muted)] leading-relaxed">{before || '(empty)'}</p>
+          <p style={{ color: 'var(--color-body)', lineHeight: 1.55 }}>{before || '(empty)'}</p>
         </div>
         <div>
-          <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent-2)] mb-1">
+          <div className="text-[10px] uppercase tracking-[0.14em] mb-1.5" style={{ color: 'var(--color-purple)' }}>
             After
           </div>
-          <p className="text-[var(--color-fg)] leading-relaxed">{after}</p>
+          <p style={{ color: 'var(--color-heading)', lineHeight: 1.55 }}>{after}</p>
         </div>
       </div>
-      <div className="mt-3 pt-3 border-t border-[var(--color-border)] text-xs text-[var(--color-fg-muted)]">
-        <strong className="text-[var(--color-fg)]">Why:</strong> {reason}
+      <div className="mt-3 pt-3 border-t border-[var(--color-border)] caption">
+        <span style={{ color: 'var(--color-heading)', fontWeight: 400 }}>Why: </span>
+        {reason}
       </div>
     </div>
   );

@@ -87,7 +87,6 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
   async function startRewrite() {
     if (!signedIn) {
-      // Redirect to sign-in, return URL = home so the form is preserved.
       router.push('/sign-in');
       return;
     }
@@ -103,9 +102,6 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
     setStatus('starting');
     setError(null);
 
-    // We POST to the SSE endpoint to lock in the credit + rewriteId, but
-    // the actual streaming UI lives on /rewrite/[id]. So we stash the
-    // payload in sessionStorage and let the result page initiate the stream.
     const payload = {
       cvText,
       jdText,
@@ -120,17 +116,17 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
     router.push(`/rewrite/${draftId}`);
   }
 
+  const helperBtn =
+    'text-xs px-3 py-2 rounded-[4px] border border-[var(--color-border)] bg-white text-[var(--color-heading)] hover:bg-[var(--color-surface-soft)] transition-colors';
+
   return (
-    <div className="card p-6 md:p-8">
-      {/* CV input */}
+    <div className="card-elevated p-6 md:p-8">
       <div className="mb-6">
-        <label className="block text-sm font-semibold mb-2">Your CV</label>
-        <div className="flex gap-2 mb-3">
-          <button
-            type="button"
-            onClick={() => cvFileRef.current?.click()}
-            className="text-xs px-3 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)]"
-          >
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-label)' }}>
+          Your CV
+        </label>
+        <div className="flex gap-2 mb-3 items-center">
+          <button type="button" onClick={() => cvFileRef.current?.click()} className={helperBtn}>
             Upload PDF / DOCX
           </button>
           <input
@@ -141,7 +137,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             className="hidden"
           />
           {cvFileName && (
-            <span className="text-xs text-[var(--color-fg-muted)] self-center">
+            <span className="caption tabular">
               {cvFileName} · {cvText.length.toLocaleString()} chars
             </span>
           )}
@@ -155,24 +151,25 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
           }}
           rows={6}
           placeholder="…or paste your CV text here."
-          className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-sm font-mono text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
+          className="textarea"
         />
       </div>
 
-      {/* JD input */}
       <div className="mb-6">
-        <label className="block text-sm font-semibold mb-2">The job description</label>
+        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-label)' }}>
+          The job description
+        </label>
         <div className="flex gap-2 mb-3 text-xs">
           {(['paste', 'url', 'file'] as JdMode[]).map((m) => (
             <button
               key={m}
               type="button"
               onClick={() => setJdMode(m)}
-              className={`px-3 py-2 rounded-lg border transition-colors ${
+              className={
                 jdMode === m
-                  ? 'bg-[var(--color-accent)] text-[var(--color-bg)] border-[var(--color-accent)] font-semibold'
-                  : 'border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
-              }`}
+                  ? 'px-3 py-2 rounded-[4px] bg-[var(--color-purple)] text-white border border-[var(--color-purple)]'
+                  : helperBtn
+              }
             >
               {m === 'paste' ? 'Paste' : m === 'url' ? 'URL' : 'Upload'}
             </button>
@@ -188,7 +185,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             }}
             rows={6}
             placeholder="Paste the full job posting here."
-            className="w-full bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-sm font-mono text-[var(--color-fg)] focus:outline-none focus:border-[var(--color-accent)]"
+            className="textarea"
           />
         )}
         {jdMode === 'url' && (
@@ -198,13 +195,13 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               value={jdUrl}
               onChange={(e) => setJdUrl(e.target.value)}
               placeholder="https://example.com/jobs/senior-product-manager"
-              className="flex-1 bg-[var(--color-bg)] border border-[var(--color-border)] rounded-lg p-3 text-sm focus:outline-none focus:border-[var(--color-accent)]"
+              className="input"
             />
             <button
               type="button"
               onClick={handleJdUrl}
               disabled={status === 'parsing' || !jdUrl}
-              className="px-4 py-2 rounded-lg bg-[var(--color-surface-2)] border border-[var(--color-border)] text-sm hover:bg-[var(--color-border)] disabled:opacity-40"
+              className="btn btn-sm btn-neutral disabled:opacity-40"
             >
               {status === 'parsing' ? 'Scraping…' : 'Scrape'}
             </button>
@@ -212,11 +209,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         )}
         {jdMode === 'file' && (
           <div className="flex gap-2 items-center">
-            <button
-              type="button"
-              onClick={() => jdFileRef.current?.click()}
-              className="text-xs px-3 py-2 rounded-lg border border-[var(--color-border)] hover:bg-[var(--color-surface-2)]"
-            >
+            <button type="button" onClick={() => jdFileRef.current?.click()} className={helperBtn}>
               Upload PDF / DOCX
             </button>
             <input
@@ -227,18 +220,18 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               className="hidden"
             />
             {jdFileName && (
-              <span className="text-xs text-[var(--color-fg-muted)]">
+              <span className="caption tabular">
                 {jdFileName} · {jdText.length.toLocaleString()} chars
               </span>
             )}
           </div>
         )}
         {jdText && jdMode !== 'paste' && (
-          <details className="mt-3 text-xs text-[var(--color-fg-muted)]">
-            <summary className="cursor-pointer hover:text-[var(--color-fg)]">
+          <details className="mt-3 caption">
+            <summary className="cursor-pointer hover:text-[var(--color-heading)]">
               Preview ({jdText.length.toLocaleString()} chars)
             </summary>
-            <div className="mt-2 max-h-40 overflow-y-auto p-3 bg-[var(--color-bg)] rounded-lg border border-[var(--color-border)] font-mono whitespace-pre-wrap">
+            <div className="mt-2 max-h-40 overflow-y-auto p-3 bg-[var(--color-surface-soft)] rounded-[4px] border border-[var(--color-border)] font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
               {jdText.slice(0, 1500)}
               {jdText.length > 1500 ? '…' : ''}
             </div>
@@ -247,8 +240,8 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-lg border border-[var(--color-danger)] bg-[var(--color-danger)]/10 text-sm text-[var(--color-danger)]">
-          {error}
+        <div className="mb-4 p-3 rounded-[4px] border" style={{ background: 'rgba(234,34,97,0.06)', borderColor: 'rgba(234,34,97,0.3)', color: 'var(--color-ruby)' }}>
+          <span className="text-sm">{error}</span>
         </div>
       )}
 
@@ -256,7 +249,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         type="button"
         onClick={startRewrite}
         disabled={status === 'starting' || status === 'redirecting' || status === 'parsing'}
-        className="w-full py-4 rounded-lg bg-[var(--color-accent)] text-[var(--color-bg)] font-semibold text-base hover:opacity-90 transition-opacity disabled:opacity-40"
+        className="btn btn-lg btn-primary w-full disabled:opacity-50"
       >
         {status === 'starting' || status === 'redirecting'
           ? 'Starting engine…'
@@ -264,7 +257,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             ? 'Rewrite my CV →'
             : 'Sign in to start (free)'}
       </button>
-      <p className="text-xs text-[var(--color-fg-dim)] mt-3 text-center">
+      <p className="caption mt-3 text-center">
         First rewrite is free. Then 1 free every month, or top up: 3 for £9.99 / 10 for £19.99.
       </p>
     </div>

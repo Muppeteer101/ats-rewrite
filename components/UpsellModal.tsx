@@ -4,15 +4,10 @@ import { useEffect, useState } from 'react';
 import { PACKS } from '@/lib/stripe';
 import { SUPPORTED_CURRENCIES, type Currency } from '@/lib/fx';
 
-/**
- * Shown when /api/rewrite returns 402 (out of credits) — or from the
- * dashboard's "Get more credits" button. Two packs, multi-currency picker.
- */
 export function UpsellModal({ onClose }: { onClose?: () => void }) {
   const [currency, setCurrency] = useState<Currency>('GBP');
   const [busy, setBusy] = useState<3 | 10 | null>(null);
 
-  // Best-effort default currency from browser locale.
   useEffect(() => {
     try {
       const locale = navigator.language.toUpperCase();
@@ -54,20 +49,19 @@ export function UpsellModal({ onClose }: { onClose?: () => void }) {
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-      <div className="card max-w-lg w-full p-6">
-        <div className="flex items-start justify-between mb-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: 'rgba(13, 37, 61, 0.45)' }}>
+      <div className="card-elevated max-w-lg w-full p-7">
+        <div className="flex items-start justify-between mb-5">
           <div>
-            <h2 className="text-2xl font-bold mb-1">You’re out of credits</h2>
-            <p className="text-sm text-[var(--color-fg-muted)]">
-              Top up to keep tailoring CVs to specific roles.
-            </p>
+            <h2 className="sub-heading mb-1">You’re out of credits</h2>
+            <p className="caption">Top up to keep tailoring CVs to specific roles.</p>
           </div>
           {onClose && (
             <button
               type="button"
               onClick={onClose}
-              className="text-[var(--color-fg-muted)] hover:text-[var(--color-fg)] text-2xl leading-none"
+              className="text-2xl leading-none px-2"
+              style={{ color: 'var(--color-body)' }}
               aria-label="Close"
             >
               ×
@@ -75,8 +69,8 @@ export function UpsellModal({ onClose }: { onClose?: () => void }) {
           )}
         </div>
 
-        <div className="mb-4">
-          <label className="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] block mb-2">
+        <div className="mb-5">
+          <label className="text-[11px] uppercase tracking-[0.14em] block mb-2" style={{ color: 'var(--color-body)' }}>
             Currency
           </label>
           <div className="flex gap-1 flex-wrap">
@@ -85,11 +79,20 @@ export function UpsellModal({ onClose }: { onClose?: () => void }) {
                 key={c}
                 type="button"
                 onClick={() => setCurrency(c)}
-                className={`text-xs px-3 py-1.5 rounded border ${
+                className="text-xs px-3 py-1.5 rounded-[4px] border transition-colors"
+                style={
                   currency === c
-                    ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/10 text-[var(--color-fg)]'
-                    : 'border-[var(--color-border)] text-[var(--color-fg-muted)]'
-                }`}
+                    ? {
+                        borderColor: 'var(--color-purple)',
+                        background: 'var(--color-purple-soft)',
+                        color: 'var(--color-purple)',
+                      }
+                    : {
+                        borderColor: 'var(--color-border)',
+                        color: 'var(--color-body)',
+                        background: 'white',
+                      }
+                }
               >
                 {c}
               </button>
@@ -104,31 +107,32 @@ export function UpsellModal({ onClose }: { onClose?: () => void }) {
               type="button"
               onClick={() => buy(p.pack)}
               disabled={busy !== null}
-              className={`text-left p-4 rounded-lg border transition-colors disabled:opacity-50 ${
-                p.highlight
-                  ? 'border-[var(--color-accent)] bg-[var(--color-accent)]/5'
-                  : 'border-[var(--color-border)] hover:bg-[var(--color-surface-2)]'
-              }`}
+              className="text-left p-5 rounded-[6px] border transition-colors disabled:opacity-50"
+              style={{
+                borderColor: p.highlight ? 'var(--color-purple)' : 'var(--color-border)',
+                background: p.highlight ? 'var(--color-purple-soft)' : 'white',
+              }}
             >
               {p.highlight && (
-                <div className="text-[10px] uppercase tracking-wider text-[var(--color-accent)] font-semibold mb-1">
-                  Best value
-                </div>
+                <span className="badge badge-purple mb-2">Best value</span>
               )}
-              <div className="text-2xl font-bold mb-0.5">{p.credits} rewrites</div>
-              <div className="text-3xl font-bold text-[var(--color-accent)] mb-1">
+              <div className="tabular" style={{ fontSize: '1.5rem', fontWeight: 300, color: 'var(--color-heading)' }}>
+                {p.credits} rewrites
+              </div>
+              <div
+                className="tabular my-2"
+                style={{ fontSize: '2rem', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--color-purple)' }}
+              >
                 {p.total[currency]}
               </div>
-              <div className="text-xs text-[var(--color-fg-muted)]">
-                {p.perCredit[currency]} per rewrite
-              </div>
+              <div className="caption">{p.perCredit[currency]} per rewrite</div>
               {busy === p.pack && (
-                <div className="text-xs text-[var(--color-fg-muted)] mt-2">Redirecting…</div>
+                <div className="caption mt-2">Redirecting…</div>
               )}
             </button>
           ))}
         </div>
-        <p className="text-[11px] text-[var(--color-fg-dim)] mt-4 text-center">
+        <p className="caption mt-5 text-center">
           Secure payment via Stripe. No subscription. Credits never expire.
         </p>
       </div>

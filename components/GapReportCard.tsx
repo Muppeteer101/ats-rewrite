@@ -1,8 +1,9 @@
 import type { ATSScore } from '@/src/engine/schemas';
 
 /**
- * The honest gap report. The differentiator. Calls out what the candidate
- * still can't claim — opposite of what ChatGPT does.
+ * The honest gap report. Calls out what the candidate still can't claim —
+ * the differentiator vs ChatGPT. Stripe styling: light card, ruby accent
+ * on the left edge to flag attention without being alarming.
  */
 export function GapReportCard({
   score,
@@ -12,39 +13,45 @@ export function GapReportCard({
   unmetRequirements: string[];
 }) {
   return (
-    <div className="card p-6 border-l-4 border-l-[var(--color-warn)]">
+    <div className="card-elevated p-7" style={{ borderLeft: '3px solid var(--color-ruby)' }}>
       <div className="flex items-center gap-2 mb-3">
-        <span className="text-xs uppercase tracking-wider font-semibold text-[var(--color-warn)]">
+        <span className="badge" style={{ background: 'rgba(234,34,97,0.08)', color: 'var(--color-ruby)', borderColor: 'rgba(234,34,97,0.3)' }}>
           Honest gap report
         </span>
       </div>
-      <p className="text-base mb-4 leading-relaxed">{score.honest_gap_report}</p>
+      <p className="body-large mb-5" style={{ color: 'var(--color-heading)' }}>
+        {score.honest_gap_report}
+      </p>
 
-      <div className="grid md:grid-cols-2 gap-4">
+      <div className="grid md:grid-cols-2 gap-6 pt-5 border-t border-[var(--color-border)]">
         <div>
-          <div className="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] mb-2">
+          <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
             Coverage
           </div>
-          <ul className="text-sm space-y-1 text-[var(--color-fg-muted)]">
-            <li>
-              Required keywords:{' '}
-              <span className="text-[var(--color-fg)] font-mono">{score.keyword_coverage.required}</span>
+          <ul className="space-y-1.5 text-sm">
+            <li className="flex items-baseline justify-between">
+              <span style={{ color: 'var(--color-body)' }}>Required keywords</span>
+              <span className="font-mono tabular" style={{ color: 'var(--color-heading)' }}>
+                {score.keyword_coverage.required}
+              </span>
             </li>
-            <li>
-              Preferred keywords:{' '}
-              <span className="text-[var(--color-fg)] font-mono">{score.keyword_coverage.preferred}</span>
+            <li className="flex items-baseline justify-between">
+              <span style={{ color: 'var(--color-body)' }}>Preferred keywords</span>
+              <span className="font-mono tabular" style={{ color: 'var(--color-heading)' }}>
+                {score.keyword_coverage.preferred}
+              </span>
             </li>
           </ul>
         </div>
         {unmetRequirements.length > 0 && (
           <div>
-            <div className="text-xs uppercase tracking-wider text-[var(--color-fg-dim)] mb-2">
+            <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
               What your CV still can’t claim
             </div>
-            <ul className="text-sm space-y-1">
+            <ul className="space-y-1 text-sm">
               {unmetRequirements.slice(0, 8).map((u) => (
-                <li key={u} className="text-[var(--color-warn)]">
-                  • {u}
+                <li key={u} style={{ color: 'var(--color-ruby)' }}>
+                  · {u}
                 </li>
               ))}
             </ul>
@@ -53,7 +60,7 @@ export function GapReportCard({
       </div>
 
       {score.format_warnings && score.format_warnings.length > 0 && (
-        <div className="mt-4 text-xs text-[var(--color-warn)]">
+        <div className="mt-5 caption" style={{ color: 'var(--color-warn-text)' }}>
           <strong>Format warnings:</strong> {score.format_warnings.join('; ')}
         </div>
       )}

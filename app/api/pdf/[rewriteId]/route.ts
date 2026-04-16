@@ -31,7 +31,10 @@ export async function GET(
   const url = new URL(req.url);
   const rawTemplate = (url.searchParams.get('template') ?? 'ats-clean') as TemplateId;
   const template: TemplateId =
-    rawTemplate === 'ats-clean' || rawTemplate === 'professional' || rawTemplate === 'modern'
+    rawTemplate === 'ats-clean' ||
+    rawTemplate === 'professional' ||
+    rawTemplate === 'modern' ||
+    rawTemplate === 'cover-letter'
       ? rawTemplate
       : 'ats-clean';
 

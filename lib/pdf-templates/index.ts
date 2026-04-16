@@ -2,8 +2,9 @@ import type { EngineResult } from '@/src/engine/schemas';
 import { renderAtsClean } from './atsClean';
 import { renderProfessional } from './professional';
 import { renderModern } from './modern';
+import { renderCoverLetter } from './coverLetter';
 
-export type TemplateId = 'ats-clean' | 'professional' | 'modern';
+export type TemplateId = 'ats-clean' | 'professional' | 'modern' | 'cover-letter';
 
 export const TEMPLATES: ReadonlyArray<{
   id: TemplateId;
@@ -41,6 +42,8 @@ export function renderTemplate(id: TemplateId, result: EngineResult): string {
       return renderProfessional(result);
     case 'modern':
       return renderModern(result);
+    case 'cover-letter':
+      return renderCoverLetter(result);
     default:
       // Fallback to the safest option if an unknown id slips through.
       return renderAtsClean(result);

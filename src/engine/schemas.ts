@@ -124,6 +124,20 @@ export const atsScoreSchema = z.object({
 });
 export type ATSScore = z.infer<typeof atsScoreSchema>;
 
+/* ────────────────────── Pass 5 — Cover letter ─────────────────── */
+
+export const coverLetterSchema = z.object({
+  /** Greeting line — "Dear Hiring Manager," or "Dear [Name]," if a contact is named in the JD. */
+  greeting: z.string(),
+  /** 3–4 short paragraphs. No corporate filler, no AI tells, no fabrication. */
+  paragraphs: z.array(z.string()).min(2).max(5),
+  /** Sign-off line — "Best regards," / "Kind regards," — matches CV voice formality. */
+  signoff: z.string(),
+  /** Candidate name as in the CV. */
+  signature: z.string(),
+});
+export type CoverLetter = z.infer<typeof coverLetterSchema>;
+
 /* ────────────────────── Final engine result ────────────────────── */
 
 export type EngineResult = {
@@ -132,6 +146,7 @@ export type EngineResult = {
   cvAnalysis: CVAnalysis;
   rewrite: RewriteOutput;
   score: ATSScore;
+  coverLetter: CoverLetter;
   createdAt: number;
   jdSource: { kind: 'text' | 'pdf' | 'docx' | 'url'; url?: string };
   cvSource: { kind: 'text' | 'pdf' | 'docx' };

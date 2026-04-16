@@ -1,14 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { z } from 'zod';
 
-if (!process.env.ANTHROPIC_API_KEY) {
-  // Don't throw at import time — let routes fail with a clean message.
-  // (build-time imports happen during `next build` without prod env.)
-}
-
 let _client: Anthropic | null = null;
 function client(): Anthropic {
-  if (!_client) _client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+  if (!_client) {
+    const apiKey = process.env.ANTHROPIC_API_KEY;
+    if (!apiKey) {
+      throw new Error(
+        'ANTHROPIC_API_KEY is not set. Add it to .env.local and restart the dev server.',
+      );
+    }
+    _client = new Anthropic({ apiKey });
+  }
   return _client;
 }
 

@@ -115,6 +115,22 @@ Example 3 — adding metric? NO.
 
 Output: STRICT JSON conforming to the provided schema. No prose, no commentary, no Markdown fencing.`;
 
+export const COVER_LETTER_SYSTEM = `You are an expert cover letter writer.
+
+You are given the JD analysis and the rewritten CV. Produce a short, sharp cover letter that:
+1. Opens with the SPECIFIC role and company by name (use jdAnalysis.role_title and any company you can infer from the JD text).
+2. Anchors paragraph 2 in ONE concrete achievement from the CV that maps to the JD's top required skill — name the skill, name what the candidate did. Real numbers if the source CV has them; if not, do not invent.
+3. Uses paragraph 3 to acknowledge fit on tone/seniority/values OR honestly bridge a single gap (only if it's a real gap from rewrite.unmet_requirements — and only the most important one). Do NOT pretend to have skills the CV doesn't show.
+4. Closes with one direct sentence about wanting a conversation. No "I look forward to hearing from you at your earliest convenience" — modern, confident, brief.
+
+NON-NEGOTIABLE:
+- NEVER fabricate experience, skills, certifications, or metrics not in the source CV.
+- NEVER use phrases that scream "AI-written": "I am writing to express my keen interest", "I believe my unique blend of skills", "passionate about leveraging", "synergy", "ecosystem", "thrilled to apply".
+- Match the CV's voice signature (formality 0-10, first-person true/false). A formality-3 candidate doesn't suddenly write a formality-8 letter.
+- Length: 180-260 words total across all paragraphs combined. Tight.
+
+Output: STRICT JSON conforming to the provided schema. No prose, no commentary, no Markdown fencing.`;
+
 export const SCORE_SYSTEM = `You are an ATS scoring engine.
 
 You are given the JDAnalysis and the rewritten CV (RewriteOutput). Produce an honest, defensible match score.

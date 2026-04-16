@@ -1,68 +1,282 @@
 @import "tailwindcss";
 
-/* ─── Brand tokens ───────────────────────────────────────────────
-   Dark-first, premium-feel. Single accent (coral) so the score
-   gauge and CTAs pop against a near-black background. Mirrors the
-   "watch the model think" terminal aesthetic from the architecture
-   doc (Section 6 — visible intelligence).
-─────────────────────────────────────────────────────────────── */
+/* ─────────────────────────────────────────────────────────────────
+   STRIPE-INSPIRED DESIGN SYSTEM
+   Source: ./DESIGN.md (lifted from getdesign@latest add stripe)
+   White canvas · weight-300 display · blue-tinted multi-layer shadows
+─────────────────────────────────────────────────────────────────── */
+
 @theme inline {
-  --color-bg: #0a0a0b;
-  --color-surface: #131316;
-  --color-surface-2: #1c1c21;
-  --color-border: #26262d;
-  --color-fg: #f4f4f5;
-  --color-fg-muted: #a1a1aa;
-  --color-fg-dim: #71717a;
-  --color-accent: #ff6b6b;     /* coral — score gauge, CTAs */
-  --color-accent-2: #4ade80;   /* green — passes complete, scores up */
-  --color-warn: #fbbf24;       /* amber — gap warnings */
-  --color-danger: #ef4444;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
-  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+  /* Surfaces */
+  --color-bg: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #f6f9fc;
+  --color-surface-dark: #1c1e54;          /* brand-dark indigo for immersive sections */
+  --color-surface-darkest: #0d253d;
+
+  /* Borders */
+  --color-border: #e5edf5;
+  --color-border-purple: #b9b9f9;
+  --color-border-soft-purple: #d6d9fc;
+  --color-border-magenta: #ffd7ef;
+  --color-border-dashed: #362baa;
+
+  /* Text */
+  --color-heading: #061b31;               /* deep navy — never #000 */
+  --color-label: #273951;
+  --color-body: #64748d;
+  --color-fg-on-dark: #ffffff;
+  --color-fg-on-dark-muted: rgba(255, 255, 255, 0.72);
+
+  /* Brand accent */
+  --color-purple: #533afd;                /* signature */
+  --color-purple-hover: #4434d4;
+  --color-purple-deep: #2e2b8c;
+  --color-purple-light: #b9b9f9;
+  --color-purple-mid: #665efd;
+  --color-purple-soft: #f4f3ff;
+
+  /* Decorative-only — never on buttons or links */
+  --color-ruby: #ea2261;
+  --color-magenta: #f96bee;
+  --color-magenta-light: #ffd7ef;
+
+  /* Status */
+  --color-success: #15be53;
+  --color-success-text: #108c3d;
+  --color-success-bg: rgba(21, 190, 83, 0.12);
+  --color-success-border: rgba(21, 190, 83, 0.35);
+  --color-warn-text: #9b6829;
+  --color-warn-bg: rgba(155, 104, 41, 0.10);
+  --color-warn-border: rgba(155, 104, 41, 0.30);
+
+  /* Type */
+  --font-sans: var(--font-inter), 'SF Pro Display', system-ui, sans-serif;
+  --font-mono: var(--font-jetbrains), 'SourceCodePro', 'SFMono-Regular', monospace;
 }
+
+/* ── Base ───────────────────────────────────────────────────────── */
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
-html, body {
+html {
   background: var(--color-bg);
-  color: var(--color-fg);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
+  color: var(--color-heading);
 }
 
-/* Scrollbar — terminal-feel */
-::-webkit-scrollbar { width: 10px; height: 10px; }
-::-webkit-scrollbar-track { background: var(--color-bg); }
-::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 5px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-surface-2); }
+body {
+  background: var(--color-bg);
+  color: var(--color-body);
+  font-family: var(--font-sans);
+  font-weight: 300;                       /* Stripe signature: weight 300 default */
+  font-feature-settings: "ss01";          /* approximate the sohne-var ss01 character */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-/* Reusable card — used by score gauge, gap report, history rows */
+::selection {
+  background: var(--color-purple);
+  color: white;
+}
+
+/* ── Display typography (per DESIGN.md §3) ──────────────────────── */
+
+.display-hero {
+  font-size: clamp(2rem, 5vw, 3.5rem);    /* 32 → 56px */
+  font-weight: 300;
+  line-height: 1.03;
+  letter-spacing: -0.025em;               /* approximates -1.4px @ 56px */
+  color: var(--color-heading);
+}
+.display-large {
+  font-size: clamp(1.75rem, 4vw, 3rem);   /* 28 → 48px */
+  font-weight: 300;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--color-heading);
+}
+.section-heading {
+  font-size: clamp(1.5rem, 3vw, 2rem);    /* 24 → 32px */
+  font-weight: 300;
+  line-height: 1.10;
+  letter-spacing: -0.02em;
+  color: var(--color-heading);
+}
+.sub-heading {
+  font-size: 1.375rem;                    /* 22px */
+  font-weight: 300;
+  line-height: 1.10;
+  letter-spacing: -0.01em;
+  color: var(--color-heading);
+}
+.body-large {
+  font-size: 1.125rem;                    /* 18px */
+  font-weight: 300;
+  line-height: 1.5;
+  color: var(--color-body);
+}
+.body { font-size: 1rem; font-weight: 300; line-height: 1.5; color: var(--color-body); }
+.caption { font-size: 0.8125rem; color: var(--color-body); }
+.tabular { font-feature-settings: "tnum"; letter-spacing: -0.01em; }
+
+/* ── Cards & elevation (per DESIGN.md §6) ───────────────────────── */
+
 .card {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 14px;
+  border-radius: 6px;
 }
-
-/* Terminal-style narration feed */
-.feed {
-  background: #06060a;
+.card-elevated {
+  background: var(--color-surface);
   border: 1px solid var(--color-border);
-  border-radius: 10px;
-  font-family: var(--font-mono);
-  font-size: 13px;
-  line-height: 1.65;
+  border-radius: 8px;
+  box-shadow:
+    rgba(50, 50, 93, 0.25) 0px 30px 45px -30px,
+    rgba(0, 0, 0, 0.10) 0px 18px 36px -18px;
 }
-.feed-line { padding: 2px 14px; }
-.feed-line.system { color: var(--color-fg-dim); }
-.feed-line.pass { color: var(--color-accent); }
-.feed-line.ok { color: var(--color-accent-2); }
-.feed-line.warn { color: var(--color-warn); }
+.card-ambient {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  box-shadow: rgba(23, 23, 23, 0.08) 0px 15px 35px 0px;
+}
 
-/* Animated reveal for the score gauge */
-@keyframes gauge-fill {
-  from { stroke-dashoffset: var(--from); }
-  to { stroke-dashoffset: var(--to); }
+/* ── Buttons (per DESIGN.md §4) ─────────────────────────────────── */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01";
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1;
+  border-radius: 4px;
+  padding: 0.625rem 1rem;
+  border: 1px solid transparent;
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease, box-shadow 120ms ease;
+  cursor: pointer;
+  white-space: nowrap;
 }
+.btn-lg { padding: 0.875rem 1.25rem; font-size: 1rem; }
+.btn-sm { padding: 0.5rem 0.875rem; font-size: 0.875rem; }
+
+.btn-primary {
+  background: var(--color-purple);
+  color: white;
+}
+.btn-primary:hover { background: var(--color-purple-hover); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-purple);
+  border-color: var(--color-border-purple);
+}
+.btn-ghost:hover { background: rgba(83, 58, 253, 0.05); }
+
+.btn-neutral {
+  background: white;
+  color: var(--color-heading);
+  border-color: var(--color-border);
+}
+.btn-neutral:hover { background: var(--color-surface-soft); }
+
+/* ── Inputs ─────────────────────────────────────────────────────── */
+
+.input,
+.textarea {
+  width: 100%;
+  background: white;
+  color: var(--color-heading);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.625rem 0.75rem;
+  font-family: var(--font-sans);
+  font-size: 0.9375rem;
+  font-weight: 400;
+  font-feature-settings: "ss01";
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.input::placeholder,
+.textarea::placeholder { color: var(--color-body); }
+.input:focus,
+.textarea:focus {
+  outline: none;
+  border-color: var(--color-purple);
+  box-shadow: 0 0 0 3px rgba(83, 58, 253, 0.12);
+}
+.textarea { font-family: var(--font-mono); font-size: 0.8125rem; line-height: 1.6; }
+
+/* ── Badges ─────────────────────────────────────────────────────── */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 400;
+  font-feature-settings: "ss01";
+  border: 1px solid var(--color-border);
+}
+.badge-success {
+  background: var(--color-success-bg);
+  color: var(--color-success-text);
+  border-color: var(--color-success-border);
+}
+.badge-warn {
+  background: var(--color-warn-bg);
+  color: var(--color-warn-text);
+  border-color: var(--color-warn-border);
+}
+.badge-purple {
+  background: var(--color-purple-soft);
+  color: var(--color-purple);
+  border-color: var(--color-border-soft-purple);
+}
+
+/* ── Terminal-style narration feed ─────────────────────────────────
+   The "watch the model think" UX. Keeps a dark surface inside a light
+   card so the engine output reads like a real terminal — high contrast
+   against the rest of the Stripe-light page.
+─────────────────────────────────────────────────────────────────── */
+
+.feed {
+  background: #061b31;                    /* deep navy — matches heading colour */
+  color: #d6d9fc;
+  border-radius: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  line-height: 2;                         /* DESIGN.md spec: 2.0 line-height for code */
+  font-weight: 500;
+  padding: 0.5rem 0;
+  font-feature-settings: normal;
+}
+.feed-line { padding: 0 1rem; white-space: pre-wrap; }
+.feed-line.system { color: #b9b9f9; }
+.feed-line.pass { color: #f96bee; }
+.feed-line.ok { color: #15be53; }
+.feed-line.warn { color: #fbbf24; }
+
+/* ── Decorative ─────────────────────────────────────────────────── */
+
+.gradient-ruby-magenta {
+  background: linear-gradient(135deg, #ea2261 0%, #f96bee 100%);
+}
+.dashed-purple {
+  border: 1px dashed var(--color-border-dashed);
+  border-radius: 6px;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────── */
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-surface-soft); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-border-soft-purple); }

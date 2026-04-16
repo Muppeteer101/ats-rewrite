@@ -2,6 +2,7 @@ import { analyzeJD } from './passes/analyzeJD';
 import { analyzeCV } from './passes/analyzeCV';
 import { rewriteCV } from './passes/rewriteCV';
 import { scoreATS } from './passes/scoreATS';
+import { generateCoverLetter } from './passes/coverLetter';
 import type { EngineResult, NarrationEvent } from './schemas';
 
 export type EngineInput = {
@@ -96,14 +97,24 @@ export async function* runEngine(
     })(),
   };
 
-  // Pass 4 — score.
+  // Passes 4 + 5 in parallel — scoring and cover letter are both fed by the rewrite.
   yield { type: 'pass', pass: 4, line: '[Pass 4] Scoring against the JD…' };
-  const score = await scoreATS({ jdAnalysis, rewrite });
+  yield { type: 'pass', pass: 4, line: '[Pass 5] Drafting your cover letter…' };
+
+  const [score, coverLetter] = await Promise.all([
+    scoreATS({ jdAnalysis, rewrite }),
+    generateCoverLetter({ jdText: input.jdText, jdAnalysis, cvAnalysis, rewrite }),
+  ]);
 
   yield {
     type: 'pass-complete',
     pass: 4,
     line: `✓ ATS score: ${score.before_score} → ${score.after_score} (+${score.after_score - score.before_score}). Keyword coverage: required ${score.keyword_coverage.required}, preferred ${score.keyword_coverage.preferred}.`,
+  };
+  yield {
+    type: 'pass-complete',
+    pass: 4,
+    line: `✓ Cover letter drafted — ${coverLetter.paragraphs.length} paragraphs, voice-matched.`,
   };
 
   yield {
@@ -119,6 +130,7 @@ export async function* runEngine(
     cvAnalysis,
     rewrite,
     score,
+    coverLetter,
     createdAt: startedAt,
     jdSource: input.jdSource,
     cvSource: input.cvSource,

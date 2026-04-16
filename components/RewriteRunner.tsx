@@ -7,6 +7,7 @@ import { ScoreGauge } from './ScoreGauge';
 import { TemplatePicker } from './TemplatePicker';
 import { GapReportCard } from './GapReportCard';
 import { ChangeRationaleList } from './ChangeRationaleList';
+import { CoverLetterCard } from './CoverLetterCard';
 import { UpsellModal } from './UpsellModal';
 
 type Phase = 'priming' | 'streaming' | 'done' | 'error' | 'out-of-credits';
@@ -24,12 +25,12 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<Result | null>(null);
   const startedRef = useRef(false);
+  const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    // Pull the payload that RewriteForm stashed before redirect.
     const raw = sessionStorage.getItem(`rewrite-payload:${draftId}`);
     if (!raw) {
       setError('Lost your input on the way here. Go back and try again.');
@@ -39,6 +40,11 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
 
     void run(JSON.parse(raw));
   }, [draftId]);
+
+  // Keep the narration feed scrolled to the latest line.
+  useEffect(() => {
+    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
+  }, [lines]);
 
   async function run(payload: unknown) {
     setPhase('streaming');
@@ -83,7 +89,6 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
                 const meta = await r.json();
                 setResult({ rewriteId: evt.id, ...meta });
               } else {
-                // Fallback — no meta route yet; reconstruct from the most recent pass-complete line for Pass 4.
                 setResult({
                   rewriteId: evt.id,
                   jobTitle: 'Your role',
@@ -109,31 +114,29 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-8">
+    <div className="max-w-[1080px] mx-auto px-6 py-10">
       {phase !== 'done' && (
         <>
-          <h1 className="text-2xl font-bold mb-2">Rewriting your CV…</h1>
-          <p className="text-sm text-[var(--color-fg-muted)] mb-6">
-            Watch the four passes run. This is genuinely thinking — JD analysis, your CV analysis,
-            contextual rewrite, ATS scoring.
+          <span className="badge badge-purple mb-4">Live engine narration</span>
+          <h1 className="display-large mb-3">Rewriting your CV…</h1>
+          <p className="body-large mb-8 max-w-[640px]">
+            Watch the four passes run. JD analysis, your CV analysis, contextual rewrite, ATS scoring.
+            Genuinely thinking — not a single prompt.
           </p>
         </>
       )}
 
       {phase === 'done' && result && (
-        <div className="mb-8">
-          <p className="font-mono text-xs uppercase tracking-[0.2em] text-[var(--color-accent-2)] mb-2">
-            ✓ Rewrite complete
-          </p>
-          <h1 className="text-3xl font-bold mb-4">
-            {result.jobTitle ? `For ${result.jobTitle}` : 'Your rewrite is ready'}
+        <div className="mb-10">
+          <span className="badge badge-success mb-4">Rewrite complete</span>
+          <h1 className="display-large mb-6">
+            {result.jobTitle ? <>For <span style={{ color: 'var(--color-purple)' }}>{result.jobTitle}</span></> : 'Your rewrite is ready'}
           </h1>
           <ScoreGauge before={result.scoreBefore} after={result.scoreAfter} />
         </div>
       )}
 
-      {/* Narration feed */}
-      <div className="feed py-3 mb-6 max-h-[40vh] overflow-y-auto">
+      <div ref={feedRef} className="feed mb-8 max-h-[44vh] overflow-y-auto">
         {lines.length === 0 && phase === 'priming' && (
           <div className="feed-line system">› Booting…</div>
         )}
@@ -164,15 +167,15 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         })}
       </div>
 
-      {phase === 'done' && result && (
-        <ResultView rewriteId={result.rewriteId} />
-      )}
+      {phase === 'done' && result && <ResultView rewriteId={result.rewriteId} />}
 
       {phase === 'error' && (
-        <div className="card p-6 border-[var(--color-danger)]">
-          <h3 className="font-semibold mb-2">Something went wrong</h3>
-          <p className="text-sm text-[var(--color-fg-muted)] mb-4">{error}</p>
-          <Link href="/" className="text-sm underline">
+        <div className="card p-6" style={{ borderColor: 'rgba(234,34,97,0.4)' }}>
+          <h3 className="sub-heading mb-2" style={{ color: 'var(--color-heading)' }}>
+            Something went wrong
+          </h3>
+          <p className="body mb-4">{error}</p>
+          <Link href="/" className="btn btn-sm btn-neutral">
             Back to start
           </Link>
         </div>
@@ -183,11 +186,11 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   );
 }
 
-/** Loads the persisted EngineResult and renders the full result UI. */
 function ResultView({ rewriteId }: { rewriteId: string }) {
   const [data, setData] = useState<{
     rewrite: import('@/src/engine/schemas').RewriteOutput;
     score: import('@/src/engine/schemas').ATSScore;
+    coverLetter?: import('@/src/engine/schemas').CoverLetter;
   } | null>(null);
 
   useEffect(() => {
@@ -197,11 +200,12 @@ function ResultView({ rewriteId }: { rewriteId: string }) {
       .catch(() => null);
   }, [rewriteId]);
 
-  if (!data) return <div className="text-sm text-[var(--color-fg-muted)]">Loading result…</div>;
+  if (!data) return <div className="caption">Loading result…</div>;
 
   return (
     <div className="space-y-6">
       <TemplatePicker rewriteId={rewriteId} />
+      {data.coverLetter && <CoverLetterCard rewriteId={rewriteId} letter={data.coverLetter} />}
       <GapReportCard score={data.score} unmetRequirements={data.rewrite.unmet_requirements} />
       <ChangeRationaleList rewrite={data.rewrite} />
     </div>

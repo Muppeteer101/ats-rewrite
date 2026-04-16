@@ -38,6 +38,7 @@ export async function GET(
       scoreAfter: result.score.after_score,
       rewrite: result.rewrite,
       score: result.score,
+      coverLetter: result.coverLetter,
       jdAnalysis: result.jdAnalysis,
       cvAnalysis: result.cvAnalysis,
     });
