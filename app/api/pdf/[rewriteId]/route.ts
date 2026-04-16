@@ -60,11 +60,23 @@ export async function GET(
     .replace(/^-|-$/g, '')
     .slice(0, 60);
 
+  // `?download=1` forces a save-as download; otherwise the PDF is served
+  // inline so it renders in <iframe>/<object> previews instead of triggering
+  // a download prompt every time the user tabs between templates.
+  const filename = `cv-${slug || 'rewrite'}-${template}.pdf`;
+  const wantsDownload = url.searchParams.get('download') === '1';
+  const disposition = wantsDownload
+    ? `attachment; filename="${filename}"`
+    : `inline; filename="${filename}"`;
+
   return new NextResponse(buf, {
     headers: {
       'content-type': 'application/pdf',
-      'content-disposition': `attachment; filename="cv-${slug || 'rewrite'}-${template}.pdf"`,
+      'content-disposition': disposition,
       'cache-control': 'private, max-age=300',
+      // Some browsers treat X-Content-Type-Options: nosniff as a hint to
+      // honour the Content-Type for inline rendering.
+      'x-content-type-options': 'nosniff',
     },
   });
 }

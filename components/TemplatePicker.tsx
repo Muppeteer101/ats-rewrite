@@ -7,16 +7,16 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
   const [chosen, setChosen] = useState<TemplateId>('ats-clean');
   const [downloading, setDownloading] = useState(false);
 
-  // Browser PDF viewer hash-params hide the toolbar / scrollbar / nav
-  // chrome — `#toolbar=0&navpanes=0&scrollbar=0&view=FitH` makes the iframe
-  // read like a clean preview of just the page.
+  // Preview URL: NO `?download=1` — server returns Content-Disposition: inline
+  // so the iframe renders the PDF instead of triggering a download dialog.
   const previewSrc = `/api/pdf/${rewriteId}?template=${chosen}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
+  // Download URL: `?download=1` flips the disposition to attachment.
+  const downloadHref = `/api/pdf/${rewriteId}?template=${chosen}&download=1`;
 
   function download() {
     setDownloading(true);
     const a = document.createElement('a');
-    a.href = `/api/pdf/${rewriteId}?template=${chosen}`;
-    a.target = '_blank';
+    a.href = downloadHref;
     a.rel = 'noopener';
     document.body.appendChild(a);
     a.click();
@@ -76,9 +76,8 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
         ))}
       </div>
 
-      {/* Live preview of the chosen template — <object> loads the actual
-          PDF and falls back to an "Open in new tab" link if the browser
-          can't render PDFs inline (older Safari, some mobile browsers). */}
+      {/* Live preview — <iframe> with the inline-disposition PDF URL.
+          Tabbing between templates updates the iframe; no download dialog. */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span
@@ -100,31 +99,19 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
           className="rounded-[6px] border overflow-hidden"
           style={{ borderColor: 'var(--color-border)', background: '#525659' }}
         >
-          <object
-            // key forces the embed to remount when the chosen template
+          <iframe
+            // key forces the iframe to remount when the chosen template
             // changes — otherwise some browsers cache the previous PDF.
             key={chosen}
-            data={previewSrc}
-            type="application/pdf"
+            src={previewSrc}
+            title={`${chosen} preview`}
             className="block w-full"
             style={{ height: '780px', border: 'none' }}
-            aria-label={`${chosen} preview`}
-          >
-            <div className="p-8 text-center bg-white">
-              <p className="body mb-4">
-                Your browser can&rsquo;t show the preview inline.
-              </p>
-              <a
-                href={`/api/pdf/${rewriteId}?template=${chosen}`}
-                target="_blank"
-                rel="noopener"
-                className="btn btn-sm btn-primary"
-              >
-                Open the {chosen} PDF in a new tab →
-              </a>
-            </div>
-          </object>
+          />
         </div>
+        <p className="caption mt-2" style={{ color: 'var(--color-body)' }}>
+          On mobile the inline preview can be flaky — tap “Open full size” to view in your browser&rsquo;s PDF viewer.
+        </p>
       </div>
 
       <button
