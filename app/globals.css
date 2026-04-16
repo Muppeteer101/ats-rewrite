@@ -1,0 +1,68 @@
+@import "tailwindcss";
+
+/* ─── Brand tokens ───────────────────────────────────────────────
+   Dark-first, premium-feel. Single accent (coral) so the score
+   gauge and CTAs pop against a near-black background. Mirrors the
+   "watch the model think" terminal aesthetic from the architecture
+   doc (Section 6 — visible intelligence).
+─────────────────────────────────────────────────────────────── */
+@theme inline {
+  --color-bg: #0a0a0b;
+  --color-surface: #131316;
+  --color-surface-2: #1c1c21;
+  --color-border: #26262d;
+  --color-fg: #f4f4f5;
+  --color-fg-muted: #a1a1aa;
+  --color-fg-dim: #71717a;
+  --color-accent: #ff6b6b;     /* coral — score gauge, CTAs */
+  --color-accent-2: #4ade80;   /* green — passes complete, scores up */
+  --color-warn: #fbbf24;       /* amber — gap warnings */
+  --color-danger: #ef4444;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', monospace;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+html, body {
+  background: var(--color-bg);
+  color: var(--color-fg);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Scrollbar — terminal-feel */
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: var(--color-bg); }
+::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 5px; }
+::-webkit-scrollbar-thumb:hover { background: var(--color-surface-2); }
+
+/* Reusable card — used by score gauge, gap report, history rows */
+.card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 14px;
+}
+
+/* Terminal-style narration feed */
+.feed {
+  background: #06060a;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.65;
+}
+.feed-line { padding: 2px 14px; }
+.feed-line.system { color: var(--color-fg-dim); }
+.feed-line.pass { color: var(--color-accent); }
+.feed-line.ok { color: var(--color-accent-2); }
+.feed-line.warn { color: var(--color-warn); }
+
+/* Animated reveal for the score gauge */
+@keyframes gauge-fill {
+  from { stroke-dashoffset: var(--from); }
+  to { stroke-dashoffset: var(--to); }
+}

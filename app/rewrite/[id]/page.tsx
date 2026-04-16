@@ -1,0 +1,29 @@
+import { Suspense } from 'react';
+import Link from 'next/link';
+import { RewriteRunner } from '@/components/RewriteRunner';
+
+export const dynamic = 'force-dynamic';
+
+export default async function RewritePage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  return (
+    <main className="min-h-screen">
+      <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
+        <Link href="/" className="font-mono text-sm tracking-wider">
+          <span className="text-[var(--color-accent)]">ats</span>-rewriter
+        </Link>
+        <Link
+          href="/dashboard"
+          className="text-sm text-[var(--color-fg-muted)] hover:text-[var(--color-fg)]"
+        >
+          Dashboard
+        </Link>
+      </nav>
+
+      <Suspense fallback={<div className="max-w-3xl mx-auto px-6 py-10">Loading…</div>}>
+        <RewriteRunner draftId={id} />
+      </Suspense>
+    </main>
+  );
+}
