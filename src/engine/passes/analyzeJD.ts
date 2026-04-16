@@ -24,7 +24,7 @@ export async function analyzeJD(jdText: string): Promise<JDAnalysis> {
     `}`;
 
   return callJson({
-    model: MODELS.haiku,     // downgraded from Sonnet — extraction, not reasoning
+    model: MODELS.sonnet,    // kept on Sonnet — cleaner JSON output, no parser flakiness
     system: JD_SYSTEM,
     user,
     schema: jdAnalysisSchema,

@@ -25,7 +25,7 @@ export async function analyzeCV(cvText: string): Promise<CVAnalysis> {
     `}`;
 
   return callJson({
-    model: MODELS.haiku,     // downgraded from Sonnet — extraction, not reasoning
+    model: MODELS.sonnet,    // kept on Sonnet — cleaner JSON output, no parser flakiness
     system: CV_SYSTEM,
     user,
     schema: cvAnalysisSchema,
