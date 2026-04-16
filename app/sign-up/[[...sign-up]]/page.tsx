@@ -1,8 +1,9 @@
-import { SignIn } from '@clerk/nextjs';
+import { SignUp } from '@clerk/nextjs';
 import Link from 'next/link';
 
 export const metadata = {
-  title: 'Sign in — ATS Rewriter',
+  title: 'Sign up — ATS Rewriter',
+  robots: { index: false, follow: false },
 };
 
 export default function Page() {
@@ -10,17 +11,21 @@ export default function Page() {
     <main className="min-h-screen flex flex-col">
       <nav className="border-b border-[var(--color-border)]">
         <div className="max-w-[1080px] mx-auto px-6 h-16 flex items-center">
-          <Link href="/" className="text-[15px] font-medium tracking-tight" style={{ color: 'var(--color-heading)' }}>
+          <Link
+            href="/"
+            className="text-[15px] font-medium tracking-tight"
+            style={{ color: 'var(--color-heading)' }}
+          >
             <span style={{ color: 'var(--color-purple)' }}>ATS</span>·rewriter
           </Link>
         </div>
       </nav>
 
       <div className="flex-1 flex items-center justify-center p-6 bg-[var(--color-surface-soft)]">
-        <SignIn
-          path="/sign-in"
+        <SignUp
+          path="/sign-up"
           routing="path"
-          signUpUrl="/sign-up"
+          signInUrl="/sign-in"
           fallbackRedirectUrl="/dashboard"
           appearance={{
             variables: {
@@ -31,7 +36,8 @@ export default function Page() {
               colorInputBackground: '#ffffff',
               colorInputText: '#061b31',
               borderRadius: '4px',
-              fontFamily: 'var(--font-inter), sans-serif',
+              fontFamily:
+                'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
             },
             elements: {
               card: 'shadow-none border border-[var(--color-border)]',
