@@ -20,12 +20,6 @@ export function renderProfessional(result: EngineResult): string {
   const usableWidth = A4.w - left - right;
   let y = top;
 
-  // Accent rule + name
-  doc.setDrawColor(...ACCENT);
-  doc.setLineWidth(1.2);
-  doc.line(left, y, left + 30, y);
-  y += 6;
-
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
   doc.setTextColor(...ACCENT);

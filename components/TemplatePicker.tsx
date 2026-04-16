@@ -7,6 +7,11 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
   const [chosen, setChosen] = useState<TemplateId>('ats-clean');
   const [downloading, setDownloading] = useState(false);
 
+  // Browser PDF viewer hash-params hide the toolbar / scrollbar / nav
+  // chrome — `#toolbar=0&navpanes=0&scrollbar=0&view=FitH` makes the iframe
+  // read like a clean preview of just the page.
+  const previewSrc = `/api/pdf/${rewriteId}?template=${chosen}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`;
+
   function download() {
     setDownloading(true);
     const a = document.createElement('a');
@@ -25,6 +30,8 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
       <p className="body mb-5">
         We recommend the ATS-clean template — highest parse rate. Pick a different one if you’re sending direct.
       </p>
+
+      {/* Template cards */}
       <div className="grid md:grid-cols-3 gap-3 mb-6">
         {TEMPLATES.map((t) => (
           <button
@@ -52,6 +59,45 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
           </button>
         ))}
       </div>
+
+      {/* Live preview of the chosen template — iframe loads the actual PDF
+          from /api/pdf so what you see IS what you'll download. */}
+      <div className="mb-6">
+        <div className="flex items-center justify-between mb-2">
+          <span
+            className="text-[11px] uppercase tracking-[0.14em]"
+            style={{ color: 'var(--color-body)' }}
+          >
+            Preview · {chosen}
+          </span>
+          <a
+            href={`/api/pdf/${rewriteId}?template=${chosen}`}
+            target="_blank"
+            rel="noopener"
+            className="caption hover:text-[var(--color-purple)] underline decoration-dotted"
+          >
+            Open full size ↗
+          </a>
+        </div>
+        <div
+          className="rounded-[6px] border bg-[var(--color-surface-soft)] overflow-hidden"
+          style={{ borderColor: 'var(--color-border)' }}
+        >
+          <iframe
+            // key forces the iframe to remount when the chosen template
+            // changes — otherwise some browsers cache the previous PDF.
+            key={chosen}
+            src={previewSrc}
+            title={`${chosen} preview`}
+            className="block w-full bg-white"
+            style={{ height: '720px', border: 'none' }}
+          />
+        </div>
+        <p className="caption mt-2" style={{ color: 'var(--color-body)' }}>
+          Mobile preview can be flaky — tap “Open full size” to view in your browser&rsquo;s native PDF viewer.
+        </p>
+      </div>
+
       <button
         type="button"
         onClick={download}
