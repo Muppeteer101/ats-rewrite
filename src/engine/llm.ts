@@ -83,14 +83,13 @@ export async function callJson<T>(opts: {
 }
 
 function extractJson(s: string): unknown {
-  // First try: assume the whole response is JSON.
   const trimmed = s.trim();
   try {
     return JSON.parse(trimmed);
   } catch {
     /* fall through */
   }
-  // Second try: ```json ... ``` fence.
+  // ```json ... ``` fence.
   const fence = trimmed.match(/```(?:json)?\s*([\s\S]*?)```/);
   if (fence) {
     try {
@@ -99,7 +98,7 @@ function extractJson(s: string): unknown {
       /* fall through */
     }
   }
-  // Third try: pull the first balanced { ... } object.
+  // Pull the first balanced { ... } object.
   const first = trimmed.indexOf('{');
   const last = trimmed.lastIndexOf('}');
   if (first >= 0 && last > first) {
@@ -109,7 +108,10 @@ function extractJson(s: string): unknown {
       /* fall through */
     }
   }
-  throw new Error('Could not extract JSON from LLM response.');
+  // Debug aid — surface what the model actually returned so we can fix it.
+  const preview = trimmed.slice(0, 400).replace(/\n/g, '\\n');
+  console.error('[extractJson] failed to parse:', preview);
+  throw new Error(`Could not extract JSON from LLM response. First 400 chars: ${preview}`);
 }
 
 /** Stream a JSON-producing call, yielding text deltas as they arrive. */
