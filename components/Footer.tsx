@@ -3,13 +3,15 @@
 
 import Link from 'next/link';
 
+// Order matches the FightMyFines AL portfolio footer; ToolyKit excluded
+// since we're on it.
 const SISTER_SITES = [
   { name: 'Cancel My Parking Ticket', url: 'https://cancelmyparkingticket.com' },
   { name: 'Cancel My Citation', url: 'https://cancelmycitation.com' },
   { name: 'Appeal My Parking Ticket', url: 'https://appealmyparkingticket.com' },
   { name: 'Appeal My Citation', url: 'https://appealmycitation.com' },
-  { name: 'Fight My Fines', url: 'https://fightmyfines.com' },
   { name: 'Car Damage Advisor', url: 'https://www.cardamageadvisor.com' },
+  { name: 'FightMyFines', url: 'https://fightmyfines.com' },
   { name: 'WTF Did I Just Agree?', url: 'https://wtfdidijustagree.com' },
   { name: 'WTF Did I Just Sign?', url: 'https://wtfdidijustsign.com' },
   { name: 'Write My Legal Letter', url: 'https://writemylegalletter.com' },
@@ -47,12 +49,15 @@ export function Footer() {
             href="https://almostlegal.ai"
             target="_blank"
             rel="noopener"
-            style={{ color: 'var(--color-heading)', fontWeight: 500 }}
+            style={{ color: 'var(--color-heading)', fontWeight: 600 }}
           >
             Almost Legal Limited
           </a>
-          . ATS Rewriter is an AI-assisted CV-writing tool, not a recruiter or career
-          coach. Always review the output before submitting to an employer.
+          . ToolyKit.ai is a toolkit for ATS-optimised CV writing.{' '}
+          <span style={{ display: 'block', marginTop: 4 }}>
+            Almost Legal Limited is a Muerto Limited (Isle of Man) company.
+            AI-generated content should be reviewed before use.
+          </span>
         </p>
 
         <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[12px] mb-5">
