@@ -12,16 +12,20 @@ const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET;
 
 /**
  * Stripe webhook — handles `checkout.session.completed` events for credit-pack
- * purchases. Pattern lifted from /Users/openclaw/writemylegalletter/app/api/webhook/route.ts.
+ * purchases.
  *
- * Side effects on a successful pack purchase:
- *   1. INCRBY paid credits on the Clerk user (via lib/credits.addPaidCredits).
- *   2. Send Resend "credits added" receipt email.
- *   3. Fire-and-forget POST to almostlegal.ai/api/track/sale for creator
- *      attribution (only if a coupon was applied at checkout).
+ * Critical ordering rule: ALWAYS credit the user FIRST. Only after the credit
+ * grant succeeds do we mark the event as processed (idempotency) and run any
+ * best-effort side effects (emails, attribution). If a side-effect fails, the
+ * user still has their credits — the next Stripe retry will see the
+ * idempotency marker and short-circuit.
  *
- * Idempotency: we record processed event IDs so Stripe's webhook retry
- * mechanism can't double-credit the user.
+ * Why this matters (Apr 2026 incident): the original implementation set the
+ * idempotency marker before attempting an over-deep `stripe.checkout.sessions.retrieve`
+ * call (`expand: ['total_details.breakdown.discounts.discount.coupon']` — 5
+ * levels, max is 4). The Stripe call threw, the handler 500'd, but the marker
+ * was already set, so Stripe's retries hit "deduped" → 200 → stopped retrying,
+ * leaving the user paid-but-uncredited.
  */
 export async function POST(req: NextRequest): Promise<Response> {
   if (!WEBHOOK_SECRET) {
@@ -59,79 +63,92 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'missing metadata' }, { status: 400 });
   }
 
-  // Idempotency guard — checked AFTER metadata validation so retries of a
-  // crashed handler can re-attempt the work. The marker is only persisted
-  // once `addPaidCredits` succeeds (see below) — if a previous attempt failed
-  // before that line, no marker exists and Stripe's retry will re-run the work.
+  // Idempotency check (read only — we don't WRITE the marker until credits are granted)
   const eventKey = k.stripeEvent(event.id);
   const already = await redis.get<string>(eventKey);
   if (already) {
     return NextResponse.json({ received: true, deduped: true });
   }
 
-  // Re-fetch with discount expansion so we can grab the coupon ID for attribution.
-  const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
-    expand: ['total_details.breakdown.discounts.discount.coupon'],
-  });
-
-  // Credit the user FIRST. Only after this succeeds do we mark the event as
-  // processed — that way a crash in any later step (email send, attribution
-  // fetch) won't permanently block the credit grant on Stripe's retries.
+  // ──────────────────────────────────────────────────────────────────────
+  // STEP 1: Credit the user. This is the only step that MUST succeed for
+  // the customer to get what they paid for. Everything else is best-effort.
+  // ──────────────────────────────────────────────────────────────────────
   const newState = await addPaidCredits(clerkUserId, credits);
   await redis.set(eventKey, '1', { ex: 60 * 60 * 24 * 30 });
 
-  // Customer email + receipt.
-  const email = session.customer_details?.email ?? session.customer_email ?? null;
-  if (email) {
-    const total =
-      fullSession.amount_total != null && fullSession.currency
-        ? new Intl.NumberFormat('en-GB', {
-            style: 'currency',
-            currency: fullSession.currency.toUpperCase(),
-          }).format(fullSession.amount_total / 100)
-        : `pack of ${credits}`;
-    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
-    sendCreditsTopUpEmail({
-      to: email,
-      credits,
-      total,
-      dashboardUrl: `${baseUrl}/dashboard`,
-    }).catch((e) => {
-      console.error('topup email failed', e);
-    });
+  // ──────────────────────────────────────────────────────────────────────
+  // STEP 2: Best-effort side effects. Each is wrapped in try/catch — a
+  // failure here does NOT 500 the response, because credits already landed.
+  // ──────────────────────────────────────────────────────────────────────
+
+  // Email receipt
+  const customerEmail = session.customer_details?.email ?? session.customer_email ?? null;
+  if (customerEmail) {
+    try {
+      const total =
+        session.amount_total != null && session.currency
+          ? new Intl.NumberFormat('en-GB', {
+              style: 'currency',
+              currency: session.currency.toUpperCase(),
+            }).format(session.amount_total / 100)
+          : `pack of ${credits}`;
+      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+      sendCreditsTopUpEmail({
+        to: customerEmail,
+        credits,
+        total,
+        dashboardUrl: `${baseUrl}/dashboard`,
+      }).catch((e) => console.error('topup email failed', e));
+    } catch (e) {
+      console.error('topup email setup failed', e);
+    }
   }
 
-  // Re-fetch with the promotion_code expansion too — needed for the
-  // share-code-redemption reward path below (not just creator attribution).
-  const fullSessionWithPromo = await stripe.checkout.sessions.retrieve(session.id, {
-    expand: [
-      'total_details.breakdown.discounts.discount.coupon',
-      'total_details.breakdown.discounts.discount.promotion_code',
-    ],
-  });
-
-  type DiscountSlot = {
+  // Re-fetch session for discount/coupon attribution + share-code rewards.
+  // Expansion is capped at 4 levels by Stripe's API — keep paths shallow and
+  // hydrate sub-objects via separate fetches if needed.
+  let discounts: Array<{
     discount?: {
-      coupon?: { id: string } | null;
-      promotion_code?: string | { code: string } | null;
+      coupon?: string | { id: string } | null;
+      promotion_code?: string | null;
     };
-  };
-  const allDiscounts = (fullSessionWithPromo.total_details?.breakdown?.discounts ?? []) as DiscountSlot[];
+  }> = [];
+  let amountTotal: number | null = session.amount_total ?? null;
+  let currency: string | null = session.currency ?? null;
+  try {
+    const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
+      expand: ['total_details.breakdown.discounts'],
+    });
+    amountTotal = fullSession.amount_total ?? amountTotal;
+    currency = fullSession.currency ?? currency;
+    discounts = (fullSession.total_details?.breakdown?.discounts ?? []) as typeof discounts;
+  } catch (e) {
+    console.error('session re-fetch for attribution failed', e);
+  }
 
-  // 1. Reward sharer if buyer used a personal share code (50%-off coupon)
-  if (email) {
-    for (const d of allDiscounts) {
-      const promo = d.discount?.promotion_code;
-      if (!promo) continue;
-      const usedCode = typeof promo === 'string' ? promo : promo.code;
-      if (!usedCode) continue;
+  // Share-code reward path: if the buyer used a personal share code, reward
+  // the original sharer with a free-base coupon. Look up the human-readable
+  // code from each discount's promotion_code by fetching it separately
+  // (since deeper expansion isn't allowed).
+  if (customerEmail) {
+    for (const d of discounts) {
+      const promoIdOrObj = d.discount?.promotion_code;
+      if (!promoIdOrObj) continue;
       try {
+        const promoId =
+          typeof promoIdOrObj === 'string' ? promoIdOrObj : null;
+        if (!promoId) continue;
+        const promoObj = await stripe.promotionCodes.retrieve(promoId);
+        const usedCode = promoObj.code;
+        if (!usedCode) continue;
+
         const ownerEmail = await redis.get<string>(`share:owner:${usedCode}`);
-        if (ownerEmail && ownerEmail !== email) {
+        if (ownerEmail && ownerEmail !== customerEmail) {
           const rewardPromo = await stripe.promotionCodes.create({
             promotion: { coupon: 'REWARD_FREE_BASE', type: 'coupon' },
             max_redemptions: 1,
-            metadata: { earnedBy: ownerEmail, usedBy: email, site: 'TOOLYKIT' },
+            metadata: { earnedBy: ownerEmail, usedBy: customerEmail, site: 'TOOLYKIT' },
           });
           const { sendReferrerRewardEmail } = await import('@/lib/email');
           sendReferrerRewardEmail({
@@ -146,31 +163,33 @@ export async function POST(req: NextRequest): Promise<Response> {
     }
   }
 
-  // 2. Creator-attribution: fire-and-forget to almostlegal.ai's tracker.
-  // Same pattern as cancelmyparkingticket — see creator-programme-handoff.md.
-  type DiscountWithCoupon = { discount: { coupon: { id: string } } };
-  const firstDiscount = fullSession.total_details?.breakdown?.discounts?.[0] as
-    | DiscountWithCoupon
-    | undefined;
-  const couponId = firstDiscount?.discount?.coupon?.id ?? null;
-  if (couponId && process.env.CREATOR_TRACK_SECRET && fullSession.amount_total != null) {
-    const trackUrl = process.env.CREATOR_TRACK_URL ?? 'https://almostlegal.ai/api/track/sale';
-    const brand = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? 'ats-rewriter.com';
-    fetch(trackUrl, {
-      method: 'POST',
-      headers: {
-        'content-type': 'application/json',
-        'x-track-secret': process.env.CREATOR_TRACK_SECRET,
-      },
-      body: JSON.stringify({
-        code: couponId,
-        brand,
-        amountMinor: fullSession.amount_total,
-        currency: (fullSession.currency ?? 'gbp').toUpperCase(),
-      }),
-    }).catch((e) => {
-      console.error('creator track/sale failed', e);
-    });
+  // Creator-attribution: fire-and-forget POST to almostlegal.ai/api/track/sale.
+  try {
+    const firstCoupon = discounts[0]?.discount?.coupon;
+    const couponId =
+      typeof firstCoupon === 'string'
+        ? firstCoupon
+        : firstCoupon?.id ?? null;
+
+    if (couponId && process.env.CREATOR_TRACK_SECRET && amountTotal != null) {
+      const trackUrl = process.env.CREATOR_TRACK_URL ?? 'https://almostlegal.ai/api/track/sale';
+      const brand = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? 'toolykit.ai';
+      fetch(trackUrl, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'x-track-secret': process.env.CREATOR_TRACK_SECRET,
+        },
+        body: JSON.stringify({
+          code: couponId,
+          brand,
+          amountMinor: amountTotal,
+          currency: (currency ?? 'gbp').toUpperCase(),
+        }),
+      }).catch((e) => console.error('creator track/sale failed', e));
+    }
+  } catch (e) {
+    console.error('creator attribution setup failed', e);
   }
 
   return NextResponse.json({
