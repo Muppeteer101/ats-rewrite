@@ -95,10 +95,53 @@ export async function POST(req: NextRequest): Promise<Response> {
     });
   }
 
-  // Creator-attribution: fire-and-forget to almostlegal.ai's tracker.
+  // Re-fetch with the promotion_code expansion too — needed for the
+  // share-code-redemption reward path below (not just creator attribution).
+  const fullSessionWithPromo = await stripe.checkout.sessions.retrieve(session.id, {
+    expand: [
+      'total_details.breakdown.discounts.discount.coupon',
+      'total_details.breakdown.discounts.discount.promotion_code',
+    ],
+  });
+
+  type DiscountSlot = {
+    discount?: {
+      coupon?: { id: string } | null;
+      promotion_code?: string | { code: string } | null;
+    };
+  };
+  const allDiscounts = (fullSessionWithPromo.total_details?.breakdown?.discounts ?? []) as DiscountSlot[];
+
+  // 1. Reward sharer if buyer used a personal share code (50%-off coupon)
+  if (email) {
+    for (const d of allDiscounts) {
+      const promo = d.discount?.promotion_code;
+      if (!promo) continue;
+      const usedCode = typeof promo === 'string' ? promo : promo.code;
+      if (!usedCode) continue;
+      try {
+        const ownerEmail = await redis.get<string>(`share:owner:${usedCode}`);
+        if (ownerEmail && ownerEmail !== email) {
+          const rewardPromo = await stripe.promotionCodes.create({
+            promotion: { coupon: 'REWARD_FREE_BASE', type: 'coupon' },
+            max_redemptions: 1,
+            metadata: { earnedBy: ownerEmail, usedBy: email, site: 'TOOLYKIT' },
+          });
+          const { sendReferrerRewardEmail } = await import('@/lib/email');
+          sendReferrerRewardEmail({
+            to: ownerEmail,
+            rewardCode: rewardPromo.code,
+            buyerName: session.customer_details?.name ?? undefined,
+          }).catch((e) => console.error('referrer reward email failed', e));
+        }
+      } catch (e) {
+        console.error('referrer reward path failed', e);
+      }
+    }
+  }
+
+  // 2. Creator-attribution: fire-and-forget to almostlegal.ai's tracker.
   // Same pattern as cancelmyparkingticket — see creator-programme-handoff.md.
-  // The discount object's coupon shape varies across Stripe SDK versions; cast
-  // through unknown to a minimal local type rather than fight the typing.
   type DiscountWithCoupon = { discount: { coupon: { id: string } } };
   const firstDiscount = fullSession.total_details?.breakdown?.discounts?.[0] as
     | DiscountWithCoupon

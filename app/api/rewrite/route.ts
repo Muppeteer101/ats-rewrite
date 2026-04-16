@@ -110,14 +110,38 @@ export async function POST(req: NextRequest): Promise<Response> {
               const pdfBase64 = renderTemplate(template, result);
               await redis.set(k.pdfCache(rewriteId, template), pdfBase64, { ex: 60 * 24 * 60 * 60 });
 
+              // Generate a personal share code (50% off, 10 uses) tied to
+              // this customer. Shared portfolio-wide via Stripe — works on
+              // any Almost Legal site at checkout. Owner stored in Redis so
+              // the redemption webhook can credit them with a free reward.
+              let shareCode: string | undefined;
+              try {
+                const { stripe } = await import('@/lib/stripe');
+                const promoCode = await stripe.promotionCodes.create({
+                  promotion: { coupon: 'JO4UR95g', type: 'coupon' },
+                  max_redemptions: 10,
+                  metadata: { ownerEmail: email, site: 'TOOLYKIT' },
+                });
+                shareCode = promoCode.code;
+                await redis.set(`share:owner:${promoCode.code}`, email, { ex: 60 * 60 * 24 * 365 });
+              } catch (e) {
+                // Share-code failure is non-fatal — email goes out without it.
+                console.error('share code generation failed', e);
+              }
+
               const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
+              const customerName =
+                [user?.firstName, user?.lastName].filter(Boolean).join(' ') || undefined;
               await sendRewriteReadyEmail({
                 to: email,
+                customerName,
                 jobTitle: result.jdAnalysis.role_title,
                 scoreBefore: result.score.before_score,
                 scoreAfter: result.score.after_score,
                 rewriteUrl: `${baseUrl}/rewrite/${rewriteId}`,
                 pdfBase64,
+                shareCode,
+                sessionId: rewriteId,
               });
               send({ type: 'system', line: `✉ Sent to ${email} with the PDF attached.` });
             }
