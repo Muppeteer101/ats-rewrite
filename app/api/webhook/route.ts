@@ -45,14 +45,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ received: true, ignored: event.type });
   }
 
-  // Idempotency guard.
-  const eventKey = k.stripeEvent(event.id);
-  const already = await redis.get<string>(eventKey);
-  if (already) {
-    return NextResponse.json({ received: true, deduped: true });
-  }
-  await redis.set(eventKey, '1', { ex: 60 * 60 * 24 * 30 });
-
   const session = event.data.object as Stripe.Checkout.Session;
   const meta = session.metadata ?? {};
 
@@ -67,12 +59,26 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'missing metadata' }, { status: 400 });
   }
 
+  // Idempotency guard — checked AFTER metadata validation so retries of a
+  // crashed handler can re-attempt the work. The marker is only persisted
+  // once `addPaidCredits` succeeds (see below) — if a previous attempt failed
+  // before that line, no marker exists and Stripe's retry will re-run the work.
+  const eventKey = k.stripeEvent(event.id);
+  const already = await redis.get<string>(eventKey);
+  if (already) {
+    return NextResponse.json({ received: true, deduped: true });
+  }
+
   // Re-fetch with discount expansion so we can grab the coupon ID for attribution.
   const fullSession = await stripe.checkout.sessions.retrieve(session.id, {
     expand: ['total_details.breakdown.discounts.discount.coupon'],
   });
 
+  // Credit the user FIRST. Only after this succeeds do we mark the event as
+  // processed — that way a crash in any later step (email send, attribution
+  // fetch) won't permanently block the credit grant on Stripe's retries.
   const newState = await addPaidCredits(clerkUserId, credits);
+  await redis.set(eventKey, '1', { ex: 60 * 60 * 24 * 30 });
 
   // Customer email + receipt.
   const email = session.customer_details?.email ?? session.customer_email ?? null;
