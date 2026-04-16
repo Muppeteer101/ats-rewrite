@@ -208,12 +208,6 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <footer className="border-t border-[var(--color-border)]">
-        <div className="max-w-[1080px] mx-auto px-6 py-10 caption flex items-center justify-between">
-          <span>Part of the Almost Legal portfolio.</span>
-          <span className="font-mono">ats-rewriter</span>
-        </div>
-      </footer>
     </main>
   );
 }

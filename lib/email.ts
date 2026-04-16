@@ -12,18 +12,9 @@ function client(): Resend {
 const FROM = process.env.RESEND_FROM_EMAIL ?? 'Almost Legal <hello@almostlegal.ai>';
 const TRUSTPILOT_URL = process.env.TRUSTPILOT_URL;
 
-// Other Almost Legal brands shown in the cross-sell list. ToolyKit is the
-// CURRENT site so it's intentionally excluded from its own promo.
-const OTHER_AL_SITES = [
-  { name: 'Cancel My Parking Ticket', url: 'https://cancelmyparkingticket.com', desc: 'UK council & private parking challenges' },
-  { name: 'Appeal My Parking Ticket', url: 'https://appealmyparkingticket.com', desc: 'Formal POPLA appeal letters' },
-  { name: 'Cancel My Citation', url: 'https://cancelmycitation.com', desc: 'Fight US parking citations' },
-  { name: 'Appeal My Citation', url: 'https://appealmycitation.com', desc: 'Formal US citation appeals' },
-  { name: 'Write My Legal Letter', url: 'https://writemylegalletter.com', desc: 'Any legal letter, fast' },
-  { name: 'WTF Did I Just Sign', url: 'https://wtfdidijustsign.com', desc: 'Understand any contract' },
-  { name: 'WTF Did I Just Agree', url: 'https://wtfdidijustagree.com', desc: 'Decode any terms & conditions' },
-  { name: 'Fight Fines', url: 'https://fightfines.com', desc: 'Speeding & traffic fines, 32 countries' },
-];
+// Cross-promo points at almostlegal.ai (the icon-grid landing for the whole
+// portfolio) rather than listing every brand by name — landing is being
+// redesigned and we don't want to mirror a stale brand list here.
 
 function escape(s: string): string {
   return s
@@ -73,15 +64,16 @@ export async function sendRewriteReadyEmail(opts: {
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://toolykit.ai';
   const FROM_EMAIL = 'hello@almostlegal.ai';
 
-  const otherSiteLinks = OTHER_AL_SITES.map(
-    (s) => `
-    <tr>
-      <td style="padding: 8px 0; border-bottom: 1px solid #f0f0f0;">
-        <a href="${s.url}" style="color: #1a1a1a; font-weight: 600; text-decoration: none;">${s.name}</a>
-        <span style="color: #666; font-size: 13px;"> — ${s.desc}</span>
-      </td>
-    </tr>`,
-  ).join('');
+  // Single link to the AL portfolio landing — replaces the per-brand list.
+  const crossPromoBlock = `
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:#fafafa;border-radius:10px;border:1px solid #eee;">
+      <tr><td style="padding:18px 20px;text-align:center;">
+        <p style="margin:0 0 6px;font-size:14px;color:#444;">More tools that fight your corner.</p>
+        <p style="margin:0;font-size:13px;">
+          <a href="https://almostlegal.ai" style="color:#533afd;font-weight:600;text-decoration:none;">Browse the Almost Legal toolkit →</a>
+        </p>
+      </td></tr>
+    </table>`;
 
   const reviewSection = `
     <tr>
@@ -184,10 +176,7 @@ export async function sendRewriteReadyEmail(opts: {
             <tr><td style="padding: 28px 0 20px;"><hr style="border: none; border-top: 1px solid #eee; margin: 0;"></td></tr>
 
             <tr><td>
-              <p style="margin: 0 0 16px; font-size: 13px; font-weight: 600; color: #999; text-transform: uppercase; letter-spacing: 0.05em;">More from Almost Legal</p>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                ${otherSiteLinks}
-              </table>
+              ${crossPromoBlock}
             </td></tr>
 
           </table>

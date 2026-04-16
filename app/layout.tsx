@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
 import { RefTracker } from '@/components/RefTracker';
+import { Footer } from '@/components/Footer';
 import './globals.css';
 
 // Inter @ weights 300/400 mirrors the sohne-var weight 300 signature from
@@ -50,6 +51,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <RefTracker />
           </Suspense>
           {children}
+          <Footer />
         </body>
       </html>
     </ClerkProvider>
