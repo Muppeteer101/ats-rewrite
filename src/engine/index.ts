@@ -10,6 +10,8 @@ export type EngineInput = {
   jdText: string;
   cvSource: { kind: 'text' | 'pdf' | 'docx' };
   jdSource: { kind: 'text' | 'pdf' | 'docx' | 'url'; url?: string };
+  /** Opt-in cover letter (Pass 5). Default false to keep free-tier costs down. */
+  includeCoverLetter?: boolean;
 };
 
 /**
@@ -97,13 +99,17 @@ export async function* runEngine(
     })(),
   };
 
-  // Passes 4 + 5 in parallel — scoring and cover letter are both fed by the rewrite.
+  // Pass 4 (scoring) always runs. Pass 5 (cover letter) is opt-in.
   yield { type: 'pass', pass: 4, line: '[Pass 4] Scoring against the JD…' };
-  yield { type: 'pass', pass: 4, line: '[Pass 5] Drafting your cover letter…' };
+  if (input.includeCoverLetter) {
+    yield { type: 'pass', pass: 4, line: '[Pass 5] Drafting your cover letter…' };
+  }
 
   const [score, coverLetter] = await Promise.all([
     scoreATS({ jdAnalysis, rewrite }),
-    generateCoverLetter({ jdText: input.jdText, jdAnalysis, cvAnalysis, rewrite }),
+    input.includeCoverLetter
+      ? generateCoverLetter({ jdText: input.jdText, jdAnalysis, cvAnalysis, rewrite })
+      : Promise.resolve(undefined),
   ]);
 
   yield {
@@ -111,11 +117,13 @@ export async function* runEngine(
     pass: 4,
     line: `✓ ATS score: ${score.before_score} → ${score.after_score} (+${score.after_score - score.before_score}). Keyword coverage: required ${score.keyword_coverage.required}, preferred ${score.keyword_coverage.preferred}.`,
   };
-  yield {
-    type: 'pass-complete',
-    pass: 4,
-    line: `✓ Cover letter drafted — ${coverLetter.paragraphs.length} paragraphs, voice-matched.`,
-  };
+  if (coverLetter) {
+    yield {
+      type: 'pass-complete',
+      pass: 4,
+      line: `✓ Cover letter drafted — ${coverLetter.paragraphs.length} paragraphs, voice-matched.`,
+    };
+  }
 
   yield {
     type: 'system',
@@ -130,7 +138,7 @@ export async function* runEngine(
     cvAnalysis,
     rewrite,
     score,
-    coverLetter,
+    coverLetter,     // undefined when includeCoverLetter was false
     createdAt: startedAt,
     jdSource: input.jdSource,
     cvSource: input.cvSource,

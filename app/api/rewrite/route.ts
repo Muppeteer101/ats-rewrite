@@ -40,6 +40,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     jdSource?: EngineInput['jdSource'];
     template?: 'ats-clean' | 'professional' | 'modern';
     sendEmail?: boolean;
+    includeCoverLetter?: boolean;
   };
 
   if (!body.cvText || !body.jdText) {
@@ -61,6 +62,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     jdText: body.jdText,
     cvSource: body.cvSource ?? { kind: 'text' },
     jdSource: body.jdSource ?? { kind: 'text' },
+    includeCoverLetter: body.includeCoverLetter === true,
   };
   const rewriteId = generateId();
   const template = body.template ?? 'ats-clean';

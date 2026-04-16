@@ -26,10 +26,10 @@ export async function* rewriteCV(opts: {
     JSON.stringify(jdAnalysis, null, 2),
     '',
     'ORIGINAL CV (for voice reference + ground-truth check):',
-    cvText.slice(0, 16000),
+    cvText.slice(0, 8000),      // tightened from 16000 — most CVs fit in 8k
     '',
     'ORIGINAL JD (for context):',
-    jdText.slice(0, 8000),
+    jdText.slice(0, 6000),      // tightened from 8000
     '',
     'Return JSON conforming to the RewriteOutput schema:',
     '{',
@@ -51,7 +51,7 @@ export async function* rewriteCV(opts: {
     system: REWRITE_SYSTEM,
     user,
     temperature: 0.4,
-    maxTokens: 8192,
+    maxTokens: 3500,      // tightened from 8192 — rewrite+changelog fits in 3500 for ~95% of CVs
   })) {
     full += delta;
     yield delta;

@@ -25,6 +25,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
   const [status, setStatus] = useState<Status>('idle');
   const [error, setError] = useState<string | null>(null);
+  const [includeCoverLetter, setIncludeCoverLetter] = useState(false);
 
   async function handleCvFile(file: File) {
     setStatus('parsing');
@@ -109,6 +110,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
       jdSource,
       template: 'ats-clean' as const,
       sendEmail: true,
+      includeCoverLetter,
     };
     const draftId = `draft_${Date.now().toString(36)}`;
     sessionStorage.setItem(`rewrite-payload:${draftId}`, JSON.stringify(payload));
@@ -238,6 +240,21 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
           </details>
         )}
       </div>
+
+      <label className="flex items-start gap-3 mb-5 cursor-pointer select-none">
+        <input
+          type="checkbox"
+          checked={includeCoverLetter}
+          onChange={(e) => setIncludeCoverLetter(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-[var(--color-purple)] cursor-pointer"
+        />
+        <span className="text-sm leading-snug" style={{ color: 'var(--color-heading)' }}>
+          <span style={{ fontWeight: 500 }}>Also draft a tailored cover letter</span>
+          <span className="block text-xs mt-0.5" style={{ color: 'var(--color-body)' }}>
+            Voice-matched, built around the same JD analysis. Adds ~15s + a small amount to the engine cost.
+          </span>
+        </span>
+      </label>
 
       {error && (
         <div className="mb-4 p-3 rounded-[4px] border" style={{ background: 'rgba(234,34,97,0.06)', borderColor: 'rgba(234,34,97,0.3)', color: 'var(--color-ruby)' }}>

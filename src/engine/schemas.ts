@@ -146,7 +146,8 @@ export type EngineResult = {
   cvAnalysis: CVAnalysis;
   rewrite: RewriteOutput;
   score: ATSScore;
-  coverLetter: CoverLetter;
+  /** Undefined when the user didn't opt in to a cover letter at rewrite time. */
+  coverLetter?: CoverLetter;
   createdAt: number;
   jdSource: { kind: 'text' | 'pdf' | 'docx' | 'url'; url?: string };
   cvSource: { kind: 'text' | 'pdf' | 'docx' };

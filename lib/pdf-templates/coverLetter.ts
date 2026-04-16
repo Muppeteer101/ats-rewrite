@@ -7,6 +7,9 @@ import type { EngineResult } from '@/src/engine/schemas';
  * Same ATS-safe principles as the CV: single column, no tables/images.
  */
 export function renderCoverLetter(result: EngineResult): string {
+  if (!result.coverLetter) {
+    throw new Error('No cover letter was generated for this rewrite (was it a free-tier run without the cover-letter opt-in?).');
+  }
   const doc = newDoc();
   const cl = result.coverLetter;
   const c = result.rewrite.contact;

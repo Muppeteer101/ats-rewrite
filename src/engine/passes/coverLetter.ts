@@ -44,11 +44,11 @@ export async function generateCoverLetter(opts: {
   ].join('\n');
 
   return callJson({
-    model: MODELS.sonnet,
+    model: MODELS.sonnet,    // stays on Sonnet for voice quality; cost controlled via maxTokens
     system: COVER_LETTER_SYSTEM,
     user,
     schema: coverLetterSchema,
     temperature: 0.5,
-    maxTokens: 1500,
+    maxTokens: 900,          // tightened from 1500 (200-260 word letter)
   });
 }

@@ -42,7 +42,10 @@ export async function callJson<T>(opts: {
     model: opts.model,
     max_tokens: opts.maxTokens ?? 4096,
     temperature: opts.temperature ?? 0.1,
-    system: opts.system,
+    // Prompt caching: system prompt is stable across users, so cache it
+    // for 5 min. Anthropic charges 1.25x on write, 0.1x on read — we break
+    // even at 3 uses within the window.
+    system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: opts.user }],
   });
 
@@ -108,7 +111,8 @@ export async function* streamText(opts: {
     model: opts.model,
     max_tokens: opts.maxTokens ?? 8192,
     temperature: opts.temperature ?? 0.4,
-    system: opts.system,
+    // Prompt caching on the rewrite system prompt — biggest cache win.
+    system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
     messages: [{ role: 'user', content: opts.user }],
   });
 
