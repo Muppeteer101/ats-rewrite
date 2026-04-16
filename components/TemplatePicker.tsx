@@ -26,10 +26,26 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
 
   return (
     <div className="card-elevated p-7">
-      <h3 className="sub-heading mb-1">Download your PDF</h3>
-      <p className="body mb-5">
-        We recommend the ATS-clean template — highest parse rate. Pick a different one if you’re sending direct.
+      <h3 className="sub-heading mb-1">Your CV templates</h3>
+      <p className="body mb-3">
+        We recommend the <strong>ATS-clean</strong> template — highest parse rate. Pick a different one if you’re sending direct.
       </p>
+
+      {/* Already-sent notice */}
+      <div
+        className="mb-5 p-3 rounded-[6px] border flex items-start gap-2"
+        style={{
+          background: 'var(--color-success-bg)',
+          borderColor: 'var(--color-success-border)',
+          color: 'var(--color-success-text)',
+        }}
+      >
+        <span style={{ marginTop: 1 }}>✓</span>
+        <span className="text-sm leading-snug">
+          The <strong>ATS-clean</strong> version has already been sent to your email. The previews
+          below let you compare templates and download a different one if you prefer.
+        </span>
+      </div>
 
       {/* Template cards */}
       <div className="grid md:grid-cols-3 gap-3 mb-6">
@@ -60,13 +76,14 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
         ))}
       </div>
 
-      {/* Live preview of the chosen template — iframe loads the actual PDF
-          from /api/pdf so what you see IS what you'll download. */}
+      {/* Live preview of the chosen template — <object> loads the actual
+          PDF and falls back to an "Open in new tab" link if the browser
+          can't render PDFs inline (older Safari, some mobile browsers). */}
       <div className="mb-6">
         <div className="flex items-center justify-between mb-2">
           <span
-            className="text-[11px] uppercase tracking-[0.14em]"
-            style={{ color: 'var(--color-body)' }}
+            className="text-[11px] uppercase tracking-[0.14em] font-semibold"
+            style={{ color: 'var(--color-purple)' }}
           >
             Preview · {chosen}
           </span>
@@ -80,22 +97,34 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
           </a>
         </div>
         <div
-          className="rounded-[6px] border bg-[var(--color-surface-soft)] overflow-hidden"
-          style={{ borderColor: 'var(--color-border)' }}
+          className="rounded-[6px] border overflow-hidden"
+          style={{ borderColor: 'var(--color-border)', background: '#525659' }}
         >
-          <iframe
-            // key forces the iframe to remount when the chosen template
+          <object
+            // key forces the embed to remount when the chosen template
             // changes — otherwise some browsers cache the previous PDF.
             key={chosen}
-            src={previewSrc}
-            title={`${chosen} preview`}
-            className="block w-full bg-white"
-            style={{ height: '720px', border: 'none' }}
-          />
+            data={previewSrc}
+            type="application/pdf"
+            className="block w-full"
+            style={{ height: '780px', border: 'none' }}
+            aria-label={`${chosen} preview`}
+          >
+            <div className="p-8 text-center bg-white">
+              <p className="body mb-4">
+                Your browser can&rsquo;t show the preview inline.
+              </p>
+              <a
+                href={`/api/pdf/${rewriteId}?template=${chosen}`}
+                target="_blank"
+                rel="noopener"
+                className="btn btn-sm btn-primary"
+              >
+                Open the {chosen} PDF in a new tab →
+              </a>
+            </div>
+          </object>
         </div>
-        <p className="caption mt-2" style={{ color: 'var(--color-body)' }}>
-          Mobile preview can be flaky — tap “Open full size” to view in your browser&rsquo;s native PDF viewer.
-        </p>
       </div>
 
       <button
