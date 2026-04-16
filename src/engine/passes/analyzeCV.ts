@@ -9,7 +9,7 @@ import { cvAnalysisSchema, type CVAnalysis } from '../schemas';
  */
 export async function analyzeCV(cvText: string): Promise<CVAnalysis> {
   const user =
-    `CV:\n\n${cvText.slice(0, 8000)}\n\n` +
+    `CV:\n\n${cvText.slice(0, 16000)}\n\n` +
     `Return JSON conforming to the CVAnalysis schema:\n` +
     `{\n` +
     `  "candidate_seniority": "intern"|"junior"|"mid"|"senior"|"lead"|"principal"|"executive",\n` +
@@ -30,6 +30,6 @@ export async function analyzeCV(cvText: string): Promise<CVAnalysis> {
     user,
     schema: cvAnalysisSchema,
     temperature: 0.1,
-    maxTokens: 2500,         // tightened from 4096
+    maxTokens: 4096,         // back to the safe original
   });
 }

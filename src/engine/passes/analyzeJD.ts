@@ -9,7 +9,7 @@ import { jdAnalysisSchema, type JDAnalysis } from '../schemas';
  */
 export async function analyzeJD(jdText: string): Promise<JDAnalysis> {
   const user =
-    `JOB DESCRIPTION:\n\n${jdText.slice(0, 6000)}\n\n` +
+    `JOB DESCRIPTION:\n\n${jdText.slice(0, 12000)}\n\n` +
     `Return JSON conforming to:\n` +
     `{\n` +
     `  "role_title": string,\n` +
@@ -29,6 +29,6 @@ export async function analyzeJD(jdText: string): Promise<JDAnalysis> {
     user,
     schema: jdAnalysisSchema,
     temperature: 0.1,
-    maxTokens: 1500,         // tightened from 2048
+    maxTokens: 2048,         // back to the safe original
   });
 }

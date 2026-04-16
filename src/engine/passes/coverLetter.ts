@@ -49,6 +49,6 @@ export async function generateCoverLetter(opts: {
     user,
     schema: coverLetterSchema,
     temperature: 0.5,
-    maxTokens: 900,          // tightened from 1500 (200-260 word letter)
+    maxTokens: 1500,         // back to the safe original
   });
 }
