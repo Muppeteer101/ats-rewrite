@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
 import { HomeFaq } from '@/components/HomeFaq';
+import { RewriteForm } from '@/components/RewriteForm';
 
 export const metadata = {
   title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
@@ -11,10 +12,9 @@ export const metadata = {
 export default async function HomePage() {
   const { userId } = await auth();
 
-  // Signed-in users go straight to /dashboard (where they start a new
-  // rewrite). Signed-out users go to /sign-in — Clerk's
-  // fallbackRedirectUrl already routes them to /dashboard after auth.
-  const primaryHref = userId ? '/dashboard' : '/sign-in';
+  // Signed-in users scroll to the form. Signed-out users go to /sign-in
+  // (RewriteForm also handles this redirect when signedIn=false).
+  const primaryHref = userId ? '#start' : '/sign-in';
 
   return (
     <main className="tile-grid">
@@ -44,6 +44,17 @@ export default async function HomePage() {
           <p className="tile-meta">
             First rewrite free · 1 free per month · Pay-as-you-go from £2/rewrite
           </p>
+        </div>
+      </section>
+
+      {/* ── FORM ───────────────────────────────────────────────── */}
+      <section className="tile tile-full tile-light" id="start">
+        <div className="tile-content" style={{ maxWidth: 760 }}>
+          <h2 className="tile-h-section">Start your rewrite.</h2>
+          <p className="tile-sub" style={{ marginBottom: 32 }}>
+            Paste the job description and your CV — the engine does the rest.
+          </p>
+          <RewriteForm signedIn={!!userId} />
         </div>
       </section>
 
