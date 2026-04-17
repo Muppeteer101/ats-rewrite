@@ -50,7 +50,12 @@ export async function* runEngine(
   };
 
   // Quick gap pre-flight to give the user an honest signal before Pass 3 starts.
-  const cvLower = (input.cvText.toLowerCase() + ' ' + cvAnalysis.stated_skills.join(' ').toLowerCase());
+  // Include implied_skills so we don't false-flag inferred capabilities as missing.
+  const cvLower = (
+    input.cvText.toLowerCase() + ' ' +
+    cvAnalysis.stated_skills.join(' ').toLowerCase() + ' ' +
+    cvAnalysis.implied_skills.join(' ').toLowerCase()
+  );
   const gaps = jdAnalysis.required_skills.filter(
     (s) => !cvLower.includes(s.toLowerCase()),
   );
@@ -106,7 +111,7 @@ export async function* runEngine(
   }
 
   const [score, coverLetter] = await Promise.all([
-    scoreATS({ jdAnalysis, rewrite }),
+    scoreATS({ jdAnalysis, rewrite, impliedSkills: cvAnalysis.implied_skills }),
     input.includeCoverLetter
       ? generateCoverLetter({ jdText: input.jdText, jdAnalysis, cvAnalysis, rewrite })
       : Promise.resolve(undefined),

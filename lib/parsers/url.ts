@@ -15,6 +15,49 @@ function normalize(text: string): string {
     .trim();
 }
 
+// Section headings that signal the start of boilerplate — stop keeping from here.
+const BOILERPLATE_HEADING = /^(benefits|perks|what we offer|what's in it for you|why join|why work (with|at|for)|compensation|pay range|salary|total rewards|the package|our (culture|values|story|mission|vision)|about (us|the company|our company|our team)|who we are|diversity|equal opportunity|eeo|affirmative action|notice to|privacy|cookie|candidate data|your data|recruitment fraud|apply now|how to apply|application (process|instructions)|next steps)\b/i;
+
+// Section headings that signal content we WANT — once seen, keep until boilerplate heading.
+const REQUIREMENTS_HEADING = /^(requirement|qualification|what you('ll| will) (bring|need|have)|what we('re| are) looking for|must.have|essential|responsibilities|what you('ll| will) do|the role|role overview|position overview|about the role|job description|key responsibilities|about the (job|position|opportunity)|your (responsibilities|role)|skills|experience|education|technical requirement|minimum requirement|preferred (qualification|experience)|key requirement)/i;
+
+/**
+ * Strip company boilerplate from a scraped job posting so only the
+ * requirements/responsibilities/qualifications sections reach analyzeJD.
+ *
+ * Strategy: walk the text line-by-line, detect section headings, and drop any
+ * section that starts with a known boilerplate pattern. We keep text until the
+ * first boilerplate heading, then toggle back on if a requirements heading follows.
+ */
+export function stripJDBoilerplate(text: string): string {
+  const lines = text.split('\n');
+  const kept: string[] = [];
+  let keeping = true; // start by keeping — opening paragraphs are usually the role summary
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+
+    // Detect section headings: short lines (≤60 chars) that look like titles.
+    if (trimmed.length > 0 && trimmed.length <= 60 && !/[.!?]$/.test(trimmed)) {
+      if (BOILERPLATE_HEADING.test(trimmed)) {
+        keeping = false;
+        continue;
+      }
+      if (REQUIREMENTS_HEADING.test(trimmed)) {
+        keeping = true;
+      }
+    }
+
+    if (keeping) {
+      kept.push(line);
+    }
+  }
+
+  const stripped = kept.join('\n').replace(/\n{3,}/g, '\n\n').trim();
+  // Fallback: if we stripped too aggressively (< 200 chars left), return original.
+  return stripped.length >= 200 ? stripped : text;
+}
+
 async function fetchDirect(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: {
@@ -40,7 +83,7 @@ async function fetchDirect(url: string): Promise<string> {
     throw new Error('insufficient content');
   }
 
-  return normalize(article.textContent);
+  return stripJDBoilerplate(normalize(article.textContent));
 }
 
 // Jina AI Reader proxies through residential IPs and returns clean text.
@@ -61,7 +104,7 @@ async function fetchViaJina(url: string): Promise<string> {
   const text = await res.text();
   if (!text || text.trim().length < 200) throw new Error('Jina returned insufficient content');
 
-  return normalize(text);
+  return stripJDBoilerplate(normalize(text));
 }
 
 /**

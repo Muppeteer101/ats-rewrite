@@ -15,12 +15,16 @@ import {
 export async function scoreATS(opts: {
   jdAnalysis: JDAnalysis;
   rewrite: RewriteOutput;
+  impliedSkills: string[];
 }): Promise<ATSScore> {
-  const { jdAnalysis, rewrite } = opts;
+  const { jdAnalysis, rewrite, impliedSkills } = opts;
 
   const user = [
     'JD ANALYSIS:',
     JSON.stringify(jdAnalysis, null, 2),
+    '',
+    'CANDIDATE IMPLIED SKILLS (inferred from CV — treat as demonstrated capabilities):',
+    JSON.stringify(impliedSkills),
     '',
     'REWRITTEN CV:',
     JSON.stringify(rewrite, null, 2),
