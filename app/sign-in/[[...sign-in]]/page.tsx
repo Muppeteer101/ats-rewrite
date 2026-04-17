@@ -21,7 +21,7 @@ export default function Page() {
           path="/sign-in"
           routing="path"
           signUpUrl="/sign-up"
-          fallbackRedirectUrl="/dashboard"
+          fallbackRedirectUrl="/new"
           appearance={{
             variables: {
               colorPrimary: '#533afd',

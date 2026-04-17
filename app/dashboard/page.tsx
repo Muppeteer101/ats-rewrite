@@ -38,7 +38,7 @@ export default async function DashboardPage({
             <span style={{ color: 'var(--color-purple)' }}>ATS</span>·rewriter
           </Link>
           <div className="flex items-center gap-3">
-            <Link href="/" className="btn btn-sm btn-neutral">
+            <Link href="/new" className="btn btn-sm btn-neutral">
               New rewrite
             </Link>
             <UserButton />
@@ -54,7 +54,7 @@ export default async function DashboardPage({
               Welcome back{user?.firstName ? <>, <span style={{ color: 'var(--color-purple)' }}>{user.firstName}</span></> : ''}.
             </h1>
           </div>
-          <Link href="/" className="btn btn-lg btn-primary">
+          <Link href="/new" className="btn btn-lg btn-primary">
             New rewrite →
           </Link>
         </div>
@@ -112,7 +112,7 @@ export default async function DashboardPage({
         {rewrites.length === 0 ? (
           <div className="card-elevated p-10 text-center">
             <p className="body mb-5">No rewrites yet. Your first one is free.</p>
-            <Link href="/" className="btn btn-lg btn-primary">
+            <Link href="/new" className="btn btn-lg btn-primary">
               Start your first rewrite →
             </Link>
           </div>
