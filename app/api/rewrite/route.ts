@@ -41,6 +41,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     template?: 'ats-clean' | 'professional' | 'modern';
     sendEmail?: boolean;
     includeCoverLetter?: boolean;
+    preAnalysis?: EngineInput['preAnalysis'];
+    extraSkills?: string[];
   };
 
   if (!body.cvText || !body.jdText) {
@@ -63,6 +65,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     cvSource: body.cvSource ?? { kind: 'text' },
     jdSource: body.jdSource ?? { kind: 'text' },
     includeCoverLetter: body.includeCoverLetter === true,
+    preAnalysis: body.preAnalysis,
+    extraSkills: body.extraSkills,
   };
   const rewriteId = generateId();
   const template = body.template ?? 'ats-clean';

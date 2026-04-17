@@ -181,8 +181,8 @@ Only mark a skill as MISSING if none of the four conditions above are satisfied.
   - 10 pts — structural ATS-readability (single-column-friendly, labelled sections, parseable dates)
   - 10 pts — seniority + tone alignment (candidate level + voice match the JD's expectations)
 
-before_score: estimate the ORIGINAL CV (pre-rewrite) score against this JD. Pre-rewrite CVs typically use different wording, have unparseable structure, and miss exact keyword matches. A realistic before_score for an unoptimised senior executive CV is 25–50. Most rewrites produce a 25–45 pt uplift.
-after_score: score for the rewritten CV using the rubric and matching rules above. Items in rewrite.unmet_requirements reduce the score; items covered via scope containment or implied skills should NOT reduce the score.
+before_score: independently score the ORIGINAL CV (before rewriting) against this JD. Use the "before" text in rewrite.summary.before and rewrite.roles[].bullets[].before as your evidence — these are the actual original bullet points and summary. Apply the same rubric and matching rules to THIS text, NOT the rewritten text. DO NOT derive before_score from after_score or create any specific gap between them — assess them completely independently. A senior executive with highly relevant background might score 40–65 even before rewriting; a less-matched candidate might score 15–35.
+after_score: independently score the REWRITTEN CV against this JD using the rubric and matching rules above. Items in rewrite.unmet_requirements reduce the score; items covered via scope containment or implied skills should NOT reduce the score.
 
 honest_gap_report: 1-3 sentences, plain English, addressed to the candidate. Lead with the strongest item from rewrite.unmet_requirements (genuinely absent skills). If unmet_requirements is empty, say the CV is well-matched and note one soft gap if any.
 

@@ -3,7 +3,8 @@ import { analyzeCV } from './passes/analyzeCV';
 import { rewriteCV } from './passes/rewriteCV';
 import { scoreATS } from './passes/scoreATS';
 import { generateCoverLetter } from './passes/coverLetter';
-import type { EngineResult, NarrationEvent } from './schemas';
+import type { EngineResult, NarrationEvent, JDAnalysis, CVAnalysis } from './schemas';
+import { detectGaps } from './gap-detect';
 
 export type EngineInput = {
   cvText: string;
@@ -12,6 +13,10 @@ export type EngineInput = {
   jdSource: { kind: 'text' | 'pdf' | 'docx' | 'url'; url?: string };
   /** Opt-in cover letter (Pass 5). Default false to keep free-tier costs down. */
   includeCoverLetter?: boolean;
+  /** Pre-computed Pass 1+2 results from /api/analyze — skips running them again. */
+  preAnalysis?: { jdAnalysis: JDAnalysis; cvAnalysis: CVAnalysis };
+  /** User-confirmed implied skills from the gap-confirm step. Merged into CV implied_skills. */
+  extraSkills?: string[];
 };
 
 /**
@@ -27,42 +32,63 @@ export async function* runEngine(
 ): AsyncGenerator<NarrationEvent, EngineResult, void> {
   const startedAt = Date.now();
 
-  yield { type: 'system', line: '› Engine starting — running 4 passes…' };
+  // Pass 1+2 — use pre-computed analysis if available (from /api/analyze gap-confirm step),
+  // otherwise run both in parallel now.
+  let jdAnalysis: JDAnalysis;
+  let cvAnalysis: CVAnalysis;
 
-  // Pass 1 + Pass 2 in parallel — they're independent.
-  yield { type: 'pass', pass: 1, line: '[Pass 1] Reading the job description…' };
-  yield { type: 'pass', pass: 2, line: '[Pass 2] Analysing your CV…' };
-
-  const [jdAnalysis, cvAnalysis] = await Promise.all([
-    analyzeJD(input.jdText),
-    analyzeCV(input.cvText),
-  ]);
-
-  yield {
-    type: 'pass-complete',
-    pass: 1,
-    line: `✓ JD: role "${jdAnalysis.role_title}" (${jdAnalysis.seniority}), ${jdAnalysis.required_skills.length} required skills, ${jdAnalysis.preferred_skills.length} preferred, tone is ${jdAnalysis.company_tone}.`,
-  };
-  yield {
-    type: 'pass-complete',
-    pass: 2,
-    line: `✓ CV: ${cvAnalysis.years_experience} years (${cvAnalysis.candidate_seniority}), ${cvAnalysis.roles.length} roles, ${cvAnalysis.stated_skills.length} stated skills + ${cvAnalysis.implied_skills.length} implied. Voice: formality ${cvAnalysis.voice_signature.formality}/10, ${cvAnalysis.voice_signature.first_person ? 'first-person' : 'third-person'}.`,
-  };
-
-  // Quick gap pre-flight to give the user an honest signal before Pass 3 starts.
-  // Include implied_skills so we don't false-flag inferred capabilities as missing.
-  const cvLower = (
-    input.cvText.toLowerCase() + ' ' +
-    cvAnalysis.stated_skills.join(' ').toLowerCase() + ' ' +
-    cvAnalysis.implied_skills.join(' ').toLowerCase()
-  );
-  const gaps = jdAnalysis.required_skills.filter(
-    (s) => !cvLower.includes(s.toLowerCase()),
-  );
-  if (gaps.length > 0) {
+  if (input.preAnalysis) {
+    jdAnalysis = input.preAnalysis.jdAnalysis;
+    cvAnalysis = input.preAnalysis.cvAnalysis;
+    yield { type: 'system', line: '› Engine starting — using pre-computed analysis, running Pass 3+4…' };
     yield {
-      type: 'warn',
-      line: `⚠ Heads-up: ${gaps.length} JD-required skill${gaps.length > 1 ? 's' : ''} not in your CV (${gaps.slice(0, 4).join(', ')}${gaps.length > 4 ? '…' : ''}). The rewrite will flag these honestly — not invent them.`,
+      type: 'pass-complete',
+      pass: 1,
+      line: `✓ JD: role "${jdAnalysis.role_title}" (${jdAnalysis.seniority}), ${jdAnalysis.required_skills.length} required skills, ${jdAnalysis.preferred_skills.length} preferred, tone is ${jdAnalysis.company_tone}.`,
+    };
+    yield {
+      type: 'pass-complete',
+      pass: 2,
+      line: `✓ CV: ${cvAnalysis.years_experience} years (${cvAnalysis.candidate_seniority}), ${cvAnalysis.roles.length} roles, ${cvAnalysis.stated_skills.length} stated skills + ${cvAnalysis.implied_skills.length} implied.`,
+    };
+  } else {
+    yield { type: 'system', line: '› Engine starting — running 4 passes…' };
+    yield { type: 'pass', pass: 1, line: '[Pass 1] Reading the job description…' };
+    yield { type: 'pass', pass: 2, line: '[Pass 2] Analysing your CV…' };
+
+    [jdAnalysis, cvAnalysis] = await Promise.all([
+      analyzeJD(input.jdText),
+      analyzeCV(input.cvText),
+    ]);
+
+    yield {
+      type: 'pass-complete',
+      pass: 1,
+      line: `✓ JD: role "${jdAnalysis.role_title}" (${jdAnalysis.seniority}), ${jdAnalysis.required_skills.length} required skills, ${jdAnalysis.preferred_skills.length} preferred, tone is ${jdAnalysis.company_tone}.`,
+    };
+    yield {
+      type: 'pass-complete',
+      pass: 2,
+      line: `✓ CV: ${cvAnalysis.years_experience} years (${cvAnalysis.candidate_seniority}), ${cvAnalysis.roles.length} roles, ${cvAnalysis.stated_skills.length} stated skills + ${cvAnalysis.implied_skills.length} implied. Voice: formality ${cvAnalysis.voice_signature.formality}/10, ${cvAnalysis.voice_signature.first_person ? 'first-person' : 'third-person'}.`,
+    };
+
+    // Narration-only gap pre-flight (word-level matching, not phrase matching).
+    const gaps = detectGaps(jdAnalysis.required_skills, input.cvText, cvAnalysis);
+    if (gaps.length > 0) {
+      yield {
+        type: 'warn',
+        line: `ℹ ${gaps.length} JD keyword${gaps.length > 1 ? 's' : ''} not found literally in your CV (${gaps.slice(0, 3).join(', ')}${gaps.length > 3 ? '…' : ''}). Given your experience level, the rewrite will surface these through your actual achievements.`,
+      };
+    }
+  }
+
+  // Merge user-confirmed extra skills into implied_skills for Pass 3.
+  if (input.extraSkills?.length) {
+    cvAnalysis = {
+      ...cvAnalysis,
+      implied_skills: [
+        ...new Set([...cvAnalysis.implied_skills, ...input.extraSkills]),
+      ],
     };
   }
 
