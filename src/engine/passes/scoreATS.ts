@@ -44,6 +44,6 @@ export async function scoreATS(opts: {
     user,
     schema: atsScoreSchema,
     temperature: 0,
-    maxTokens: 1024,
+    maxTokens: 2048,
   });
 }

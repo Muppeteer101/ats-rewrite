@@ -40,6 +40,12 @@ Hard rules:
 5. voice_signature.first_person: true if the CV uses "I" or implied first-person ("Built X, led Y"). false if it's third-person about the candidate.
 6. years_experience is the total of distinct working years, not summed (parallel roles don't double-count).
 7. candidate_seniority is your read of the candidate's level based on titles + scope of achievements — NOT their stated job title alone.
+8. Scope-hierarchy inference for implied_skills: when a candidate held BROADER scope than a narrower form of a concept, add the narrower form to implied_skills. This ensures the rewrite pass can surface it precisely. Examples:
+   - "International VP of Sales / EMEA, APAC, Americas" → add "regional sales leadership", "national sales leadership"
+   - "Led teams of 5 to 110 people" → add "team management", "people management", "sales team management"
+   - "New Business and Account Management" combined in a senior role → add "strategic account management"
+   - "P&L ownership at company level" → add "business unit P&L", "departmental budget ownership"
+   These are real capabilities the candidate has — they just appear at broader scope in the CV.
 
 Output: STRICT JSON conforming to the provided schema. No prose, no commentary, no Markdown fencing.`;
 
@@ -63,7 +69,13 @@ Your job is to produce a rewritten CV that surfaces the candidate's REAL experie
 
 3. NEVER invent responsibilities, scope, team sizes, budgets, or dates. If the source says "Led the design team", you cannot rewrite to "Led a 12-person design team across 3 timezones" unless the team size and timezones are stated elsewhere in the source.
 
-4. If a JD-required skill is absent from the source CV, list it in unmet_requirements. DO NOT sneak it into the rewrite by paraphrase or implication. Recruiters can spot this.
+4. If a JD-required skill is GENUINELY absent from the source CV, list it in unmet_requirements. DO NOT sneak it into the rewrite by paraphrase or implication. Recruiters can spot this.
+   CRITICAL — before adding to unmet_requirements, check for scope-equivalence and semantic coverage:
+   - Scope hierarchy: global > regional > national > local. A candidate with global/international responsibility COVERS regional/national requirements. Do NOT mark "regional sales leadership" as unmet if the candidate held global responsibility.
+   - Leadership = management: "led a team of 50" satisfies "team management", "people management", "sales team management", etc. Do NOT mark these as unmet.
+   - Broader role covers narrower: "Account Management" in a role that also involved strategy satisfies "strategic account management".
+   - If CVAnalysis.implied_skills contains the concept, it is NOT absent — the rewrite should surface it.
+   Only add to unmet_requirements if the skill or its conceptual equivalent is genuinely missing from stated_skills, implied_skills, and all role achievements.
 
 ═══════════════════════════════════════════════════════════════════════════
   REWRITE TECHNIQUE — what you SHOULD do
@@ -135,6 +147,20 @@ export const SCORE_SYSTEM = `You are an ATS scoring engine.
 
 You are given the JDAnalysis and the rewritten CV (RewriteOutput). Produce an honest, defensible match score.
 
+═══════════════════════════════════════════════════════════════════════════
+  SEMANTIC MATCHING — read before scoring
+═══════════════════════════════════════════════════════════════════════════
+
+Use SEMANTIC matching, NOT literal keyword matching. A required skill is covered when the candidate's CV demonstrates an equivalent or broader capability:
+
+- Scope hierarchy: global > regional > national > local. A candidate with international or global responsibility COVERS any regional or national requirement. Never mark "regional sales leadership" as missing if the candidate has global scope.
+- Leadership = management: any form of leading/managing a team satisfies "team management", "people management", "sales team management", etc.
+- Broader covers narrower: "Account Management" in a commercial role satisfies "strategic account management". "Business Development" covers "pipeline management". "P&L responsibility" covers "budget management".
+- Synonyms: "commercial leadership" = "sales leadership"; "client portfolio" = "account management"; "new logo acquisition" = "new business development".
+- Implied skills count: if the concept appears in rewrite.unmet_requirements, it is genuinely missing. If it was surfaced in the rewritten CV, count it as matched.
+
+═══════════════════════════════════════════════════════════════════════════
+
 Scoring rubric (out of 100):
   - 50 pts — required-skills coverage: (matched required / total required) × 50
   - 20 pts — preferred-skills coverage: (matched preferred / total preferred) × 20
@@ -142,10 +168,10 @@ Scoring rubric (out of 100):
   - 10 pts — structural ATS-readability (is the structure single-column-friendly, are sections labelled, are dates parseable)
   - 10 pts — seniority + tone alignment (does the candidate's seniority + voice match the JD's seniority + tone)
 
-before_score: estimate what the ORIGINAL CV (pre-rewrite) would have scored against this JD using the same rubric. Be realistic — most uplifts are 30-50 pt jumps.
-after_score: actual score for the rewritten CV.
+before_score: estimate what the ORIGINAL CV (pre-rewrite) would have scored against this JD using the same rubric. A senior executive CV against a matching seniority JD should typically score 40–65 before rewriting. Be calibrated — most uplifts are 20–40 pt jumps. Do NOT anchor the before_score low just because unmet_requirements is non-empty; the rewrite pass may have been overly conservative.
+after_score: actual score for the rewritten CV using the semantic matching rules above.
 
-honest_gap_report: 1-3 sentences, plain English, addressed to the candidate. Lead with the strongest unmet JD requirement. Suggest a concrete next step (e.g. "Consider self-studying X" or "Target roles that accept Y as a substitute").
+honest_gap_report: 1-3 sentences, plain English, addressed to the candidate. Lead with the strongest GENUINELY unmet JD requirement (from rewrite.unmet_requirements only). Suggest a concrete next step. If unmet_requirements is empty or all requirements are covered, say so positively.
 
 format_warnings: only populate if the rewrite has structures that would break ATS parsers (tables, columns, images). Empty is fine.
 
