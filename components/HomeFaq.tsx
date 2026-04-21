@@ -13,7 +13,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How is this different from ChatGPT writing my CV?',
-    a: 'A single ChatGPT prompt does one thing at a time. ToolyKit runs four separate AI passes that feed each other: it reads the job description, reads your CV, rewrites with the right keywords, then scores the result against the role. That structural difference is why the output is measurably better — and why we can scaffold an honest before/after score.',
+    a: 'A single ChatGPT prompt does one thing at a time. ToolyKit runs six separate AI passes that feed each other: it analyses the job description, analyses your CV, scores the role match, produces a recruiter verdict, rewrites the CV with a tailored cover letter and a log of every change, then rates ATS confidence on the rewrite. That structural difference is why the output is measurably better — and why we can scaffold an honest match score and ATS rating.',
   },
   {
     q: 'Will it invent experience I don\u2019t have?',
