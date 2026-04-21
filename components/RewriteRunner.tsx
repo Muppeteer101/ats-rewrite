@@ -157,9 +157,6 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
     }
   }
 
-  const rewriteId = header && phase === 'done' ? (header as ResultHeader & { id?: string }) : null;
-  void rewriteId; // header already carries what we need; the full result is fetched by ResultView
-
   return (
     <div className="max-w-[1080px] mx-auto px-6 py-10">
       {phase !== 'done' && (
