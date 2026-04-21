@@ -2,7 +2,7 @@
 
 A multi-pass AI CV rewriter for the Almost Legal portfolio. Premium ATS rewriting that's measurably better than ChatGPT — without inventing experience.
 
-- **Engine**: 4-pass pipeline (JD analysis → CV analysis → contextual rewrite → ATS scoring), Anthropic Claude Sonnet + Haiku, streamed via SSE
+- **Engine**: 6-pass pipeline (job analysis → CV analysis → role match score → recruiter verdict → rewrite + cover letter + changes → ATS confidence), Anthropic Claude Sonnet + Haiku, streamed via SSE
 - **Output**: Polished PDF (3 templates: ATS-clean, Professional, Modern) + change report + before/after ATS score
 - **Pricing**: First rewrite free + 1 free per calendar month, then 3-pack £9.99 / 10-pack £19.99 (multi-currency)
 - **Auth**: Clerk magic-link + dashboard
@@ -26,7 +26,7 @@ app/
     checkout/                         Stripe credit-pack session
     webhook/                          Stripe checkout.session.completed → +credits
 src/engine/
-  index.ts                            4-pass orchestrator (yields NarrationEvents)
+  index.ts                            6-pass orchestrator (yields NarrationEvents)
   passes/                             analyzeJD · analyzeCV · rewriteCV · scoreATS
   prompts.ts                          ALL system prompts (anti-hallucination clauses live here)
   schemas.ts                          Zod schemas for every pass output

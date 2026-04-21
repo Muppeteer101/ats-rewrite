@@ -15,7 +15,7 @@ export default async function NewRewritePage() {
       <span className="badge badge-purple mb-4 inline-block">New rewrite</span>
       <h1 className="display-large mb-3">Rewrite your CV</h1>
       <p className="body mb-8 max-w-[640px]">
-        Paste the job description and your CV. The four-pass engine takes it from there.
+        Paste the job description and your CV. The six-pass engine takes it from there.
       </p>
       <RewriteForm signedIn={true} />
     </main>

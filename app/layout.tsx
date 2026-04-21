@@ -32,7 +32,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
     description:
-      'A four-pass AI pipeline that rewrites your CV against the exact job description. ATS-scored. No hallucinated experience.',
+      'A six-pass AI pipeline that analyses, scores, rewrites, and ATS-checks your CV against the exact job description. Recruiter verdict included. No hallucinated experience.',
     type: 'website',
   },
   twitter: {

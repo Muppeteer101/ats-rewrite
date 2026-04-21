@@ -152,9 +152,9 @@ export async function sendRewriteReadyEmail(opts: {
 
             <tr><td style="padding-bottom: 24px;">
               <p style="margin: 0; font-size: 15px; color: #444; line-height: 1.6;">
-                We rewrote your CV for <strong>${escape(jobTitle)}</strong> — ATS match score went from
-                <strong>${scoreBefore}</strong> to <strong style="color:#108c3d;">${scoreAfter}</strong>.
-                The PDF is attached. Send it off and good luck.
+                We analysed, scored, and rewrote your CV for <strong>${escape(jobTitle)}</strong>. Your original matched the role at
+                <strong>${scoreBefore}/100</strong>; the rewritten version is <strong style="color:#108c3d;">${scoreAfter}%</strong> confidence
+                to pass ATS screening. The PDF is attached. Send it off and good luck.
               </p>
             </td></tr>
 
@@ -195,7 +195,7 @@ export async function sendRewriteReadyEmail(opts: {
   await client().emails.send({
     from: FROM,
     to,
-    subject: `Your CV is ready — ATS score ${scoreBefore} → ${scoreAfter}`,
+    subject: `Your CV is ready — match ${scoreBefore}/100, ATS ${scoreAfter}%`,
     html,
     attachments: [{ filename, content: pdfBase64 }],
   });

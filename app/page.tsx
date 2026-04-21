@@ -23,7 +23,7 @@ export default async function HomePage() {
         <div className="tile-content">
           <div className="tile-badge">
             <span className="tile-badge-stars">★★★★★</span>
-            4-pass AI engine · streamed live
+            6-pass AI engine · streamed live
           </div>
           <h1 className="tile-h-mega">
             Your CV vs the ATS.<br />
@@ -86,7 +86,7 @@ export default async function HomePage() {
                 </svg>
               </div>
               <h3>2. AI does its thing</h3>
-              <p>Four passes. Reads the JD, reads your CV, rewrites with the right keywords, scores it against the role.</p>
+              <p>Six passes. JD analysis, CV analysis, role match score, recruiter verdict, rewritten CV + cover letter, ATS confidence rating.</p>
             </div>
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -99,7 +99,7 @@ export default async function HomePage() {
                 </svg>
               </div>
               <h3>3. Download your PDF</h3>
-              <p>ATS-clean, Professional, or Modern template. Add a matching cover letter. Send and apply.</p>
+              <p>ATS-clean, Professional, or Modern template, plus a matching cover letter. Send and apply.</p>
             </div>
           </div>
         </div>
@@ -108,16 +108,16 @@ export default async function HomePage() {
       {/* ── STATS ──────────────────────────────────────────────── */}
       <section className="tile tile-half tile-dark">
         <div className="tile-content">
-          <p className="tile-h-stat">4-pass</p>
-          <h3 className="tile-h-sm">AI rewrite engine</h3>
-          <p className="tile-sub-sm">Reads the JD. Reads your CV. Rewrites with the right keywords. Scores the result against the actual role.</p>
+          <p className="tile-h-stat">6-pass</p>
+          <h3 className="tile-h-sm">AI analysis engine</h3>
+          <p className="tile-sub-sm">Reads the JD. Reads your CV. Scores the match. Runs a recruiter verdict. Rewrites the CV + drafts a cover letter. Confidence-rates it against ATS.</p>
         </div>
       </section>
       <section className="tile tile-half tile-dark">
         <div className="tile-content">
           <p className="tile-h-stat">4</p>
           <h3 className="tile-h-sm">PDF templates</h3>
-          <p className="tile-sub-sm">ATS-Clean, Professional, Modern — plus an optional voice-matched cover letter built from the same JD analysis.</p>
+          <p className="tile-sub-sm">ATS-Clean, Professional, Modern — plus a voice-matched cover letter built from the same JD analysis, always included.</p>
         </div>
       </section>
 
