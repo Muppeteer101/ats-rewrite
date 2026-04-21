@@ -40,9 +40,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     jdSource?: EngineInput['jdSource'];
     template?: 'ats-clean' | 'professional' | 'modern';
     sendEmail?: boolean;
-    includeCoverLetter?: boolean;
-    preAnalysis?: EngineInput['preAnalysis'];
-    extraSkills?: string[];
   };
 
   if (!body.cvText || !body.jdText) {
@@ -64,9 +61,6 @@ export async function POST(req: NextRequest): Promise<Response> {
     jdText: body.jdText,
     cvSource: body.cvSource ?? { kind: 'text' },
     jdSource: body.jdSource ?? { kind: 'text' },
-    includeCoverLetter: body.includeCoverLetter === true,
-    preAnalysis: body.preAnalysis,
-    extraSkills: body.extraSkills,
   };
   const rewriteId = generateId();
   const template = body.template ?? 'ats-clean';
@@ -96,12 +90,15 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         // Persist — 60-day TTL is plenty (dashboard re-download window).
         await redis.set(k.rewrite(rewriteId), result, { ex: 60 * 24 * 60 * 60 });
+        // scoreBefore = original CV → JD match (Pass 3), scoreAfter = ATS pass
+        // likelihood for the rewritten CV (Pass 6). These are the two numbers
+        // we surface on the dashboard + email as the before→after narrative.
         await recordRewrite(userId, {
           id: rewriteId,
-          jobTitle: result.jdAnalysis.role_title,
+          jobTitle: result.jobAnalysis.roleTitle,
           date: result.createdAt,
-          scoreBefore: result.score.before_score,
-          scoreAfter: result.score.after_score,
+          scoreBefore: result.roleMatch.overallScore,
+          scoreAfter: result.atsConfidence.percentage,
           pdfTemplate: template,
         });
 
@@ -139,9 +136,9 @@ export async function POST(req: NextRequest): Promise<Response> {
               await sendRewriteReadyEmail({
                 to: email,
                 customerName,
-                jobTitle: result.jdAnalysis.role_title,
-                scoreBefore: result.score.before_score,
-                scoreAfter: result.score.after_score,
+                jobTitle: result.jobAnalysis.roleTitle,
+                scoreBefore: result.roleMatch.overallScore,
+                scoreAfter: result.atsConfidence.percentage,
                 rewriteUrl: `${baseUrl}/rewrite/${rewriteId}`,
                 pdfBase64,
                 shareCode,

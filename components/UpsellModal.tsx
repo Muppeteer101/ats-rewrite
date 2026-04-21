@@ -11,7 +11,22 @@ type GeoResponse = {
   detected: boolean;
 };
 
-export function UpsellModal({ onClose }: { onClose?: () => void }) {
+/**
+ * Out-of-credits top-up modal.
+ *
+ * `resumeDraftId` — if set, passes through to /api/checkout so that after a
+ * successful top-up Stripe returns the user to /rewrite/<draftId>?topup=success
+ * instead of the dashboard. That page sees the query param and re-runs the
+ * rewrite with the sessionStorage payload, so the flow feels continuous
+ * instead of "pay, land on dashboard, go back to start, re-upload everything".
+ */
+export function UpsellModal({
+  onClose,
+  resumeDraftId,
+}: {
+  onClose?: () => void;
+  resumeDraftId?: string;
+}) {
   const [geo, setGeo] = useState<GeoResponse | null>(null);
   const [busy, setBusy] = useState<3 | 10 | null>(null);
 
@@ -31,7 +46,7 @@ export function UpsellModal({ onClose }: { onClose?: () => void }) {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ pack }),     // currency derived server-side from geo, not sent
+        body: JSON.stringify({ pack, resumeDraftId }),     // currency derived server-side from geo, not sent
       });
       const data = await res.json();
       if (!res.ok || !data.url) {

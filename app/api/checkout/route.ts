@@ -23,12 +23,20 @@ export async function POST(req: NextRequest): Promise<Response> {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const body = (await req.json()) as { pack?: number };
+  const body = (await req.json()) as { pack?: number; resumeDraftId?: string };
   const packNum = Number(body.pack);
   const pack: PackSize | null = packNum === 3 ? 3 : packNum === 10 ? 10 : null;
   if (!pack) {
     return NextResponse.json({ error: "pack must be 3 or 10" }, { status: 400 });
   }
+
+  // Whitelist the draft ID format produced by RewriteForm ("draft_<base36>")
+  // so a malicious caller can't turn success_url into an open-redirect vector.
+  const rawDraftId = body.resumeDraftId;
+  const resumeDraftId =
+    typeof rawDraftId === 'string' && /^draft_[a-z0-9]{1,40}$/i.test(rawDraftId)
+      ? rawDraftId
+      : null;
 
   // Currency is LOCKED to the user's geo-IP — derived from the
   // Vercel-set `x-vercel-ip-country` header, NEVER from client input.
@@ -78,8 +86,15 @@ export async function POST(req: NextRequest): Promise<Response> {
       currency,
       ref: alRef ?? '',
     },
-    success_url: `${baseUrl}/dashboard?topup=success&pack=${pack}`,
-    cancel_url: `${baseUrl}/dashboard?topup=cancelled`,
+    // When the top-up is triggered from the middle of a rewrite (via
+    // UpsellModal on the /rewrite/[id] page), return there so the runner can
+    // resume automatically. Otherwise fall back to the dashboard banner.
+    success_url: resumeDraftId
+      ? `${baseUrl}/rewrite/${resumeDraftId}?topup=success&pack=${pack}`
+      : `${baseUrl}/dashboard?topup=success&pack=${pack}`,
+    cancel_url: resumeDraftId
+      ? `${baseUrl}/rewrite/${resumeDraftId}?topup=cancelled`
+      : `${baseUrl}/dashboard?topup=cancelled`,
     allow_promotion_codes: !discounts, // let users type a code if no auto-apply
   });
 

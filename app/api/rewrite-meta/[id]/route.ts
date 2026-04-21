@@ -8,10 +8,14 @@ export const runtime = 'nodejs';
 /**
  * GET /api/rewrite-meta/[id]?full=1
  *
- * Returns metadata about a rewrite. By default returns the lean fields the
- * result page header needs (jobTitle, scoreBefore, scoreAfter). Pass `full=1`
- * to also include the full rewrite + score JSON for the change-rationale +
- * gap-report views.
+ * Returns metadata about a completed rewrite.
+ *
+ * Lean (default) — what the result page header needs to render the top banner:
+ *   { jobTitle, matchScore, atsPercentage, atsRating, verdict }
+ *
+ * Full (?full=1) — everything the result view needs for all seven blocks:
+ *   the job/CV analyses, role-match, recruiter verdict, rewrite, cover letter,
+ *   changes made, and ATS confidence.
  */
 export async function GET(
   req: NextRequest,
@@ -28,25 +32,30 @@ export async function GET(
     return NextResponse.json({ error: 'Not found' }, { status: 404 });
   }
 
+  const header = {
+    jobTitle: result.jobAnalysis.roleTitle,
+    matchScore: result.roleMatch.overallScore,
+    atsPercentage: result.atsConfidence.percentage,
+    atsRating: result.atsConfidence.rating,
+    verdict: result.recruiterVerdict.decision,
+  };
+
   const url = new URL(req.url);
   const full = url.searchParams.get('full') === '1';
 
   if (full) {
     return NextResponse.json({
-      jobTitle: result.jdAnalysis.role_title,
-      scoreBefore: result.score.before_score,
-      scoreAfter: result.score.after_score,
-      rewrite: result.rewrite,
-      score: result.score,
-      coverLetter: result.coverLetter,
-      jdAnalysis: result.jdAnalysis,
+      ...header,
+      jobAnalysis: result.jobAnalysis,
       cvAnalysis: result.cvAnalysis,
+      roleMatch: result.roleMatch,
+      recruiterVerdict: result.recruiterVerdict,
+      rewrite: result.rewrite,
+      coverLetter: result.coverLetter,
+      changesMade: result.changesMade,
+      atsConfidence: result.atsConfidence,
     });
   }
 
-  return NextResponse.json({
-    jobTitle: result.jdAnalysis.role_title,
-    scoreBefore: result.score.before_score,
-    scoreAfter: result.score.after_score,
-  });
+  return NextResponse.json(header);
 }

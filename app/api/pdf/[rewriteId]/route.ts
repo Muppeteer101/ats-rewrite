@@ -54,7 +54,7 @@ export async function GET(
 
   const buf = Buffer.from(base64, 'base64');
   const result = await redis.get<EngineResult>(k.rewrite(rewriteId));
-  const slug = (result?.jdAnalysis.role_title ?? 'cv')
+  const slug = (result?.jobAnalysis.roleTitle ?? 'cv')
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-|-$/g, '')

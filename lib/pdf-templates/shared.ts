@@ -62,13 +62,13 @@ export function flatten(result: EngineResult) {
       .filter(Boolean)
       .join('  ·  '),
     links: r.contact.links ?? [],
-    summary: r.summary.after,
+    summary: r.summary,
     skills: r.skills,
     roles: r.roles.map((role) => ({
       title: role.title,
       company: role.company,
       dates: role.dates,
-      bullets: role.bullets.map((b) => b.after),
+      bullets: role.bullets,
     })),
     education: r.education ?? [],
     certifications: r.certifications ?? [],
