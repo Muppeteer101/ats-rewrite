@@ -86,7 +86,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         body: JSON.stringify({ url: jdUrl.trim() }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to scrape JD');
+      if (!res.ok) throw new Error(data.error ?? 'Failed to fetch JD from URL');
       setJdText(data.text);
       setJdSource({ kind: 'url', url: jdUrl.trim() });
       setStatus('idle');
@@ -207,7 +207,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               disabled={status === 'parsing' || !jdUrl}
               className="btn btn-sm btn-neutral disabled:opacity-40"
             >
-              {status === 'parsing' ? 'Scraping…' : 'Scrape'}
+              {status === 'parsing' ? 'Analysing…' : 'Analyse'}
             </button>
           </div>
         )}
