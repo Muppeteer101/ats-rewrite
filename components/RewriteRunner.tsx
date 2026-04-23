@@ -50,7 +50,7 @@ type FullResult = ResultHeader & {
  * Multi-stage runner for the three-stage engine:
  *   1. analyze (FREE)    — show scores + ask about gaps
  *   2. rescore (FREE)    — re-score with confirmed gaps, show NEW scores
- *   3. finalize (PAID)   — rewrite CV + cover letter, show full debrief
+ *   3. finalize (PAID)   — rewrite resume + cover letter, show full debrief
  *
  * The teaser + new-scores views deliberately withhold all reasoning. Only
  * the three headline numbers (match / verdict / ATS) + gap labels are shown
@@ -299,19 +299,19 @@ function stageLabel(s: Stage): string {
   }
 }
 function stageHeadline(s: Stage, initial: Teaser | null, next: Teaser | null): string {
-  if (s === 'analyzing')  return 'Analysing your CV against the role…';
+  if (s === 'analyzing')  return 'Analysing your resume against the role…';
   if (s === 'teaser')     return initial ? `Your initial scores${initial.jobTitle ? ` — ${initial.jobTitle}` : ''}` : 'Initial scores';
   if (s === 'rescoring')  return 'Rescoring with your confirmed experience…';
   if (s === 'new-scores') return next ? 'Your updated scores' : 'Updated scores';
-  if (s === 'finalizing') return 'Rewriting your CV and cover letter…';
+  if (s === 'finalizing') return 'Rewriting your resume and cover letter…';
   return 'Getting ready';
 }
 function stageSubhead(s: Stage): string {
-  if (s === 'analyzing')  return 'Five passes — job, CV, role match, recruiter verdict, ATS. No payment, just the real numbers.';
+  if (s === 'analyzing')  return 'Five passes — job, resume, role match, recruiter verdict, ATS. No payment, just the real numbers.';
   if (s === 'teaser')     return 'Before you go further — confirm any experience we flagged as a gap. We’ll rescore in seconds.';
   if (s === 'rescoring')  return 'Re-running the scoring with the experience you just confirmed.';
   if (s === 'new-scores') return 'These are your new numbers after confirming your experience. Still free.';
-  if (s === 'finalizing') return 'Producing your rewritten CV, tailored cover letter, and final ATS check.';
+  if (s === 'finalizing') return 'Producing your rewritten resume, tailored cover letter, and final ATS check.';
   return '';
 }
 
@@ -349,14 +349,14 @@ function TeaserAndGapsCard({
       {teaser.gaps.length === 0 ? (
         <div className="card-elevated p-7">
           <h3 className="sub-heading mb-2">No gaps flagged</h3>
-          <p className="body mb-4">Your CV already covers the role’s stated requirements. Ready for the rewrite?</p>
+          <p className="body mb-4">Your resume already covers the role’s stated requirements. Ready for the rewrite?</p>
           <div className="flex gap-3 flex-wrap">
             <button onClick={onSkip} className="btn btn-primary">Unlock the full debrief + rewrite</button>
           </div>
         </div>
       ) : (
         <div className="card-elevated p-7">
-          <h3 className="sub-heading mb-2">Here are the gaps we found between your CV and the job description</h3>
+          <h3 className="sub-heading mb-2">Here are the gaps we found between your resume and the job description</h3>
           <p className="body mb-5" style={{ color: 'var(--color-body)' }}>
             Can you confirm if you have this experience? Anything you say <strong>Yes</strong> to, we’ll weave naturally into the rewrite — no inventing numbers or clients, just surfacing what you have. This will rescore in seconds.
           </p>
@@ -454,14 +454,14 @@ function NewScoresAndUnlockCard({
       <ScoreTeaserStrip teaser={updated} initial={initial} compareMode />
 
       <div className="card-elevated p-7" style={{ borderColor: 'rgba(184,163,255,0.4)' }}>
-        <h3 className="sub-heading mb-2">Want the full debrief + your new CV and cover letter?</h3>
+        <h3 className="sub-heading mb-2">Want the full debrief + your new resume and cover letter?</h3>
         <p className="body mb-1">Everything above is free. Below is what you get when you unlock:</p>
         <ul className="bullets mb-5">
           <li>The full recruiter verdict — what works in your favour, what works against you, what would change the decision.</li>
-          <li>Your CV rewritten for this role — with your confirmed experience woven in naturally, ATS-friendly formatting, downloadable as PDF.</li>
+          <li>Your resume rewritten for this role — with your confirmed experience woven in naturally, ATS-friendly formatting, downloadable as PDF.</li>
           <li>A tailored cover letter, downloadable as PDF.</li>
           <li>A changes-log explaining every edit, so you can learn from it.</li>
-          <li>A final ATS confidence rating on the rewritten CV.</li>
+          <li>A final ATS confidence rating on the rewritten resume.</li>
         </ul>
         <div className="flex gap-3 flex-wrap">
           <button onClick={onUnlock} className="btn btn-primary">Unlock the full debrief + rewrite</button>
@@ -540,11 +540,11 @@ type StepState = { title: string; blurb: string; tone?: string; detail?: string;
 
 const STEP_BLUEPRINT: { title: string; active: string; done: string; blurb: string }[] = [
   { title: 'Job description',    active: 'Analysing the job description',       done: 'Job description analysed',   blurb: 'Extracting must-haves, nice-to-haves, tone, and rejection risks.' },
-  { title: 'Your CV',             active: 'Analysing your CV',                   done: 'CV analysed',                 blurb: 'Mapping your demonstrated strengths, gaps, and presentation quality.' },
+  { title: 'Your resume',             active: 'Analysing your resume',                   done: 'Resume analysed',                 blurb: 'Mapping your demonstrated strengths, gaps, and presentation quality.' },
   { title: 'Role match score',    active: 'Scoring the role match',              done: 'Role match scored',           blurb: 'Measuring how your experience lines up against what this role actually needs.' },
   { title: 'Recruiter verdict',   active: 'Running the recruiter verdict',       done: 'Recruiter verdict reached',   blurb: 'Simulating a recruiter shortlisting you against 50 others.' },
-  { title: 'Rewrite + cover',     active: 'Rewriting your CV and cover letter',  done: 'Rewrite complete',            blurb: 'Mirroring the role’s language where your experience supports it — no invention.' },
-  { title: 'ATS confidence',      active: 'Running the ATS confidence check',    done: 'ATS confidence checked',      blurb: 'Checking your rewrite against how ATS platforms parse and rank CVs.' },
+  { title: 'Rewrite + cover',     active: 'Rewriting your resume and cover letter',  done: 'Rewrite complete',            blurb: 'Mirroring the role’s language where your experience supports it — no invention.' },
+  { title: 'ATS confidence',      active: 'Running the ATS confidence check',    done: 'ATS confidence checked',      blurb: 'Checking your rewrite against how ATS platforms parse and rank resumes.' },
 ];
 
 const MILESTONES: Record<string, number> = {
@@ -606,7 +606,7 @@ function ProgressConsole({ lines, phase }: { lines: NarrationEvent[]; phase: 'pr
   const current = STEP_BLUEPRINT[shownIdx] ?? STEP_BLUEPRINT[0];
   const headline = isDone ? 'Analysis complete' : phase === 'priming' ? 'Booting the engine' : current.active;
   const blurb = isDone
-    ? 'Your score, verdict, rewritten CV, cover letter, and ATS rating are below.'
+    ? 'Your score, verdict, rewritten resume, cover letter, and ATS rating are below.'
     : phase === 'priming'
       ? 'Reading your input and preparing the six-pass pipeline.'
       : current.blurb;
@@ -710,7 +710,7 @@ function ResultView({ rewriteId }: { rewriteId: string }) {
       {/* 3. What Needs to Change */}
       <WhatToChangeCard data={data.recruiterVerdict} />
 
-      {/* 4 + 5. Rewritten CV download (covers both screen preview + PDF) */}
+      {/* 4 + 5. Rewritten resume download (covers both screen preview + PDF) */}
       <TemplatePicker rewriteId={rewriteId} />
 
       {/* Cover Letter card — on-screen preview + PDF download */}
@@ -741,7 +741,7 @@ function RoleMatchCard({ data }: { data: RoleMatch }) {
       <div className="flex items-start justify-between mb-5 flex-wrap gap-4">
         <div>
           <h3 className="sub-heading mb-1">Role match score</h3>
-          <p className="caption">How well your CV aligns with this role’s stated requirements.</p>
+          <p className="caption">How well your resume aligns with this role’s stated requirements.</p>
         </div>
         <ScoreRing score={data.overallScore} />
       </div>

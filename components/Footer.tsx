@@ -27,7 +27,7 @@ export function Footer() {
     <footer className="site-footer">
       <div className="site-footer-inner">
         <p>
-          <strong>ToolyKit.ai</strong> &mdash; AI CV rewriter that beats the ATS. Not a recruitment agency.
+          <strong>ImproveMyResume.ai</strong> &mdash; AI resume rewriter that beats the ATS. Not a recruitment agency.
           AI-generated content should be reviewed before use.
         </p>
         <p style={{ marginTop: 8 }}>

@@ -7,7 +7,7 @@ type Status = 'idle' | 'parsing' | 'starting' | 'redirecting' | 'error';
 type JdMode = 'paste' | 'url' | 'file';
 
 /**
- * Landing-page form — CV + job description capture.
+ * Landing-page form — Resume + job description capture.
  *
  * No gap-confirm, no cover-letter opt-in: the six-pass engine runs the full
  * pipeline every time and always produces a cover letter as part of Pass 5.
@@ -46,7 +46,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
       fd.append('file', file);
       const res = await fetch('/api/parse-cv', { method: 'POST', body: fd });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? 'Failed to parse CV');
+      if (!res.ok) throw new Error(data.error ?? 'Failed to parse resume');
       setCvText(data.text);
       setCvSource(data.kind);
       setStatus('idle');
@@ -98,7 +98,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
   function startRewrite() {
     if (!signedIn) { router.push('/sign-in'); return; }
-    if (cvText.length < 50) { setError('Please add your CV (paste or upload a PDF/DOCX).'); return; }
+    if (cvText.length < 50) { setError('Please add your resume (paste or upload a PDF/DOCX).'); return; }
     if (jdText.length < 30) { setError('Please add the job description (paste, URL, or upload).'); return; }
 
     setStatus('starting');
@@ -127,7 +127,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
     <div className="card-elevated p-6 md:p-8">
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-label)' }}>
-          Your CV
+          Your resume
         </label>
         <div className="flex gap-2 mb-3 items-center">
           <button type="button" onClick={() => cvFileRef.current?.click()} className={helperBtn}>
@@ -154,7 +154,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             setCvFileName(null);
           }}
           rows={6}
-          placeholder="…or paste your CV text here."
+          placeholder="…or paste your resume text here."
           className="textarea"
         />
       </div>
@@ -262,7 +262,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             : 'Sign in to start (free)'}
       </button>
       <p className="caption mt-3 text-center">
-        Match score · recruiter verdict · rewritten CV + cover letter · ATS confidence rating. First rewrite is free.
+        Match score · recruiter verdict · rewritten resume + cover letter · ATS confidence rating. First rewrite is free.
       </p>
     </div>
   );

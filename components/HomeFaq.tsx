@@ -3,21 +3,21 @@
 import { useState } from 'react';
 
 /**
- * ToolyKit homepage FAQ — accordion. Mirrors the cancelmyparkingticket
+ * ImproveMyResume homepage FAQ — accordion. Mirrors the cancelmyparkingticket
  * pattern: faq-item / faq-trigger / faq-answer styled in globals.css.
  */
 const FAQ_ITEMS = [
   {
     q: 'What\u2019s an ATS and why does it matter?',
-    a: 'Applicant Tracking Systems are the bots that filter CVs before a human ever sees them. They look for specific keywords from the job description. If your CV doesn\u2019t match — even if you\u2019re perfect for the role — you get rejected automatically. ToolyKit rewrites your CV against the actual job description so the bot lets it through.',
+    a: 'Applicant Tracking Systems are the bots that filter resumes before a human ever sees them. They look for specific keywords from the job description. If your resume doesn\u2019t match — even if you\u2019re perfect for the role — you get rejected automatically. The engine rewrites your resume against the actual job description so the bot lets it through.',
   },
   {
-    q: 'How is this different from ChatGPT writing my CV?',
-    a: 'A single ChatGPT prompt does one thing at a time. ToolyKit runs six separate AI passes that feed each other: it analyses the job description, analyses your CV, scores the role match, produces a recruiter verdict, rewrites the CV with a tailored cover letter and a log of every change, then rates ATS confidence on the rewrite. That structural difference is why the output is measurably better — and why we can scaffold an honest match score and ATS rating.',
+    q: 'How is this different from ChatGPT writing my resume?',
+    a: 'A single ChatGPT prompt does one thing at a time. The engine runs six separate AI passes that feed each other: it analyses the job description, analyses your resume, scores the role match, produces a recruiter verdict, rewrites the resume with a tailored cover letter and a log of every change, then rates ATS confidence on the rewrite. That structural difference is why the output is measurably better — and why we can scaffold an honest match score and ATS rating.',
   },
   {
     q: 'Will it invent experience I don\u2019t have?',
-    a: 'No. Defensive prompts repeated three ways. If the JD asks for AWS and your CV doesn\u2019t have it, the gap report flags it honestly — we don\u2019t fake skills. The rewrite re-angles your real experience to surface the keywords; it doesn\u2019t fabricate them.',
+    a: 'No. Defensive prompts repeated three ways. If the JD asks for AWS and your resume doesn\u2019t have it, the gap report flags it honestly — we don\u2019t fake skills. The rewrite re-angles your real experience to surface the keywords; it doesn\u2019t fabricate them.',
   },
   {
     q: 'How much does it cost?',

@@ -25,7 +25,7 @@ function escape(s: string): string {
 }
 
 /**
- * Sent after a CV rewrite completes (free or paid).
+ * Sent after a resume rewrite completes (free or paid).
  *
  * This is the standard Almost Legal post-purchase email template — same
  * structure as Write My Legal Letter / Cancel My Parking Ticket / etc:
@@ -147,12 +147,12 @@ export async function sendRewriteReadyEmail(opts: {
         <tr><td style="padding: 32px;">
           <table width="100%" cellpadding="0" cellspacing="0">
             <tr><td style="padding-bottom: 20px;">
-              <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">Your CV is ready${firstName !== 'there' ? ', ' + escape(firstName) : ''} — go land that interview 🎉</p>
+              <p style="margin: 0; font-size: 22px; font-weight: 700; color: #1a1a1a;">Your resume is ready${firstName !== 'there' ? ', ' + escape(firstName) : ''} — go land that interview 🎉</p>
             </td></tr>
 
             <tr><td style="padding-bottom: 24px;">
               <p style="margin: 0; font-size: 15px; color: #444; line-height: 1.6;">
-                We analysed, scored, and rewrote your CV for <strong>${escape(jobTitle)}</strong>. Your original matched the role at
+                We analysed, scored, and rewrote your resume for <strong>${escape(jobTitle)}</strong>. Your original matched the role at
                 <strong>${scoreBefore}/100</strong>; the rewritten version is <strong style="color:#108c3d;">${scoreAfter}%</strong> confidence
                 to pass ATS screening. The PDF is attached. Send it off and good luck.
               </p>
@@ -161,7 +161,7 @@ export async function sendRewriteReadyEmail(opts: {
             <tr><td style="padding: 0 0 28px;">
               <table width="100%" cellpadding="0" cellspacing="0" style="background: #f0f7ff; border: 1px solid #cce0ff; border-radius: 8px;">
                 <tr><td style="padding: 20px 24px;">
-                  <p style="margin: 0 0 6px; font-size: 15px; font-weight: 700; color: #1a1a1a;">📄 Your CV is attached</p>
+                  <p style="margin: 0 0 6px; font-size: 15px; font-weight: 700; color: #1a1a1a;">📄 Your resume is attached</p>
                   <p style="margin: 0 0 14px; font-size: 14px; color: #444; line-height: 1.6;">
                     ATS-clean template (highest parse rate). Two more templates (Professional, Modern) are available on your result page below.
                   </p>
@@ -195,7 +195,7 @@ export async function sendRewriteReadyEmail(opts: {
   await client().emails.send({
     from: FROM,
     to,
-    subject: `Your CV is ready — match ${scoreBefore}/100, ATS ${scoreAfter}%`,
+    subject: `Your resume is ready — match ${scoreBefore}/100, ATS ${scoreAfter}%`,
     html,
     attachments: [{ filename, content: pdfBase64 }],
   });
@@ -269,7 +269,7 @@ export async function sendCreditsTopUpEmail(opts: {
   await client().emails.send({
     from: FROM,
     to,
-    subject: `${credits} CV rewrites added to your account`,
+    subject: `${credits} resume rewrites added to your account`,
     html: `<!doctype html><html><body style="font-family:-apple-system,'Segoe UI',sans-serif;background:#f5f5f5;padding:32px;color:#1a1a1a;">
       <div style="max-width:520px;margin:0 auto;background:#fff;border:1px solid #eee;border-radius:12px;padding:32px;">
         <p style="margin:0 0 12px;font-size:20px;font-weight:700;">${credits} rewrites added 🎉</p>

@@ -4,9 +4,9 @@ import { HomeFaq } from '@/components/HomeFaq';
 import { RewriteForm } from '@/components/RewriteForm';
 
 export const metadata = {
-  title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
+  title: 'ImproveMyResume — AI Resume Rewriter | Beat the ATS in 60 seconds',
   description:
-    'Got a CV? Tailor it to any job in 60 seconds. AI rewrites your CV against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
+    'Got a resume? Tailor it to any job in 60 seconds. AI rewrites your resume against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
 };
 
 export default async function HomePage() {
@@ -26,16 +26,16 @@ export default async function HomePage() {
             6-pass AI engine · streamed live
           </div>
           <h1 className="tile-h-mega">
-            Your CV vs the ATS.<br />
+            Your resume vs the ATS.<br />
             <span className="tile-h-gradient">Win the bot fight.</span>
           </h1>
           <p className="tile-sub">
-            AI rewrites your CV against the actual job description —<br />
+            AI rewrites your resume against the actual job description —<br />
             keyword-matched, recruiter-ready, ATS-optimised.
           </p>
           <div className="cta-pair">
             <Link href={primaryHref} className="cta-fill">
-              Rewrite My CV Free →
+              Rewrite My Resume Free →
             </Link>
             <Link href="#how" className="cta-outline-tile">
               How it works
@@ -52,7 +52,7 @@ export default async function HomePage() {
         <div className="tile-content" style={{ maxWidth: 760 }}>
           <h2 className="tile-h-section">Start your rewrite.</h2>
           <p className="tile-sub" style={{ marginBottom: 32 }}>
-            Paste the job description and your CV — the engine does the rest.
+            Paste the job description and your resume — the engine does the rest.
           </p>
           <RewriteForm signedIn={!!userId} />
         </div>
@@ -63,7 +63,7 @@ export default async function HomePage() {
         <div className="tile-content">
           <h2 className="tile-h-section">Three steps. Sixty seconds.</h2>
           <p className="tile-sub">
-            Paste the job description. Upload your CV. Download a CV that actually passes the bots.
+            Paste the job description. Upload your resume. Download a resume that actually passes the bots.
           </p>
           <div className="tile-steps">
             <div className="tile-step">
@@ -74,7 +74,7 @@ export default async function HomePage() {
                 </svg>
               </div>
               <h3>1. Paste &amp; upload</h3>
-              <p>Drop the job description in. Upload your CV (PDF or paste text). Takes 10 seconds.</p>
+              <p>Drop the job description in. Upload your resume (PDF or paste text). Takes 10 seconds.</p>
             </div>
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -86,7 +86,7 @@ export default async function HomePage() {
                 </svg>
               </div>
               <h3>2. AI does its thing</h3>
-              <p>Six passes. JD analysis, CV analysis, role match score, recruiter verdict, rewritten CV + cover letter, ATS confidence rating.</p>
+              <p>Six passes. JD analysis, resume analysis, role match score, recruiter verdict, rewritten resume + cover letter, ATS confidence rating.</p>
             </div>
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -110,7 +110,7 @@ export default async function HomePage() {
         <div className="tile-content">
           <p className="tile-h-stat">6-pass</p>
           <h3 className="tile-h-sm">AI analysis engine</h3>
-          <p className="tile-sub-sm">Reads the JD. Reads your CV. Scores the match. Runs a recruiter verdict. Rewrites the CV + drafts a cover letter. Confidence-rates it against ATS.</p>
+          <p className="tile-sub-sm">Reads the JD. Reads your resume. Scores the match. Runs a recruiter verdict. Rewrites the resume + drafts a cover letter. Confidence-rates it against ATS.</p>
         </div>
       </section>
       <section className="tile tile-half tile-dark">
@@ -126,7 +126,7 @@ export default async function HomePage() {
         <div className="tile-content" style={{ textAlign: 'left' }}>
           <p className="tile-stars">★★★★★</p>
           <p className="tile-quote">
-            &ldquo;ATS rejected me 12 times for the same job. ToolyKit rewrote my CV against the JD,
+            &ldquo;ATS rejected me 12 times for the same job. The engine rewrote my resume against the JD,
             scored it 94/100. <strong>Got the interview.</strong>&rdquo;
           </p>
           <p className="tile-cite">Sarah M., London</p>
@@ -199,7 +199,7 @@ export default async function HomePage() {
           </p>
           <div className="cta-pair">
             <Link href={primaryHref} className="cta-fill" style={{ padding: '16px 40px', fontSize: 18 }}>
-              Rewrite My CV Free →
+              Rewrite My Resume Free →
             </Link>
           </div>
         </div>

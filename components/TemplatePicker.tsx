@@ -26,7 +26,7 @@ export function TemplatePicker({ rewriteId }: { rewriteId: string }) {
 
   return (
     <div className="card-elevated p-7">
-      <h3 className="sub-heading mb-1">Your CV templates</h3>
+      <h3 className="sub-heading mb-1">Your resume templates</h3>
       <p className="body mb-3">
         We recommend the <strong>ATS-clean</strong> template — highest parse rate. Pick a different one if you’re sending direct.
       </p>

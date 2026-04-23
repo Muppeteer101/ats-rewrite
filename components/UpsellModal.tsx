@@ -68,7 +68,7 @@ export function UpsellModal({
         <div className="flex items-start justify-between mb-5">
           <div>
             <h2 className="sub-heading mb-1">You’re out of credits</h2>
-            <p className="caption">Top up to keep tailoring CVs to specific roles.</p>
+            <p className="caption">Top up to keep tailoring resumes to specific roles.</p>
           </div>
           {onClose && (
             <button

@@ -25,21 +25,21 @@ const mono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
+  title: 'ImproveMyResume — AI Resume Rewriter | Beat the ATS in 60 seconds',
   description:
-    'Got a CV? Tailor it to any job in 60 seconds. AI rewrites your CV against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
+    'Got a resume? Tailor it to any job in 60 seconds. AI rewrites your resume against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'),
   openGraph: {
-    title: 'ToolyKit — AI CV Rewriter | Beat the ATS in 60 seconds',
+    title: 'ImproveMyResume — AI Resume Rewriter | Beat the ATS in 60 seconds',
     description:
-      'A six-pass AI pipeline that analyses, scores, rewrites, and ATS-checks your CV against the exact job description. Recruiter verdict included. No hallucinated experience.',
+      'A six-pass AI pipeline that analyses, scores, rewrites, and ATS-checks your resume against the exact job description. Recruiter verdict included. No hallucinated experience.',
     type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ToolyKit — AI CV Rewriter',
+    title: 'ImproveMyResume — AI Resume Rewriter',
     description:
-      'A CV rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you\u2019re applying to.',
+      'A resume rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you\u2019re applying to.',
   },
 };
 

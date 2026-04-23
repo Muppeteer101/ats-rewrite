@@ -22,7 +22,7 @@ export async function POST(req: NextRequest): Promise<Response> {
     const body = (await req.json()) as { text?: string };
     const text = (body.text ?? '').trim();
     if (text.length < 50) {
-      return NextResponse.json({ error: 'CV text looks too short — paste the full content.' }, { status: 400 });
+      return NextResponse.json({ error: 'Resume text looks too short — paste the full content.' }, { status: 400 });
     }
     return NextResponse.json({ text, kind: 'text', charCount: text.length });
   }

@@ -17,7 +17,7 @@ export function Navbar() {
   return (
     <nav className="pill-nav" aria-label="Primary">
       <Link href="/" className="pill-nav-logo">
-        ToolyKit<span>.ai</span>
+        ImproveMyResume<span>.ai</span>
       </Link>
 
       <div className="pill-nav-links">
