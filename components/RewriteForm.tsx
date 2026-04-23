@@ -120,150 +120,328 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
     router.push(`/rewrite/${draftId}`);
   }
 
-  const helperBtn =
-    'text-xs px-3 py-2 rounded-[4px] border border-[var(--color-border)] bg-white text-[var(--color-heading)] hover:bg-[var(--color-surface-soft)] transition-colors';
+  const cvChars = cvText.length;
+  const jdChars = jdText.length;
+  const cvReady = cvChars >= 50;
+  const jdReady = jdChars >= 30;
+  const busy = status === 'starting' || status === 'redirecting' || status === 'parsing';
+
+  const cardStyle: React.CSSProperties = {
+    background: '#fff',
+    border: '1px solid #e7e8ef',
+    borderRadius: 14,
+    padding: 28,
+    boxShadow: '0 2px 6px -2px rgba(15,15,26,0.04)',
+  };
+  const textareaStyle: React.CSSProperties = {
+    width: '100%',
+    padding: 14,
+    border: '1px solid #e7e8ef',
+    borderRadius: 10,
+    fontFamily: 'inherit',
+    fontSize: 14,
+    lineHeight: 1.55,
+    resize: 'vertical',
+    outline: 'none',
+    background: '#fff',
+    color: '#0f0f1a',
+  };
 
   return (
-    <div className="card-elevated p-6 md:p-8">
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-label)' }}>
-          Your resume
-        </label>
-        <div className="flex gap-2 mb-3 items-center">
-          <button type="button" onClick={() => cvFileRef.current?.click()} className={helperBtn}>
-            Upload PDF / DOCX
-          </button>
-          <input
-            ref={cvFileRef}
-            type="file"
-            accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-            onChange={(e) => e.target.files?.[0] && handleCvFile(e.target.files[0])}
-            className="hidden"
-          />
-          {cvFileName && (
-            <span className="caption tabular">
-              {cvFileName} · {cvText.length.toLocaleString()} chars
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+      <div className="rf-grid" style={{ display: 'grid', gap: 20 }}>
+        {/* ─────────── Resume ─────────── */}
+        <section style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18, gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>Your resume</h2>
+              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>Upload a PDF, DOCX, or paste the text.</p>
+            </div>
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: cvReady ? '#22c55e' : '#7a7c95', whiteSpace: 'nowrap' }}>
+              ● {cvReady ? 'READY' : 'REQUIRED'}
             </span>
-          )}
-        </div>
-        <textarea
-          value={cvText}
-          onChange={(e) => {
-            setCvText(e.target.value);
-            setCvSource('text');
-            setCvFileName(null);
-          }}
-          rows={6}
-          placeholder="…or paste your resume text here."
-          className="textarea"
-        />
-      </div>
-
-      <div className="mb-6">
-        <label className="block text-sm font-medium mb-2" style={{ color: 'var(--color-label)' }}>
-          The job description
-        </label>
-        <div className="flex gap-2 mb-3 text-xs">
-          {(['paste', 'url', 'file'] as JdMode[]).map((m) => (
-            <button
-              key={m}
-              type="button"
-              onClick={() => setJdMode(m)}
-              className={
-                jdMode === m
-                  ? 'px-3 py-2 rounded-[4px] bg-[var(--color-purple)] text-white border border-[var(--color-purple)]'
-                  : helperBtn
-              }
-            >
-              {m === 'paste' ? 'Paste' : m === 'url' ? 'URL' : 'Upload'}
-            </button>
-          ))}
-        </div>
-        {jdMode === 'paste' && (
-          <textarea
-            value={jdText}
-            onChange={(e) => {
-              setJdText(e.target.value);
-              setJdSource({ kind: 'text' });
-              setJdFileName(null);
-            }}
-            rows={6}
-            placeholder="Paste the full job posting here."
-            className="textarea"
-          />
-        )}
-        {jdMode === 'url' && (
-          <div className="flex gap-2">
-            <input
-              type="url"
-              value={jdUrl}
-              onChange={(e) => setJdUrl(e.target.value)}
-              placeholder="https://example.com/jobs/senior-product-manager"
-              className="input"
-            />
-            <button
-              type="button"
-              onClick={handleJdUrl}
-              disabled={status === 'parsing' || !jdUrl}
-              className="btn btn-sm btn-neutral disabled:opacity-40"
-            >
-              {status === 'parsing' ? 'Analysing…' : 'Analyse'}
-            </button>
           </div>
-        )}
-        {jdMode === 'file' && (
-          <div className="flex gap-2 items-center">
-            <button type="button" onClick={() => jdFileRef.current?.click()} className={helperBtn}>
-              Upload PDF / DOCX
-            </button>
+
+          <div
+            onClick={() => cvFileRef.current?.click()}
+            onDragOver={(e) => { e.preventDefault(); }}
+            onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) void handleCvFile(f); }}
+            style={{
+              border: '2px dashed ' + (cvFileName ? '#b8a3ff' : '#cfd2e0'),
+              borderRadius: 10,
+              padding: cvFileName ? 16 : 24,
+              textAlign: 'center',
+              background: cvFileName ? '#f8f5ff' : '#fafbff',
+              marginBottom: 14,
+              cursor: 'pointer',
+              transition: 'all 150ms ease',
+            }}
+          >
+            {cvFileName ? (
+              <>
+                <p style={{ fontSize: 14, fontWeight: 600, color: '#0f0f1a', margin: '0 0 2px' }}>📄 {cvFileName}</p>
+                <p style={{ fontSize: 12, color: '#7a7c95', margin: 0 }}>
+                  {cvChars.toLocaleString()} chars parsed · <span style={{ color: '#7c3aed' }}>click to replace</span>
+                </p>
+              </>
+            ) : (
+              <>
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" strokeWidth="1.5" style={{ margin: '0 auto 8px', display: 'block' }}>
+                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4" />
+                  <polyline points="17 8 12 3 7 8" />
+                  <line x1="12" y1="3" x2="12" y2="15" />
+                </svg>
+                <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>Drop your PDF or DOCX here</p>
+                <p style={{ fontSize: 13, color: '#7a7c95', margin: 0 }}>
+                  or <span style={{ color: '#7c3aed', fontWeight: 600 }}>click to browse</span> · max 10&nbsp;MB
+                </p>
+              </>
+            )}
             <input
-              ref={jdFileRef}
+              ref={cvFileRef}
               type="file"
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-              onChange={(e) => e.target.files?.[0] && handleJdFile(e.target.files[0])}
-              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleCvFile(e.target.files[0])}
+              style={{ display: 'none' }}
             />
-            {jdFileName && (
-              <span className="caption tabular">
-                {jdFileName} · {jdText.length.toLocaleString()} chars
-              </span>
-            )}
           </div>
-        )}
-        {jdText && jdMode !== 'paste' && (
-          <details className="mt-3 caption">
-            <summary className="cursor-pointer hover:text-[var(--color-heading)]">
-              Preview ({jdText.length.toLocaleString()} chars)
-            </summary>
-            <div className="mt-2 max-h-40 overflow-y-auto p-3 bg-[var(--color-surface-soft)] rounded-[4px] border border-[var(--color-border)] font-mono text-[12px] leading-relaxed whitespace-pre-wrap">
-              {jdText.slice(0, 1500)}
-              {jdText.length > 1500 ? '…' : ''}
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b0b3c9', fontSize: 12, margin: '12px 0' }}>
+            <span style={{ flex: 1, height: 1, background: '#e7e8ef' }} />
+            <span>OR PASTE</span>
+            <span style={{ flex: 1, height: 1, background: '#e7e8ef' }} />
+          </div>
+
+          <textarea
+            value={cvText}
+            onChange={(e) => { setCvText(e.target.value); setCvSource('text'); setCvFileName(null); }}
+            placeholder="Paste your resume text here. We'll parse roles, bullets, skills, education, and dates."
+            style={{ ...textareaStyle, minHeight: 160 }}
+          />
+          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#7a7c95' }}>
+            <span>Any length is fine — the engine handles long careers.</span>
+            <span style={{ fontVariantNumeric: 'tabular-nums', color: cvReady ? '#22c55e' : '#7a7c95' }}>
+              {cvChars.toLocaleString()} / 50 min
+            </span>
+          </div>
+        </section>
+
+        {/* ─────────── Job description ─────────── */}
+        <section style={cardStyle}>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18, gap: 12 }}>
+            <div>
+              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>The job description</h2>
+              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>Paste, link to a URL, or upload the posting.</p>
             </div>
-          </details>
-        )}
+            <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: jdReady ? '#22c55e' : '#7a7c95', whiteSpace: 'nowrap' }}>
+              ● {jdReady ? 'READY' : 'REQUIRED'}
+            </span>
+          </div>
+
+          <div
+            role="tablist"
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(3, 1fr)',
+              gap: 4,
+              background: '#f2f2f8',
+              padding: 4,
+              borderRadius: 10,
+              marginBottom: 16,
+            }}
+          >
+            {(['paste', 'url', 'file'] as JdMode[]).map((m) => {
+              const active = jdMode === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  role="tab"
+                  aria-selected={active}
+                  onClick={() => setJdMode(m)}
+                  style={{
+                    padding: '10px 14px',
+                    borderRadius: 7,
+                    border: 'none',
+                    background: active ? '#fff' : 'transparent',
+                    color: active ? '#0f0f1a' : '#7a7c95',
+                    fontWeight: active ? 600 : 500,
+                    fontSize: 14,
+                    cursor: 'pointer',
+                    boxShadow: active ? '0 1px 3px rgba(15,15,26,0.08)' : 'none',
+                    transition: 'all 150ms ease',
+                  }}
+                >
+                  {m === 'paste' ? 'Paste' : m === 'url' ? 'URL' : 'Upload'}
+                </button>
+              );
+            })}
+          </div>
+
+          {jdMode === 'paste' && (
+            <>
+              <textarea
+                value={jdText}
+                onChange={(e) => { setJdText(e.target.value); setJdSource({ kind: 'text' }); setJdFileName(null); }}
+                placeholder="Paste the full job description here — role, responsibilities, must-haves, nice-to-haves."
+                style={{ ...textareaStyle, minHeight: 220 }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#7a7c95' }}>
+                <span>Longer JDs give better matches — don&apos;t trim.</span>
+                <span style={{ fontVariantNumeric: 'tabular-nums', color: jdReady ? '#22c55e' : '#7a7c95' }}>
+                  {jdChars.toLocaleString()} / 200 min
+                </span>
+              </div>
+            </>
+          )}
+
+          {jdMode === 'url' && (
+            <>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <input
+                  type="url"
+                  value={jdUrl}
+                  onChange={(e) => setJdUrl(e.target.value)}
+                  placeholder="https://… (LinkedIn, Indeed, company careers page)"
+                  style={{ flex: 1, padding: '12px 14px', border: '1px solid #e7e8ef', borderRadius: 10, fontSize: 14, outline: 'none', background: '#fff', color: '#0f0f1a' }}
+                />
+                <button
+                  type="button"
+                  onClick={handleJdUrl}
+                  disabled={status === 'parsing' || !jdUrl}
+                  style={{
+                    padding: '12px 20px',
+                    background: '#7c3aed',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    fontWeight: 600,
+                    fontSize: 14,
+                    cursor: (status === 'parsing' || !jdUrl) ? 'not-allowed' : 'pointer',
+                    opacity: (status === 'parsing' || !jdUrl) ? 0.5 : 1,
+                  }}
+                >
+                  {status === 'parsing' ? 'Analysing…' : 'Analyse'}
+                </button>
+              </div>
+              {jdText && (
+                <details style={{ marginTop: 14, fontSize: 12, color: '#7a7c95' }}>
+                  <summary style={{ cursor: 'pointer' }}>Preview ({jdChars.toLocaleString()} chars)</summary>
+                  <div style={{ marginTop: 8, maxHeight: 180, overflowY: 'auto', padding: 12, background: '#fafbff', borderRadius: 8, border: '1px solid #e7e8ef', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
+                    {jdText.slice(0, 1500)}{jdText.length > 1500 ? '…' : ''}
+                  </div>
+                </details>
+              )}
+            </>
+          )}
+
+          {jdMode === 'file' && (
+            <>
+              <div
+                onClick={() => jdFileRef.current?.click()}
+                onDragOver={(e) => { e.preventDefault(); }}
+                onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) void handleJdFile(f); }}
+                style={{
+                  border: '2px dashed ' + (jdFileName ? '#b8a3ff' : '#cfd2e0'),
+                  borderRadius: 10,
+                  padding: jdFileName ? 16 : 24,
+                  textAlign: 'center',
+                  background: jdFileName ? '#f8f5ff' : '#fafbff',
+                  cursor: 'pointer',
+                }}
+              >
+                {jdFileName ? (
+                  <>
+                    <p style={{ fontSize: 14, fontWeight: 600, color: '#0f0f1a', margin: '0 0 2px' }}>📄 {jdFileName}</p>
+                    <p style={{ fontSize: 12, color: '#7a7c95', margin: 0 }}>{jdChars.toLocaleString()} chars parsed · <span style={{ color: '#7c3aed' }}>click to replace</span></p>
+                  </>
+                ) : (
+                  <>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>Drop the job posting PDF/DOCX</p>
+                    <p style={{ fontSize: 13, color: '#7a7c95', margin: 0 }}>or <span style={{ color: '#7c3aed', fontWeight: 600 }}>click to browse</span></p>
+                  </>
+                )}
+                <input
+                  ref={jdFileRef}
+                  type="file"
+                  accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                  onChange={(e) => e.target.files?.[0] && handleJdFile(e.target.files[0])}
+                  style={{ display: 'none' }}
+                />
+              </div>
+            </>
+          )}
+        </section>
       </div>
 
       {error && (
-        <div className="mb-4 p-3 rounded-[4px] border" style={{ background: 'rgba(234,34,97,0.06)', borderColor: 'rgba(234,34,97,0.3)', color: 'var(--color-ruby)' }}>
-          <span className="text-sm">{error}</span>
+        <div style={{ padding: 14, borderRadius: 10, background: 'rgba(234,34,97,0.06)', border: '1px solid rgba(234,34,97,0.3)', color: '#ea2261', fontSize: 14 }}>
+          {error}
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={startRewrite}
-        disabled={status === 'starting' || status === 'redirecting' || status === 'parsing'}
-        className="btn btn-lg btn-primary w-full disabled:opacity-50"
+      {/* ─────────── Action row ─────────── */}
+      <div
+        style={{
+          background: 'linear-gradient(135deg, #0b1430 0%, #1a1240 100%)',
+          border: '1px solid rgba(184,163,255,0.18)',
+          borderRadius: 14,
+          padding: 24,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: 16,
+          boxShadow: '0 20px 60px -30px rgba(5,8,24,0.5)',
+        }}
       >
-        {status === 'starting' || status === 'redirecting'
-          ? 'Starting engine…'
-          : signedIn
-            ? 'Run the full analysis →'
-            : 'Sign in to start (free)'}
-      </button>
-      <p className="caption mt-3 text-center">
-        Match score · recruiter verdict · rewritten resume + cover letter · ATS confidence rating. First rewrite is free.
+        <div style={{ flex: '1 1 280px' }}>
+          <h3 style={{ fontSize: 16, fontWeight: 600, color: '#f4f0ff', margin: 0 }}>
+            {cvReady && jdReady ? 'Ready when you are' : 'Add your resume and the JD to continue'}
+          </h3>
+          <p style={{ fontSize: 13, color: '#b5b8d6', margin: '4px 0 0', lineHeight: 1.5 }}>
+            Match score · recruiter verdict · ATS confidence · gap confirmation · rewrite + cover letter. <strong style={{ color: '#fff' }}>First rewrite is free.</strong>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={startRewrite}
+          disabled={busy}
+          style={{
+            padding: '14px 28px',
+            background: busy
+              ? 'rgba(184,163,255,0.3)'
+              : 'linear-gradient(135deg, #b8a3ff 0%, #f96bee 100%)',
+            color: '#0f0f1a',
+            border: 'none',
+            borderRadius: 10,
+            fontSize: 15,
+            fontWeight: 700,
+            letterSpacing: '0.01em',
+            cursor: busy ? 'not-allowed' : 'pointer',
+            boxShadow: busy ? 'none' : '0 6px 20px -6px rgba(249,107,238,0.6)',
+            opacity: busy ? 0.7 : 1,
+            transition: 'all 150ms ease',
+          }}
+        >
+          {status === 'starting' || status === 'redirecting'
+            ? 'Starting engine…'
+            : signedIn
+              ? 'Run the full analysis →'
+              : 'Sign in to start (free)'}
+        </button>
+      </div>
+
+      <p style={{ fontSize: 12, color: '#7a7c95', textAlign: 'center', margin: 0 }}>
+        By submitting you agree to the analysis being processed by Anthropic Claude. Your files never leave Vercel infrastructure.
       </p>
+
+      {/* Responsive two-column: desktop side-by-side, mobile stacked */}
+      <style>{`
+        @media (min-width: 900px) {
+          .rf-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
+        }
+      `}</style>
     </div>
   );
 }
