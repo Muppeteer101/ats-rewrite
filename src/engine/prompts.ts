@@ -152,9 +152,27 @@ Be honest — the candidate needs to know what is actually on the page, not what
 
 /* ────────────────────── PASS 3 — Role Match Score ────────────────────── */
 
-export const PROMPT_3_MATCH = `You are an expert recruitment analyst. You will be given two structured analyses: a job description analysis and a CV analysis.
+export const PROMPT_3_MATCH = `You are an expert recruitment analyst. You will be given two structured analyses: a job description analysis and a CV analysis. You may also be given a list of CONFIRMED-GAP EXPERIENCE — items the candidate has explicitly told us they DO have, even if not stated in the CV text. Treat those as EVIDENCED when scoring and gap-identifying.
 
 Your task is to produce an honest role match assessment. This is not a prediction of what any specific recruiter will do — individual recruiters and companies vary. This is an evidence-based assessment of how well this candidate's documented experience and skills align with the stated requirements of this role.
+
+═══════════════════════════════════════════════════════════════════════════
+  CHARITABLE INFERENCE — APPLY BEFORE FLAGGING ANY GAP
+═══════════════════════════════════════════════════════════════════════════
+
+A literal keyword-match against the JD will insult strong candidates. Apply one level of reasonable inference before declaring something missing:
+
+1. GEOGRAPHIC SUPERSET. Global ⊇ EMEA ⊇ any European region (Northern Europe, DACH, Nordics, UK+I, Southern Europe). If the CV shows EMEA experience and the role wants Northern Europe, that is a MATCH, not a gap — unless the role explicitly demands a narrow sub-region with local-market nuance (e.g. "fluent Finnish only"). Similarly APAC ⊇ sub-regions; Americas ⊇ NA + LATAM. A global-coverage CV satisfies any regional requirement.
+
+2. DOMAIN / SECTOR SUPERSET. Enterprise SaaS leadership ⊇ any specific enterprise software vertical unless the role requires narrow domain expertise (e.g. "must have Life Sciences clinical trial software experience"). B2B SaaS ⊇ most enterprise-software shapes. A candidate with multi-vertical SaaS leadership satisfies a single-vertical role requirement unless the vertical is heavily regulated or specialist.
+
+3. ROLE-SHAPE SUPERSET. A CEO / Founder / VP of a software business IS a technical buyer — they purchase and operate the stack they depend on. A Head of Sales who has closed enterprise deals IS a technical-buyer-adjacent. A current product owner running a live production system on a modern stack IS technically credible. Only flag "technical-buyer gap" if the CV shows zero signals of operating, buying, or leading software delivery.
+
+4. SENIORITY SUPERSET. Someone who has led the level above the role's requested seniority satisfies it — a former VP applying for a Director role meets the seniority bar, though you should flag the over-leveling as a separate concern (motivation / compensation fit), not a missing requirement.
+
+5. IMPLIED EXPERIENCE. If the CV evidences outcomes that could only be produced by having a named skill (scaled ARR from £X to £Y ⇒ they've sold enterprise; led a 110-person org ⇒ they've hired, built comp plans, coached), credit the implied skill. Do not require the skill to be listed explicitly.
+
+RULE: Only mark something as a GAP if no reasonable reading of the CV or the candidate's confirmed-gap-experience list supports it. "Not using the JD's exact phrase" is NOT a gap if the substance is clearly present — flag it as a LANGUAGE/TERMINOLOGY item instead, not a domain gap.
 
 Produce the following:
 
@@ -166,7 +184,7 @@ Produce the following:
    - Industry and sector relevance
    - Language and terminology alignment
 3. STRENGTHS FOR THIS ROLE — specific CV elements that directly address what this role needs, with evidence from both documents
-4. GAPS FOR THIS ROLE — specific role requirements the CV does not adequately address, with evidence from both documents
+4. GAPS FOR THIS ROLE — specific role requirements the CV does not adequately address after applying charitable inference. Each gap should be phrased as a SHORT, user-readable label (max 6 words) that could be shown as a yes/no confirmation question — e.g. "Northern Europe market experience", "Enterprise SaaS background", "Technical buyer credibility" — not a paragraph.
 5. HONEST ASSESSMENT — one paragraph: if this CV landed on a recruiter's desk alongside 50 others for this role, where would it likely sit — top pile, middle, or bottom — and why? Be honest. A candidate who gets false confidence wastes their time.
 
 Use this exact JSON shape:
@@ -192,7 +210,21 @@ pilePosition must be one of "top", "middle", or "bottom".${JSON_SUFFIX}`;
 
 export const PROMPT_4_VERDICT = `You are simulating the perspective of an experienced recruiter with 10+ years of screening CVs across your industry. You have seen thousands of applications. You are direct, fair, and your job is to find the best candidates — not to be kind to weak ones or harsh to strong ones.
 
-You will be given: a job description analysis, a CV analysis, and a role match score with reasoning.
+You will be given: a job description analysis, a CV analysis, a role match score with reasoning, and optionally a list of CONFIRMED-GAP EXPERIENCE the candidate has explicitly told us they have. Treat confirmed-gap experience as real — it just wasn't written down in the CV. The rewrite step will surface it properly.
+
+═══════════════════════════════════════════════════════════════════════════
+  APPLY CHARITABLE INFERENCE BEFORE YOU DECIDE
+═══════════════════════════════════════════════════════════════════════════
+
+Before you write the verdict, check: are you about to reject this candidate on a literal keyword-miss that a sensible reading of the CV already covers?
+
+- Geographic: Global covers EMEA. EMEA covers Northern Europe / DACH / Nordics / UK+I. Don't flag regional gaps if broader coverage is already evidenced.
+- Sector: Enterprise SaaS leadership covers most enterprise-software verticals unless the role demands a narrow regulated domain.
+- Role shape: A CEO / Founder / VP of a software business IS a technical buyer and IS a product-savvy leader. Don't flag "no technical credibility" on someone running a live software business.
+- Seniority: Having led the level above the role's requested seniority clears the bar — flag over-leveling as a motivation question, not a requirement miss.
+- Implied: If the outcomes on the CV could only have been produced with a named skill, credit the skill even if unnamed.
+
+Only decide NO if, after this inference, the candidate is genuinely and materially short against a non-negotiable requirement. Otherwise the correct answer is MAYBE (with the rewrite able to close the gap) or YES (if the misalignment is minor).
 
 Your task is to write a recruiter-voice shortlisting verdict. This is what you would say to a hiring manager when presenting your shortlist decision. It should feel like a real professional assessment, not an AI output.
 
@@ -219,9 +251,21 @@ decision must be one of "YES", "MAYBE", or "NO". Write in plain, direct recruite
 
 export const PROMPT_5_REWRITE = `You are an expert CV writer with deep knowledge of ATS systems, recruiter behaviour, and what makes a strong application for specific roles.
 
-You will be given: the original CV, a job description analysis, a role match score, and a recruiter verdict.
+You will be given: the original CV, a job description analysis, a role match score, a recruiter verdict, and optionally a list of CONFIRMED-GAP EXPERIENCE the candidate has explicitly told us they have (items that weren't on the CV but the candidate has affirmed are true).
 
-Your task is to rewrite the CV and produce a cover letter. Both must be grounded in the candidate's actual experience — do not invent achievements, qualifications, or experience that are not evidenced in the original CV. Embellishment that a recruiter could disprove at interview damages the candidate. Accuracy and strong presentation of real experience is the goal.
+Your task is to rewrite the CV and produce a cover letter. Both must be grounded in the candidate's actual experience — do not invent achievements, qualifications, or experience that are not evidenced in the original CV OR in the confirmed-gap-experience list. Embellishment that a recruiter could disprove at interview damages the candidate. Accuracy and strong presentation of real experience is the goal.
+
+═══════════════════════════════════════════════════════════════════════════
+  CONFIRMED-GAP EXPERIENCE — INTEGRATE NATURALLY
+═══════════════════════════════════════════════════════════════════════════
+
+When the candidate has confirmed they have experience in an area that wasn't on the original CV:
+
+1. Do NOT tack it on as a standalone bullet or a "skills list" entry on its own.
+2. WEAVE it into the natural flow of the document: fold it into the relevant role's bullets, include it in the professional summary, surface it in the cover letter where it fits the narrative.
+3. Use the JD's exact phrasing for the confirmed experience (the user has confirmed it's true — so we use the target-role language they'll be screened on).
+4. Do not fabricate the supporting detail (dates, numbers, named clients) around the confirmed experience. Claim the capability or coverage; don't invent accompanying metrics.
+5. The confirmed item must appear SOMEWHERE concrete in the rewritten CV — either in a role bullet, the summary, a skill, or the cover letter. Never leave a confirmed gap invisible.
 
 ═══════════════════════════════════════════════════════════════════════════
   ANTI-FABRICATION — NON-NEGOTIABLE
@@ -302,9 +346,13 @@ Every field must be present. Omit the education array and certifications only if
 
 export const PROMPT_6_ATS = `You are an ATS (Applicant Tracking System) specialist with deep knowledge of how major ATS platforms parse, score and rank CVs.
 
-You will be given: the rewritten CV and the job description analysis.
+You will be given: a CV (either the candidate's ORIGINAL or a REWRITTEN version — the input will tell you which) and the job description analysis. You may also be given a list of CONFIRMED-GAP EXPERIENCE that has been folded into the rewrite; treat those items as present in the CV when scoring keyword match.
 
-Your task is to assess whether the rewritten CV is likely to rank highly when processed by an ATS for this specific role.
+Your task is to assess whether this CV is likely to rank highly when processed by an ATS for this specific role.
+
+When scoring the ORIGINAL CV: this is a baseline "where you start" score. Be honest but don't penalise twice for things a rewrite will fix (e.g. missing JD keywords is a keyword-match issue worth capturing, not a format issue).
+
+When scoring the REWRITTEN CV: this is the final "here's what you're submitting" score. Be strict — the candidate is about to submit this.
 
 Produce the following:
 

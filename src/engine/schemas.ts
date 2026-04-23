@@ -227,6 +227,10 @@ export type EngineResult = {
   coverLetter: CoverLetter;
   changesMade: string[];
   atsConfidence: ATSConfidence;
+  /** Gaps the user confirmed they DO have (integrated into the rewrite). */
+  confirmedGaps?: string[];
+  /** ATS score on the original pre-rewrite CV — for the "before" number. */
+  atsOriginal?: ATSConfidence;
 };
 
 /* ────────────────────── SSE narration events ────────────────────── */
@@ -235,10 +239,21 @@ export type PassNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
 export type NarrationTone = 'good' | 'amber' | 'bad' | 'info';
 
+/** Thin teaser — ONLY scores + gap labels. No reasoning, never. */
+export type Teaser = {
+  matchScore: number;
+  verdictDecision: 'YES' | 'MAYBE' | 'NO';
+  atsRating: 'HIGH' | 'MEDIUM' | 'LOW';
+  atsPercentage: number;
+  gaps: string[];
+  jobTitle: string;
+};
+
 export type NarrationEvent =
   | { type: 'system'; line: string }
   | { type: 'pass'; pass: PassNumber; line: string }
   | { type: 'pass-complete'; pass: PassNumber; line: string; tone?: NarrationTone }
   | { type: 'warn'; line: string }
+  | { type: 'teaser'; data: Teaser }
   | { type: 'result'; id: string }
   | { type: 'error'; message: string };

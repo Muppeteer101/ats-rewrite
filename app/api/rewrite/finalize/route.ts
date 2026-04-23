@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
-import { runEngine, type EngineInput } from '@/src/engine';
+import { runFinalize, type AnalysisSnapshot } from '@/src/engine';
 import type { EngineResult, NarrationEvent } from '@/src/engine/schemas';
 import type { CreditState } from '@/lib/credits';
 import { redis, k } from '@/lib/redis';
@@ -9,74 +9,57 @@ import { sendRewriteReadyEmail } from '@/lib/email';
 import { renderTemplate } from '@/lib/pdf-templates';
 
 export const runtime = 'nodejs';
-export const maxDuration = 300; // 5 min — engine targets <90s but give headroom
+export const maxDuration = 300;
 
 /**
- * POST /api/rewrite
+ * POST /api/rewrite/finalize — Stage 3: PAID rewrite + cover letter.
  *
- * Body: { cvText, jdText, cvSource, jdSource, template?, sendEmail? }
+ * Body: { analysisId, template?, sendEmail? }
  *
- * Response: text/event-stream of NarrationEvent objects, terminating with
- *   { type: 'result', id }
- * or
- *   { type: 'error', message }
- *
- * Side effects:
- *   - Consumes one credit (lifetime-free → monthly-free → paid).
- *   - Persists EngineResult under k.rewrite(id).
- *   - Indexes the rewrite under the user (k.rewrites(userId)).
- *   - If sendEmail (default true), renders the chosen template + sends Resend email with PDF.
+ * Charges one credit (lifetime-free → monthly-free → paid). If out of
+ * credits returns 402. Streams SSE narration for passes 5 + 6. Persists the
+ * final EngineResult under k.rewrite(rewriteId) and records it for the
+ * dashboard. Sends the "rewrite ready" email with PDF attached.
  */
 export async function POST(req: NextRequest): Promise<Response> {
   const { userId } = await auth();
-  if (!userId) {
-    return new Response('Unauthorized', { status: 401 });
-  }
+  if (!userId) return new Response('Unauthorized', { status: 401 });
 
   const body = (await req.json()) as {
-    cvText?: string;
-    jdText?: string;
-    cvSource?: EngineInput['cvSource'];
-    jdSource?: EngineInput['jdSource'];
+    analysisId?: string;
     template?: 'ats-clean' | 'professional' | 'modern';
     sendEmail?: boolean;
   };
+  if (!body.analysisId) return new Response('Missing analysisId', { status: 400 });
 
-  if (!body.cvText || !body.jdText) {
-    return new Response('Missing cvText or jdText', { status: 400 });
+  const stored = await redis.get<AnalysisSnapshot & { userId?: string }>(k.analysis(body.analysisId));
+  if (!stored) return new Response('Analysis not found or expired', { status: 404 });
+  if (stored.userId && stored.userId !== userId) {
+    return new Response('Forbidden', { status: 403 });
   }
 
-  // Charge a credit BEFORE running the engine (refunded on hard failure).
+  const template = body.template ?? 'ats-clean';
+  const sendEmail = body.sendEmail !== false;
+
+  // Charge a credit BEFORE the rewrite — the expensive LLM calls are here.
   const source = await consumeCredit(userId);
   if (!source) {
-    // 402 Payment Required — front-end shows the upsell modal.
     return new Response(JSON.stringify({ error: 'out_of_credits' }), {
       status: 402,
       headers: { 'content-type': 'application/json' },
     });
   }
 
-  const input: EngineInput = {
-    cvText: body.cvText,
-    jdText: body.jdText,
-    cvSource: body.cvSource ?? { kind: 'text' },
-    jdSource: body.jdSource ?? { kind: 'text' },
-  };
-  const rewriteId = generateId();
-  const template = body.template ?? 'ats-clean';
-  const sendEmail = body.sendEmail !== false;
-
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     async start(controller) {
-      const send = (e: NarrationEvent) => {
+      const send = (e: NarrationEvent) =>
         controller.enqueue(encoder.encode(`data: ${JSON.stringify(e)}\n\n`));
-      };
 
       try {
-        send({ type: 'system', line: `› Charged 1 credit (${source}). Booting engine…` });
+        send({ type: 'system', line: `› Charged 1 credit (${source}). Producing your rewrite…` });
 
-        const gen = runEngine(input, rewriteId);
+        const gen = runFinalize(stored);
         let result: EngineResult | undefined;
         while (true) {
           const next = await gen.next();
@@ -86,13 +69,10 @@ export async function POST(req: NextRequest): Promise<Response> {
           }
           send(next.value);
         }
-        if (!result) throw new Error('Engine did not return a result.');
+        if (!result) throw new Error('Finalize did not return a result.');
 
-        // Persist — 60-day TTL is plenty (dashboard re-download window).
+        const rewriteId = result.id;
         await redis.set(k.rewrite(rewriteId), result, { ex: 60 * 24 * 60 * 60 });
-        // scoreBefore = original CV → JD match (Pass 3), scoreAfter = ATS pass
-        // likelihood for the rewritten CV (Pass 6). These are the two numbers
-        // we surface on the dashboard + email as the before→after narrative.
         await recordRewrite(userId, {
           id: rewriteId,
           jobTitle: result.jobAnalysis.roleTitle,
@@ -102,7 +82,9 @@ export async function POST(req: NextRequest): Promise<Response> {
           pdfTemplate: template,
         });
 
-        // Render the chosen template + (optionally) email it.
+        // Free the analysis snapshot — it's been consumed.
+        await redis.del(k.analysis(body.analysisId!));
+
         if (sendEmail) {
           try {
             const user = await currentUser();
@@ -111,10 +93,6 @@ export async function POST(req: NextRequest): Promise<Response> {
               const pdfBase64 = renderTemplate(template, result);
               await redis.set(k.pdfCache(rewriteId, template), pdfBase64, { ex: 60 * 24 * 60 * 60 });
 
-              // Generate a personal share code (50% off, 10 uses) tied to
-              // this customer. Shared portfolio-wide via Stripe — works on
-              // any Almost Legal site at checkout. Owner stored in Redis so
-              // the redemption webhook can credit them with a free reward.
               let shareCode: string | undefined;
               try {
                 const { stripe } = await import('@/lib/stripe');
@@ -126,7 +104,6 @@ export async function POST(req: NextRequest): Promise<Response> {
                 shareCode = promoCode.code;
                 await redis.set(`share:owner:${promoCode.code}`, email, { ex: 60 * 60 * 24 * 365 });
               } catch (e) {
-                // Share-code failure is non-fatal — email goes out without it.
                 console.error('share code generation failed', e);
               }
 
@@ -147,18 +124,14 @@ export async function POST(req: NextRequest): Promise<Response> {
               send({ type: 'system', line: `✉ Sent to ${email} with the PDF attached.` });
             }
           } catch (e) {
-            // Email failure is not fatal — the rewrite is still persisted.
-            send({ type: 'warn', line: `⚠ Could not send email (${(e as Error).message}). PDF still available on the result page.` });
+            send({ type: 'warn', line: `⚠ Email skipped (${(e as Error).message}). PDF is on the result page.` });
           }
         }
 
         controller.close();
       } catch (e) {
-        // Refund the credit on engine failure — it's not the user's fault.
+        // Refund the credit on engine failure.
         try {
-          // We deliberately don't refund the lifetime-free flag (it stays consumed)
-          // because the user did get to see narration; instead we just bump paidCredits
-          // by 1 if the source was 'paid', and bump monthly bucket back if monthly.
           const state = await redis.get<CreditState>(k.user(userId));
           if (state) {
             if (source === 'paid') {
@@ -176,10 +149,10 @@ export async function POST(req: NextRequest): Promise<Response> {
             }
           }
         } catch {
-          /* refund failure is non-fatal */
+          /* refund failure non-fatal */
         }
 
-        send({ type: 'error', message: (e as Error).message ?? 'Engine failure' });
+        send({ type: 'error', message: (e as Error).message ?? 'Rewrite failed' });
         controller.close();
       }
     },
@@ -193,11 +166,4 @@ export async function POST(req: NextRequest): Promise<Response> {
       connection: 'keep-alive',
     },
   });
-}
-
-function generateId(): string {
-  // Compact, URL-safe, sortable-ish (timestamp prefix + 8 chars random).
-  const ts = Date.now().toString(36);
-  const rand = Math.random().toString(36).slice(2, 10);
-  return `r_${ts}_${rand}`;
 }

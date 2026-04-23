@@ -23,8 +23,9 @@ export async function runRewrite(opts: {
   jobAnalysis: JobAnalysis;
   roleMatch: RoleMatch;
   recruiterVerdict: RecruiterVerdict;
+  confirmedGaps?: string[];
 }): Promise<RewritePass5> {
-  const user = [
+  const parts = [
     'ORIGINAL CV (verbatim — do not invent anything beyond this):',
     opts.originalCv.slice(0, 16000),
     '',
@@ -36,7 +37,15 @@ export async function runRewrite(opts: {
     '',
     'RECRUITER VERDICT (whatWouldChangeIt tells you what the rewrite should address):',
     JSON.stringify(opts.recruiterVerdict, null, 2),
-  ].join('\n');
+  ];
+  if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
+    parts.push(
+      '',
+      'CONFIRMED-GAP EXPERIENCE — the candidate has confirmed they HAVE these capabilities even though they are not on the original CV. WEAVE each one naturally into the rewrite (summary, role bullets, skills, cover letter) using the JD language. Do NOT fabricate supporting numbers or named clients. Every item below MUST appear somewhere concrete in the rewritten CV:',
+    );
+    for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
+  }
+  const user = parts.join('\n');
 
   return callJson({
     model: MODELS.sonnet,

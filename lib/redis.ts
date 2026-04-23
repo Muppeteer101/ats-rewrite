@@ -19,6 +19,10 @@ export const k = {
   // Individual rewrite payload — JSON of {jdAnalysis, cvAnalysis, rewrite, score, pdfTemplate, jobTitle}.
   rewrite: (rewriteId: string) => `cv-rewrite:${rewriteId}`,
 
+  // Intermediate analysis snapshot (pre-rewrite) — persisted between stages.
+  // 24-hour TTL: long enough for a user to start analysis, consider, and pay.
+  analysis: (analysisId: string) => `cv-analysis:${analysisId}`,
+
   // Pre-computed PDF binary cache (base64) so dashboard re-downloads don't re-render.
   pdfCache: (rewriteId: string, template: string) => `cv-pdf:${rewriteId}:${template}`,
 
