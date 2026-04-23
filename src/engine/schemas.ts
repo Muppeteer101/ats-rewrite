@@ -233,10 +233,12 @@ export type EngineResult = {
 
 export type PassNumber = 1 | 2 | 3 | 4 | 5 | 6;
 
+export type NarrationTone = 'good' | 'amber' | 'bad' | 'info';
+
 export type NarrationEvent =
   | { type: 'system'; line: string }
   | { type: 'pass'; pass: PassNumber; line: string }
-  | { type: 'pass-complete'; pass: PassNumber; line: string }
+  | { type: 'pass-complete'; pass: PassNumber; line: string; tone?: NarrationTone }
   | { type: 'warn'; line: string }
   | { type: 'result'; id: string }
   | { type: 'error'; message: string };

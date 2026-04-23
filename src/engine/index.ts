@@ -4,7 +4,14 @@ import { runRoleMatch } from './passes/pass3RoleMatch';
 import { runRecruiterVerdict } from './passes/pass4Verdict';
 import { runRewrite } from './passes/pass5Rewrite';
 import { runAtsConfidence } from './passes/pass6Ats';
-import type { EngineResult, NarrationEvent } from './schemas';
+import type { EngineResult, NarrationEvent, NarrationTone } from './schemas';
+
+const scoreTone = (n: number): NarrationTone =>
+  n >= 70 ? 'good' : n >= 40 ? 'amber' : 'bad';
+const verdictTone = (v: string): NarrationTone =>
+  v === 'YES' ? 'good' : v === 'MAYBE' ? 'amber' : 'bad';
+const atsTone = (r: string): NarrationTone =>
+  r === 'HIGH' ? 'good' : r === 'MEDIUM' ? 'amber' : 'bad';
 
 export type EngineInput = {
   cvText: string;
@@ -46,11 +53,13 @@ export async function* runEngine(
   yield {
     type: 'pass-complete',
     pass: 1,
+    tone: 'info',
     line: `✓ Job: "${jobAnalysis.roleTitle}" (${jobAnalysis.seniorityLevel}) — ${jobAnalysis.mustHaves.hardSkills.length} must-have skills, ${jobAnalysis.niceToHaves.skills.length} nice-to-have.`,
   };
   yield {
     type: 'pass-complete',
     pass: 2,
+    tone: 'info',
     line: `✓ CV: ${cvAnalysis.candidateOverview.yearsOfExperience} experience (${cvAnalysis.candidateOverview.seniorityLevel}) — ${cvAnalysis.strengths.hardSkills.length} demonstrated skills, ${cvAnalysis.weaknesses.thinOrAbsentAreas.length} gap areas flagged.`,
   };
 
@@ -60,6 +69,7 @@ export async function* runEngine(
   yield {
     type: 'pass-complete',
     pass: 3,
+    tone: scoreTone(roleMatch.overallScore),
     line: `✓ Match: ${roleMatch.overallScore}/100 — ${roleMatch.pilePosition} pile.`,
   };
 
@@ -69,6 +79,7 @@ export async function* runEngine(
   yield {
     type: 'pass-complete',
     pass: 4,
+    tone: verdictTone(recruiterVerdict.decision),
     line: `✓ Verdict: ${recruiterVerdict.decision} — ${recruiterVerdict.oneSentenceReason}`,
   };
 
@@ -83,6 +94,7 @@ export async function* runEngine(
   yield {
     type: 'pass-complete',
     pass: 5,
+    tone: 'info',
     line: `✓ Rewrite: ${pass5.rewrittenCV.roles.length} roles restructured, ${pass5.rewrittenCV.skills.length} skills surfaced, ${pass5.changesMade.length} changes logged. Cover letter: ${pass5.coverLetter.paragraphs.length} paragraphs.`,
   };
 
@@ -95,6 +107,7 @@ export async function* runEngine(
   yield {
     type: 'pass-complete',
     pass: 6,
+    tone: atsTone(atsConfidence.rating),
     line: `✓ ATS: ${atsConfidence.rating} confidence (${atsConfidence.percentage}% pass likelihood).`,
   };
 

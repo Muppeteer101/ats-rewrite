@@ -55,7 +55,6 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   const [error, setError] = useState<string | null>(null);
   const [header, setHeader] = useState<ResultHeader | null>(null);
   const startedRef = useRef(false);
-  const feedRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (startedRef.current) return;
@@ -81,10 +80,6 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
     void run(payload, toppedUp ? 3 : 0);
   }, [draftId, searchParams]);
 
-  // Keep the narration feed scrolled to the latest line.
-  useEffect(() => {
-    if (feedRef.current) feedRef.current.scrollTop = feedRef.current.scrollHeight;
-  }, [lines]);
 
   async function run(payload: unknown, retriesLeft: number) {
     setPhase('streaming');
@@ -173,36 +168,11 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         <ResultHeaderBlock header={header} />
       )}
 
-      <div ref={feedRef} className="feed mb-8 max-h-[44vh] overflow-y-auto">
-        {lines.length === 0 && phase === 'priming' && (
-          <div className="feed-line system">› Booting…</div>
-        )}
-        {lines.map((l, i) => {
-          const cls =
-            l.type === 'system'
-              ? 'feed-line system'
-              : l.type === 'pass-complete'
-                ? 'feed-line ok'
-                : l.type === 'warn'
-                  ? 'feed-line warn'
-                  : l.type === 'pass'
-                    ? 'feed-line pass'
-                    : l.type === 'error'
-                      ? 'feed-line warn'
-                      : 'feed-line system';
-          const text =
-            l.type === 'error'
-              ? `✗ ${l.message}`
-              : l.type === 'result'
-                ? '✓ Persisted.'
-                : l.line;
-          return (
-            <div key={i} className={cls}>
-              {text}
-            </div>
-          );
-        })}
-      </div>
+      {phase !== 'done' && phase !== 'error' && (
+        <div className="mb-8">
+          <ProgressConsole lines={lines} phase={phase} />
+        </div>
+      )}
 
       {phase === 'done' && header && <ResultView rewriteId={draftIdToRewriteId(lines)} />}
 
@@ -229,6 +199,135 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
 function draftIdToRewriteId(lines: NarrationEvent[]): string {
   const evt = lines.find((l) => l.type === 'result');
   return evt && evt.type === 'result' ? evt.id : '';
+}
+
+/* ────────────────────── Progress console ────────────────────── */
+
+type StepState = { title: string; blurb: string; tone?: string; detail?: string; status: 'pending' | 'active' | 'done' };
+
+const STEP_BLUEPRINT: { title: string; active: string; done: string; blurb: string }[] = [
+  { title: 'Job description',    active: 'Analysing the job description',       done: 'Job description analysed',   blurb: 'Extracting must-haves, nice-to-haves, tone, and rejection risks.' },
+  { title: 'Your CV',             active: 'Analysing your CV',                   done: 'CV analysed',                 blurb: 'Mapping your demonstrated strengths, gaps, and presentation quality.' },
+  { title: 'Role match score',    active: 'Scoring the role match',              done: 'Role match scored',           blurb: 'Measuring how your experience lines up against what this role actually needs.' },
+  { title: 'Recruiter verdict',   active: 'Running the recruiter verdict',       done: 'Recruiter verdict reached',   blurb: 'Simulating a recruiter shortlisting you against 50 others.' },
+  { title: 'Rewrite + cover',     active: 'Rewriting your CV and cover letter',  done: 'Rewrite complete',            blurb: 'Mirroring the role’s language where your experience supports it — no invention.' },
+  { title: 'ATS confidence',      active: 'Running the ATS confidence check',    done: 'ATS confidence checked',      blurb: 'Checking your rewrite against how ATS platforms parse and rank CVs.' },
+];
+
+const MILESTONES: Record<string, number> = {
+  boot: 4,
+  p1Start: 8, p2Start: 10,
+  p1Done: 20, p2Done: 32,
+  p3Start: 36, p3Done: 48,
+  p4Start: 52, p4Done: 64,
+  p5Start: 68, p5Done: 86,
+  p6Start: 90, p6Done: 100,
+};
+
+function deriveProgress(lines: NarrationEvent[]): { percent: number; steps: StepState[]; currentIndex: number } {
+  const steps: StepState[] = STEP_BLUEPRINT.map((s) => ({ title: s.title, blurb: s.blurb, status: 'pending' }));
+  let percent = lines.length === 0 ? 0 : MILESTONES.boot;
+
+  for (const l of lines) {
+    if (l.type === 'pass') {
+      const i = l.pass - 1;
+      if (steps[i] && steps[i].status === 'pending') steps[i].status = 'active';
+      const key = `p${l.pass}Start`;
+      if (MILESTONES[key] != null) percent = Math.max(percent, MILESTONES[key]);
+    } else if (l.type === 'pass-complete') {
+      const i = l.pass - 1;
+      if (steps[i]) {
+        steps[i].status = 'done';
+        if ('tone' in l && l.tone) steps[i].tone = l.tone;
+        const m = /^✓\s*[^:]+:\s*(.+)$/.exec(l.line);
+        if (m) steps[i].detail = m[1];
+      }
+      const key = `p${l.pass}Done`;
+      if (MILESTONES[key] != null) percent = Math.max(percent, MILESTONES[key]);
+    }
+  }
+
+  const active = steps.findIndex((s) => s.status === 'active');
+  const pending = steps.findIndex((s) => s.status === 'pending');
+  return { percent, steps, currentIndex: active !== -1 ? active : pending };
+}
+
+function ProgressConsole({ lines, phase }: { lines: NarrationEvent[]; phase: Phase }) {
+  const { percent: targetPercent, steps, currentIndex } = deriveProgress(lines);
+  const [displayPercent, setDisplayPercent] = useState(0);
+
+  useEffect(() => {
+    const id = window.setInterval(() => {
+      setDisplayPercent((prev) => {
+        if (prev >= targetPercent) return prev;
+        const gap = targetPercent - prev;
+        const step = gap > 10 ? 1.5 : gap > 4 ? 0.6 : 0.2;
+        return Math.min(targetPercent, Math.round((prev + step) * 10) / 10);
+      });
+    }, 120);
+    return () => window.clearInterval(id);
+  }, [targetPercent]);
+
+  const isDone = phase === 'done' || targetPercent >= 100;
+  const shownIdx = isDone ? steps.length - 1 : currentIndex === -1 ? 0 : currentIndex;
+  const current = STEP_BLUEPRINT[shownIdx] ?? STEP_BLUEPRINT[0];
+  const headline = isDone ? 'Analysis complete' : phase === 'priming' ? 'Booting the engine' : current.active;
+  const blurb = isDone
+    ? 'Your score, verdict, rewritten CV, cover letter, and ATS rating are below.'
+    : phase === 'priming'
+      ? 'Reading your input and preparing the six-pass pipeline.'
+      : current.blurb;
+
+  const RADIUS = 62;
+  const CIRC = 2 * Math.PI * RADIUS;
+  const dashoffset = CIRC - (displayPercent / 100) * CIRC;
+
+  return (
+    <div className="progress-console" role="status" aria-live="polite">
+      <div className="progress-ring" aria-label={`${Math.round(displayPercent)} percent complete`}>
+        <svg viewBox="0 0 140 140">
+          <defs>
+            <linearGradient id="progressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#b8a3ff" />
+              <stop offset="100%" stopColor="#f96bee" />
+            </linearGradient>
+          </defs>
+          <circle className="track" cx="70" cy="70" r={RADIUS} />
+          <circle
+            className="fill"
+            cx="70"
+            cy="70"
+            r={RADIUS}
+            strokeDasharray={CIRC}
+            strokeDashoffset={dashoffset}
+          />
+        </svg>
+        <span className="pct">{Math.round(displayPercent)}%</span>
+      </div>
+
+      <div className="progress-current">
+        <div className="label">{isDone ? 'Done' : `Step ${Math.max(1, shownIdx + 1)} of 6`}</div>
+        <h3>{headline}</h3>
+        <p>{blurb}</p>
+
+        <div className="progress-steps">
+          {steps.map((s, i) => {
+            const cls =
+              s.status === 'active' ? 'progress-step active'
+              : s.status === 'done' ? `progress-step done${s.tone ? ` tone-${s.tone}` : ''}`
+              : 'progress-step';
+            return (
+              <div key={i} className={cls}>
+                <span className="dot" />
+                <span>{STEP_BLUEPRINT[i].title}</span>
+                <span className="detail">{s.status === 'done' ? s.detail ?? '' : s.status === 'active' ? 'in progress…' : ''}</span>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 /* ────────────────────── Result View ────────────────────── */
