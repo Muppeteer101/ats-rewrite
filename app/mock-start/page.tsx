@@ -180,42 +180,6 @@ export default function MockStartPage() {
               <span style={{ fontVariantNumeric: 'tabular-nums' }}>0 / 200 min</span>
             </div>
 
-            {/* URL tab preview (shown when URL tab active) */}
-            <div style={{ marginTop: 20, padding: 14, background: '#f8f9ff', border: '1px dashed #cfd2e0', borderRadius: 10 }}>
-              <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: '#7a7c95', marginBottom: 8 }}>
-                URL tab preview
-              </div>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input
-                  type="url"
-                  placeholder="https://… (LinkedIn, Indeed, company careers page)"
-                  style={{
-                    flex: 1,
-                    padding: '10px 12px',
-                    border: '1px solid #e7e8ef',
-                    borderRadius: 8,
-                    fontSize: 14,
-                    outline: 'none',
-                    background: '#fff',
-                  }}
-                />
-                <button
-                  type="button"
-                  style={{
-                    padding: '10px 18px',
-                    background: '#7c3aed',
-                    color: '#fff',
-                    border: 'none',
-                    borderRadius: 8,
-                    fontWeight: 600,
-                    fontSize: 14,
-                    cursor: 'pointer',
-                  }}
-                >
-                  Analyse
-                </button>
-              </div>
-            </div>
           </section>
         </div>
 
