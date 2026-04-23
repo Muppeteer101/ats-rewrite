@@ -50,6 +50,6 @@ export async function runAtsConfidence(opts: {
     user: parts.join('\n'),
     schema: atsConfidenceSchema,
     temperature: 0,
-    maxTokens: 2500,
+    maxTokens: 4000,
   });
 }

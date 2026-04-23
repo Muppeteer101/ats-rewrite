@@ -159,8 +159,26 @@ function repairTruncatedJson(s: string): string | null {
   }
 
   if (lastSafeIndex < 0) return null;
-  // Trim back to last safe index; if it ended with a comma, drop it.
+  // Trim back to last safe index; if it ended with a dangling colon or
+  // comma, walk back further — we need to drop the incomplete key-value
+  // pair entirely, not leave it as `"foo":}` which won't parse.
   let trimmed = s.slice(0, lastSafeIndex + 1);
+  trimmed = trimmed.replace(/[,:]\s*$/, '');
+  // If we still end on a partial pair like `"foo"` (key without value),
+  // strip back to the nearest `,` or `{` or `[`.
+  for (let guard = 0; guard < 4; guard++) {
+    const tail = trimmed.replace(/\s+$/, '');
+    if (/[,:]$/.test(tail)) {
+      trimmed = tail.slice(0, -1);
+      continue;
+    }
+    if (/"$/.test(tail) && !/:\s*"[^"]*"$/.test(tail) && !/[,[{]\s*"[^"]*"$/.test(tail)) {
+      // A dangling key string with no colon — drop it.
+      const cut = Math.max(tail.lastIndexOf(','), tail.lastIndexOf('{'), tail.lastIndexOf('['));
+      if (cut >= 0) { trimmed = tail.slice(0, cut + (tail[cut] === ',' ? 0 : 1)); continue; }
+    }
+    break;
+  }
   trimmed = trimmed.replace(/,\s*$/, '');
   return trimmed + stack.reverse().join('');
 }

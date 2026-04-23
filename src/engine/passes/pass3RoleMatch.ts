@@ -33,6 +33,6 @@ export async function runRoleMatch(opts: {
     user,
     schema: roleMatchSchema,
     temperature: 0,
-    maxTokens: 2500,
+    maxTokens: 3500,
   });
 }
