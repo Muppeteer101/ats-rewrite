@@ -61,6 +61,19 @@ export type JobAnalysis = z.infer<typeof jobAnalysisSchema>;
 
 /* ────────────────────── Pass 2 — CV Analysis ────────────────────── */
 
+/**
+ * One role as it appears on the CV. The dates are kept as the candidate wrote
+ * them ("Feb 2022", "January 2024", "Present") — Pass 3's deterministic
+ * gap-validator parses them. Empty string is allowed for an absent date.
+ */
+export const cvRoleEntrySchema = z.object({
+  title: z.string(),
+  employer: z.string(),
+  startDate: z.string(),
+  endDate: z.string(),
+});
+export type CVRoleEntry = z.infer<typeof cvRoleEntrySchema>;
+
 export const cvAnalysisSchema = z.object({
   candidateOverview: z.object({
     currentRole: z.string(),
@@ -69,6 +82,12 @@ export const cvAnalysisSchema = z.object({
     careerTrajectory: z.string(),
     yearsOfExperience: z.string(),
   }),
+  /**
+   * Every role listed on the CV, reverse-chronological. Ground truth for any
+   * downstream date-range claim — Pass 3 refuses to flag a career-gap range
+   * that overlaps any entry here.
+   */
+  roles: z.array(cvRoleEntrySchema),
   strengths: z.object({
     hardSkills: z.array(z.string()),
     quantifiedAchievements: z.array(z.string()),
