@@ -86,6 +86,9 @@ export const PROMPT_2_CV = `You are an expert CV analyst with deep knowledge of 
 
 You will be given a CV. Analyse it thoroughly and extract the following. Be honest and direct — a candidate needs accurate feedback, not flattery.
 
+0. EMPLOYMENT HISTORY (extract first, before anything else)
+List every paid role on the CV in reverse-chronological order. For each role capture title, employer, start date, and end date EXACTLY as they appear on the CV (e.g. "Feb 2022", "January 2024", "Present" for ongoing). Use an empty string only if the CV genuinely omits a date. Do not paraphrase, infer, or skip roles — this list is the canonical employment record that later passes use to validate any career-gap claim.
+
 1. CANDIDATE OVERVIEW
 - Current or most recent role and seniority level
 - Industry background and sector experience
@@ -101,7 +104,7 @@ You will be given a CV. Analyse it thoroughly and extract the following. Be hone
 3. WEAKNESSES AND GAPS
 - Skills or experience areas that appear thin or absent
 - Achievements that are vague or unquantified
-- Career gaps or patterns that might raise questions
+- Career gaps or patterns that might raise questions — only flag a date-range gap that is consistent with the EMPLOYMENT HISTORY you extracted in section 0. A "gap" between two roles only exists if the earlier role's end date precedes the later role's start date by more than 6 months. Never invent a date range that overlaps a listed role.
 - Qualifications that appear to be missing
 
 4. PRESENTATION QUALITY
@@ -123,6 +126,9 @@ Use this exact JSON shape:
     "careerTrajectory": "",
     "yearsOfExperience": ""
   },
+  "roles": [
+    { "title": "", "employer": "", "startDate": "", "endDate": "" }
+  ],
   "strengths": {
     "hardSkills": [],
     "quantifiedAchievements": [],
@@ -174,6 +180,8 @@ A literal keyword-match against the JD will insult strong candidates. Apply one 
 
 RULE: Only mark something as a GAP if no reasonable reading of the CV or the candidate's confirmed-gap-experience list supports it. "Not using the JD's exact phrase" is NOT a gap if the substance is clearly present — flag it as a LANGUAGE/TERMINOLOGY item instead, not a domain gap.
 
+DATE-RANGE GAPS: The CV analysis includes a \`roles\` array — that is the canonical employment record. Never emit a "career gap (Mon YYYY–Mon YYYY)" label whose period overlaps the dates of any role in that array. If the candidate is in continuous employment across the period, there is no gap, full stop. A real employment gap can only exist between one role's end date and the next role's start date, and only if it exceeds 6 months. If you are unsure, omit the gap.
+
 Produce the following:
 
 1. OVERALL MATCH SCORE (0-100) with a one-sentence plain English summary
@@ -223,6 +231,7 @@ Before you write the verdict, check: are you about to reject this candidate on a
 - Role shape: A CEO / Founder / VP of a software business IS a technical buyer and IS a product-savvy leader. Don't flag "no technical credibility" on someone running a live software business.
 - Seniority: Having led the level above the role's requested seniority clears the bar — flag over-leveling as a motivation question, not a requirement miss.
 - Implied: If the outcomes on the CV could only have been produced with a named skill, credit the skill even if unnamed.
+- Date-range gaps: the CV analysis \`roles\` array is the canonical employment record. Never claim a career gap whose period overlaps any role listed there. A real employment gap can only sit between one role's end date and the next role's start date and must exceed 6 months.
 
 Only decide NO if, after this inference, the candidate is genuinely and materially short against a non-negotiable requirement. Otherwise the correct answer is MAYBE (with the rewrite able to close the gap) or YES (if the misalignment is minor).
 
