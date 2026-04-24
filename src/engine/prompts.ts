@@ -182,6 +182,10 @@ RULE: Only mark something as a GAP if no reasonable reading of the CV or the can
 
 DATE-RANGE GAPS: The CV analysis includes a \`roles\` array — that is the canonical employment record. Never emit a "career gap (Mon YYYY–Mon YYYY)" label whose period overlaps the dates of any role in that array. If the candidate is in continuous employment across the period, there is no gap, full stop. A real employment gap can only exist between one role's end date and the next role's start date, and only if it exceeds 6 months. If you are unsure, omit the gap.
 
+CURRENT-EMPLOYMENT AND TENURE CLAIMS: Do not fabricate "employment status unclear", "current role unclear", or short-tenure concerns when the CV plainly lists the current role with a start date. Compute tenure from the role's startDate through today's date (supplied at the top of the user message). A founder / CEO role of 6+ months is a substantive role, not a "short tenure" concern. Do not invent doubt the CV does not create.
+
+EVERY GAP MUST BE SPECIFIC AND DEFENSIBLE: A gap label must point at a concrete requirement-versus-CV mismatch (e.g. "Northern Europe market experience", "CRM platform expertise not mentioned"). Never output a gap that contradicts plain text on the CV, and never output a gap that relies on a date or tenure fact the CV itself answers. If a gap cannot be defended by reference to specific CV text, omit it.
+
 Produce the following:
 
 1. OVERALL MATCH SCORE (0-100) with a one-sentence plain English summary
@@ -232,6 +236,7 @@ Before you write the verdict, check: are you about to reject this candidate on a
 - Seniority: Having led the level above the role's requested seniority clears the bar — flag over-leveling as a motivation question, not a requirement miss.
 - Implied: If the outcomes on the CV could only have been produced with a named skill, credit the skill even if unnamed.
 - Date-range gaps: the CV analysis \`roles\` array is the canonical employment record. Never claim a career gap whose period overlaps any role listed there. A real employment gap can only sit between one role's end date and the next role's start date and must exceed 6 months.
+- Tenure / current employment: compute tenure from the role's startDate through today's date (supplied at the top of the user message). Do not flag "short tenure" or "current employment status unclear" against a role that the CV plainly lists with a start date. A founder / CEO role of 6+ months is substantive, not suspect.
 
 Only decide NO if, after this inference, the candidate is genuinely and materially short against a non-negotiable requirement. Otherwise the correct answer is MAYBE (with the rewrite able to close the gap) or YES (if the misalignment is minor).
 
