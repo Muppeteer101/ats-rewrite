@@ -8,6 +8,14 @@ import {
   type CVRoleEntry,
 } from '../schemas';
 
+/** "Today's date: 24 April 2026." — prefix for every user message so the LLM
+ *  resolves "Present" against now, not the CV's authoring date. */
+function todayLine(): string {
+  const d = new Date();
+  const month = d.toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
+  return `Today's date: ${d.getUTCDate()} ${month} ${d.getUTCFullYear()}. When a role end date is "Present" / "Current", treat it as today's date.`;
+}
+
 /** Pass 3 — Role Match Score. Haiku @ temp 0 (rubric-driven, cheap). */
 export async function runRoleMatch(opts: {
   jobAnalysis: JobAnalysis;
@@ -16,6 +24,8 @@ export async function runRoleMatch(opts: {
   confirmedGaps?: string[];
 }): Promise<RoleMatch> {
   const parts = [
+    todayLine(),
+    '',
     'JOB ANALYSIS:',
     JSON.stringify(opts.jobAnalysis, null, 2),
     '',
@@ -47,14 +57,17 @@ export async function runRoleMatch(opts: {
  *
  * Even with the prompt instructions, an LLM can still emit a label like
  * "Unexplained 26-month career gap (Nov 2021–Jan 2024)" while the CV's roles
- * array clearly shows continuous employment across that period. This is the
- * deterministic safety net: if a gap label contains a date range that
- * overlaps any listed role, drop it.
+ * array clearly shows continuous employment across that period. Two-tier
+ * safety net:
  *
- * Conservative by design — we only strip gaps where:
- *   1. the label parses cleanly into two month-year endpoints, AND
- *   2. at least one role in the CV overlaps the parsed range.
- * Anything else is left for the LLM's judgement.
+ *   a) If the CV analysis yielded a populated roles[], strip any gap label
+ *      whose parsed date range overlaps any listed role.
+ *
+ *   b) If roles[] is empty or missing (Pass 2 failed to enumerate), strip
+ *      ANY gap label containing a month-year date range — we can't verify
+ *      the claim, and hallucinated date-range gaps damage the candidate
+ *      more than the rare case of a genuinely employment-less CV losing
+ *      one legitimate-but-unverifiable label.
  */
 
 const MONTHS: Record<string, number> = {
@@ -72,14 +85,12 @@ const MONTHS: Record<string, number> = {
   dec: 11, december: 11,
 };
 
-/** Returns a millis-since-epoch for the first day of the month, or null. */
 function parseMonthYear(raw: string): number | null {
   const s = raw.trim().toLowerCase();
   if (!s) return null;
   if (s === 'present' || s === 'current' || s === 'now' || s === 'today') {
     return Date.now();
   }
-  // "Feb 2022", "February 2022", "Feb. 2022", "02/2022", "2022-02"
   const named = s.match(/^([a-z]+)\.?\s+(\d{4})$/);
   if (named) {
     const m = MONTHS[named[1]];
@@ -101,15 +112,12 @@ function parseMonthYear(raw: string): number | null {
     if (m < 0 || m > 11) return null;
     return Date.UTC(y, m, 1);
   }
-  // Bare year — treat as January.
   const year = s.match(/^(\d{4})$/);
   if (year) return Date.UTC(Number(year[1]), 0, 1);
   return null;
 }
 
-/** Extracts the first (start, end) month-year pair from a free-text label. */
 function extractRangeFromLabel(label: string): { start: number; end: number } | null {
-  // Match "Nov 2021–Jan 2024", "November 2021 - January 2024", "11/2021 to 01/2024"
   const re = /([A-Za-z]+\.?\s+\d{4}|\d{1,2}[\/\-]\d{4}|\d{4}-\d{1,2})\s*(?:[–\-—]|to)\s*([A-Za-z]+\.?\s+\d{4}|\d{1,2}[\/\-]\d{4}|\d{4}-\d{1,2}|present|current)/i;
   const m = label.match(re);
   if (!m) return null;
@@ -123,7 +131,6 @@ function rangesOverlap(a: { start: number; end: number }, b: { start: number; en
   return a.start <= b.end && b.start <= a.end;
 }
 
-/** True if any listed role's date range overlaps the gap's date range. */
 function gapOverlapsAnyRole(
   gap: { start: number; end: number },
   roles: CVRoleEntry[],
@@ -141,10 +148,14 @@ export function filterFalseDateRangeGaps(
   gaps: string[],
   roles: CVRoleEntry[] | undefined,
 ): string[] {
-  if (!roles || roles.length === 0) return gaps;
+  const hasRoles = Array.isArray(roles) && roles.length > 0;
   return gaps.filter((label) => {
     const range = extractRangeFromLabel(label);
     if (!range) return true;
-    return !gapOverlapsAnyRole(range, roles);
+    // Date-range label present. If we have ground truth, check overlap.
+    if (hasRoles) return !gapOverlapsAnyRole(range, roles as CVRoleEntry[]);
+    // No ground truth — strip the label rather than risk a hallucinated
+    // chronology claim reaching the user.
+    return false;
   });
 }

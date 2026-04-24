@@ -8,6 +8,12 @@ import {
   type RoleMatch,
 } from '../schemas';
 
+function todayLine(): string {
+  const d = new Date();
+  const month = d.toLocaleString('en-GB', { month: 'long', timeZone: 'UTC' });
+  return `Today's date: ${d.getUTCDate()} ${month} ${d.getUTCFullYear()}. When a role end date is "Present" / "Current", treat it as today's date.`;
+}
+
 /** Pass 4 — Recruiter Verdict. Sonnet @ temp 0.3 (voice matters). */
 export async function runRecruiterVerdict(opts: {
   jobAnalysis: JobAnalysis;
@@ -16,6 +22,8 @@ export async function runRecruiterVerdict(opts: {
   confirmedGaps?: string[];
 }): Promise<RecruiterVerdict> {
   const parts = [
+    todayLine(),
+    '',
     'JOB ANALYSIS:',
     JSON.stringify(opts.jobAnalysis, null, 2),
     '',
