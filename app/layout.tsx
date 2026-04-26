@@ -55,6 +55,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           <Navbar />
           {children}
           <Footer />
+          <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8V75M6PD2P" strategy="afterInteractive" />
+          <Script id="gtag-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-8V75M6PD2P');`}</Script>
           {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
             <Script id="clarity" strategy="afterInteractive">{`
               (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}");
