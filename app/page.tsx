@@ -42,7 +42,7 @@ export default async function HomePage() {
             </Link>
           </div>
           <p className="tile-meta">
-            First rewrite free · 1 free per month · Pay-as-you-go from £2/rewrite
+            First rewrite free · 1 free per month · Pay-as-you-go from £2.50/rewrite
           </p>
         </div>
       </section>
@@ -158,16 +158,16 @@ export default async function HomePage() {
               <div className="tile-price-each">No card required</div>
             </div>
             <div className="tile-price-card">
-              <div className="tile-price-tier">3-pack</div>
-              <div className="tile-price-big">£9.99</div>
-              <div className="tile-price-sub">3 rewrites</div>
-              <div className="tile-price-each">£3.33 each</div>
+              <div className="tile-price-tier">1 rewrite</div>
+              <div className="tile-price-big">£4.99</div>
+              <div className="tile-price-sub">1 rewrite</div>
+              <div className="tile-price-each">Top up anytime</div>
             </div>
             <div className="tile-price-card highlight">
               <div className="tile-price-tier">10-pack · best value</div>
-              <div className="tile-price-big">£19.99</div>
+              <div className="tile-price-big">£25</div>
               <div className="tile-price-sub">10 rewrites</div>
-              <div className="tile-price-each">£2.00 each</div>
+              <div className="tile-price-each">£2.50 each</div>
             </div>
           </div>
           <p style={{ fontSize: 13, color: '#86868b', marginBottom: 28 }}>
