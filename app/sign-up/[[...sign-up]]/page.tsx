@@ -13,7 +13,7 @@ export default function Page() {
       <nav className="border-b border-[var(--color-border)]">
         <div className="max-w-[1080px] mx-auto px-6 h-16 flex items-center">
           <Link href="/">
-            <Image src="/logo.png" alt="ImproveMyResume.ai" width={48} height={48} style={{ objectFit: 'contain' }} />
+            <Image src="/logo.png" alt="ImproveMyResume.ai" width={160} height={48} style={{ objectFit: 'contain' }} />
           </Link>
         </div>
       </nav>
