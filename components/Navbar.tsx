@@ -11,7 +11,7 @@ export function Navbar() {
   return (
     <nav className="pill-nav" aria-label="Primary">
       <Link href="/" className="pill-nav-logo">
-        <Image src="/logo.svg" alt="ImproveMyResume.ai" width={220} height={28} priority />
+        <Image src="/logo.png" alt="ImproveMyResume.ai" width={48} height={48} priority style={{ objectFit: 'contain' }} />
       </Link>
 
       <div className="pill-nav-links">
