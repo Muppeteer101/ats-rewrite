@@ -493,7 +493,7 @@ a { color: inherit; text-decoration: none; }
 
 .pill-nav {
   position: fixed; top: 0; left: 0; right: 0; z-index: 100;
-  height: 72px;
+  height: 80px;
   display: flex; align-items: center; justify-content: space-between;
   padding: 0 24px;
   background: var(--nav-bg);
@@ -718,12 +718,12 @@ a { color: inherit; text-decoration: none; }
 /* Scroll offset for in-page anchor jumps under the fixed pill-nav. */
 [id] { scroll-margin-top: 70px; }
 
-/* Push every page's content clear of the fixed pill-nav (72px tall).
+/* Push every page's content clear of the fixed pill-nav (80px tall).
    This applies globally to <body> so the funnel pages (/dashboard,
    /rewrite/[id], /sign-in, /sign-up) — which we are not allowed to
    modify — still sit clear of the canonical nav strip. Their own
-   sticky inline navs then stick at top: 72px instead of top: 0. */
-body { padding-top: 72px; }
+   sticky inline navs then stick at top: 80px instead of top: 0. */
+body { padding-top: 80px; }
 
 /* Funnel sticky navs use `sticky top-0` (Tailwind). With body padded
    above, they sit just beneath the pill-nav. Bump them flush so there's
