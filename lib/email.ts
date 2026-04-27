@@ -60,7 +60,7 @@ export async function sendRewriteReadyEmail(opts: {
     opts.pdfFilename ??
     `cv-${jobTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-').slice(0, 50)}.pdf`;
   const firstName = customerName?.split(' ')[0] ?? 'there';
-  const SITE_NAME = 'ATS Rewriter';
+  const SITE_NAME = 'ImproveMyResume.ai';
   const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://toolykit.ai';
   const FROM_EMAIL = 'hello@almostlegal.ai';
 
@@ -212,7 +212,7 @@ export async function sendReferrerRewardEmail(opts: {
   buyerName?: string;
 }): Promise<void> {
   const { to, rewardCode, buyerName } = opts;
-  const SITE_NAME = 'ATS Rewriter';
+  const SITE_NAME = 'ImproveMyResume.ai';
   const FROM_EMAIL = 'hello@almostlegal.ai';
   const buyer = buyerName ?? 'Someone you referred';
 

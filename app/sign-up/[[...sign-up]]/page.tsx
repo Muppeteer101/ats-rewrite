@@ -1,8 +1,9 @@
 import { SignUp } from '@clerk/nextjs';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const metadata = {
-  title: 'Sign up — ATS Rewriter',
+  title: 'Sign up — ImproveMyResume.ai',
   robots: { index: false, follow: false },
 };
 
@@ -11,12 +12,8 @@ export default function Page() {
     <main className="min-h-screen flex flex-col">
       <nav className="border-b border-[var(--color-border)]">
         <div className="max-w-[1080px] mx-auto px-6 h-16 flex items-center">
-          <Link
-            href="/"
-            className="text-[15px] font-medium tracking-tight"
-            style={{ color: 'var(--color-heading)' }}
-          >
-            <span style={{ color: 'var(--color-purple)' }}>ATS</span>·rewriter
+          <Link href="/">
+            <Image src="/logo.svg" alt="ImproveMyResume.ai" width={200} height={26} />
           </Link>
         </div>
       </nav>

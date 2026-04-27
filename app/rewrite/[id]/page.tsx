@@ -1,5 +1,6 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { RewriteRunner } from '@/components/RewriteRunner';
 
 export const dynamic = 'force-dynamic';
@@ -10,8 +11,8 @@ export default async function RewritePage({ params }: { params: Promise<{ id: st
   return (
     <main className="min-h-screen">
       <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
-        <Link href="/" className="font-mono text-sm tracking-wider">
-          <span className="text-[var(--color-accent)]">ats</span>-rewriter
+        <Link href="/">
+          <Image src="/logo.svg" alt="ImproveMyResume.ai" width={220} height={28} priority />
         </Link>
         <Link
           href="/dashboard"

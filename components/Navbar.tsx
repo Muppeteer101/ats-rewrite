@@ -1,15 +1,9 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useUser, useClerk } from '@clerk/nextjs';
 
-/**
- * ToolyKit pill-nav — frosted glass strip, logo left, links + CTA right.
- * Mirrors cancelmyparkingticket.com / fightmyfines.com canonical pattern.
- *
- * No theme toggle: ToolyKit ships light-only (the funnel pages — /rewrite,
- * /dashboard, /sign-in — are tied to a white Stripe-light theme).
- */
 export function Navbar() {
   const { isSignedIn, isLoaded } = useUser();
   const { signOut } = useClerk();
@@ -17,7 +11,7 @@ export function Navbar() {
   return (
     <nav className="pill-nav" aria-label="Primary">
       <Link href="/" className="pill-nav-logo">
-        ImproveMyResume<span>.ai</span>
+        <Image src="/logo.svg" alt="ImproveMyResume.ai" width={220} height={28} priority />
       </Link>
 
       <div className="pill-nav-links">

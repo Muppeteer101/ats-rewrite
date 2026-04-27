@@ -323,7 +323,7 @@ function stageSubhead(s: Stage): string {
   if (s === 'analyzing')  return 'Five passes — job, resume, role match, recruiter verdict, ATS. No payment, just the real numbers.';
   if (s === 'teaser')     return "Before you go further — confirm any experience we flagged as a gap. We'll rescore in seconds.";
   if (s === 'rescoring')  return 'Re-running the scoring with the experience you just confirmed.';
-  if (s === 'new-scores') return 'These are your new numbers after confirming your experience. Still free.';
+  if (s === 'new-scores') return 'Role match and recruiter verdict updated with your confirmed experience. ATS score improves after the full rewrite.';
   if (s === 'finalizing') return 'Producing your rewritten resume, tailored cover letter, and final ATS check.';
   return '';
 }
@@ -502,12 +502,19 @@ function ScoreTeaserStrip({
   const matchDelta = compareMode && initial ? delta(teaser.matchScore, initial.matchScore) : null;
   const atsDelta = compareMode && initial ? delta(teaser.atsPercentage, initial.atsPercentage) : null;
 
+  // In compare (rescore) mode, ATS confidence is hidden — it reflects literal
+  // keyword presence in the unmodified CV text, so it doesn't move meaningfully
+  // until the paid rewrite embeds confirmed experience into the document.
+  // Showing it here just introduces noise (±5% model variance) that undermines
+  // the role match / verdict improvements that DO reflect the confirmed answers.
+  const cols = compareMode ? 2 : 3;
+
   return (
     <div className="card-elevated p-7">
       <div
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
+          gridTemplateColumns: `repeat(${cols}, 1fr)`,
           gap: 20,
           alignItems: 'center',
         }}
@@ -530,18 +537,15 @@ function ScoreTeaserStrip({
             </div>
           )}
         </div>
-        <div style={{ textAlign: 'center' }}>
-          <div className="caption" style={{ textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 11, marginBottom: 8 }}>ATS confidence</div>
-          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-            <AtsPill value={teaser.atsRating} big />
-            <ScoreRing score={teaser.atsPercentage} size={90} label="pass likelihood" />
-          </div>
-          {atsDelta != null && (
-            <div className="caption" style={{ marginTop: 8, color: atsDelta >= 0 ? '#108c3d' : '#ea2261', fontWeight: 600 }}>
-              {atsDelta >= 0 ? '+' : ''}{atsDelta}% vs initial
+        {!compareMode && (
+          <div style={{ textAlign: 'center' }}>
+            <div className="caption" style={{ textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 11, marginBottom: 8 }}>ATS confidence</div>
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+              <AtsPill value={teaser.atsRating} big />
+              <ScoreRing score={teaser.atsPercentage} size={90} label="pass likelihood" />
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
