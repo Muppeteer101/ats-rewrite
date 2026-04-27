@@ -146,7 +146,7 @@ export default async function HomePage() {
       {/* ── PRICING ────────────────────────────────────────────── */}
       <section className="tile tile-full tile-light" id="pricing">
         <div className="tile-content" style={{ maxWidth: 760 }}>
-          <h2 className="tile-h-section">Pay-as-you-go. No subscription.</h2>
+          <h2 className="tile-h-section">Pay-as-you-go.<br />No subscription.</h2>
           <p className="tile-sub">
             First rewrite is free. You get one free rewrite every calendar month. Top up only when you need more — credits never expire.
           </p>
