@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test:e2e": "CLERK_SECRET_KEY=sk_test_7BW7Nlqwk7KqkNlqTPwaJp6jGHejtfFxRVsAAZtBK9 playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
@@ -25,6 +26,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@clerk/testing": "^2.0.21",
+    "@playwright/test": "^1.59.1",
     "@tailwindcss/postcss": "^4",
     "@types/jsdom": "^21.1.7",
     "@types/node": "^25.5.0",

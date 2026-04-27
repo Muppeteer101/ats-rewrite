@@ -16,6 +16,6 @@ export async function runCvAnalysis(cvText: string): Promise<CVAnalysis> {
     user: `${todayLine()}\n\nCV:\n\n${cvText.slice(0, 16000)}`,
     schema: cvAnalysisSchema,
     temperature: 0.1,
-    maxTokens: 3000,
+    maxTokens: 4096,
   });
 }

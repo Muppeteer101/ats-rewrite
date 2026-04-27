@@ -34,7 +34,10 @@ export async function runRecruiterVerdict(opts: {
     JSON.stringify(opts.roleMatch, null, 2),
   ];
   if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
-    parts.push('', 'CONFIRMED-GAP EXPERIENCE (candidate has affirmed these, treat as real):');
+    parts.push(
+      '',
+      'RESOLVED GAPS — the candidate has confirmed they DO have the relevant experience for each of these previously-flagged items. Treat each underlying requirement as FULLY MET. Do NOT cite these as negatives in your verdict. They are confirmed strengths:',
+    );
     for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
   }
   const user = parts.join('\n');

@@ -33,7 +33,10 @@ export async function runRoleMatch(opts: {
     JSON.stringify(opts.cvAnalysis, null, 2),
   ];
   if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
-    parts.push('', 'CONFIRMED-GAP EXPERIENCE (candidate has affirmed they have these, even though not on the CV — treat as EVIDENCED):');
+    parts.push(
+      '',
+      'RESOLVED GAPS — these items were previously flagged as potential gaps, but the candidate has explicitly confirmed they DO have the relevant experience. Do NOT include any of these in your gaps output. Treat the underlying requirement as FULLY MET and evidenced. Each item below is now a strength, not a weakness:',
+    );
     for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
   }
   const user = parts.join('\n');

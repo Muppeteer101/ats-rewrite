@@ -10,11 +10,8 @@ import Link from 'next/link';
  */
 const SISTER_SITES = [
   { name: 'Cancel My Parking Ticket', url: 'https://cancelmyparkingticket.com' },
-  { name: 'Appeal My Parking Ticket', url: 'https://appealmyparkingticket.com' },
   { name: 'Cancel My Citation', url: 'https://cancelmycitation.com' },
-  { name: 'Appeal My Citation', url: 'https://appealmycitation.com' },
   { name: 'FightFines', url: 'https://fightfines.com' },
-  { name: 'FightMyFines', url: 'https://fightmyfines.com' },
   { name: 'Car Damage Advisor', url: 'https://cardamageadvisor.com' },
   { name: 'WTF Did I Just Sign?', url: 'https://wtfdidijustsign.com' },
   { name: 'WTF Did I Just Agree?', url: 'https://wtfdidijustagree.com' },

@@ -196,7 +196,7 @@ Produce the following:
    - Industry and sector relevance
    - Language and terminology alignment
 3. STRENGTHS FOR THIS ROLE — specific CV elements that directly address what this role needs, with evidence from both documents
-4. GAPS FOR THIS ROLE — specific role requirements the CV does not adequately address after applying charitable inference. Each gap should be phrased as a SHORT, user-readable label (max 6 words) that could be shown as a yes/no confirmation question — e.g. "Northern Europe market experience", "Enterprise SaaS background", "Technical buyer credibility" — not a paragraph.
+4. GAPS FOR THIS ROLE — specific role requirements the CV does not adequately address after applying charitable inference. Each gap MUST be phrased as a short, direct yes/no question the candidate can answer about their own experience (max 10 words). Start with "Do you have", "Have you", "Can you evidence", or similar. Examples: "Do you have Salesforce or CRM platform experience?", "Have you carried an enterprise revenue target in EMEA?", "Can you evidence quantified sales achievements at Zebra?". FORBIDDEN: observations about how a recruiter might perceive the candidate (e.g. "Founder role may signal disengagement" is NOT a valid gap — it's a perception, not a missing skill the candidate can confirm). Only flag concrete skill or experience requirements that are missing from the CV and that the candidate could plausibly confirm they have.
 5. HONEST ASSESSMENT — one paragraph: if this CV landed on a recruiter's desk alongside 50 others for this role, where would it likely sit — top pile, middle, or bottom — and why? Be honest. A candidate who gets false confidence wastes their time.
 
 Use this exact JSON shape:

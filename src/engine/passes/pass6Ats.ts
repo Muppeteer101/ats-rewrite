@@ -40,7 +40,10 @@ export async function runAtsConfidence(opts: {
   parts.push('', 'JOB ANALYSIS:', JSON.stringify(opts.jobAnalysis, null, 2));
 
   if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
-    parts.push('', 'CONFIRMED-GAP EXPERIENCE (treat as present when scoring keyword match):');
+    parts.push(
+      '',
+      'RESOLVED GAPS — these requirements were previously flagged but the candidate has confirmed the relevant experience exists. Treat each as FULLY PRESENT when scoring keyword match and ATS likelihood. Do NOT penalise for any of these items:',
+    );
     for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
   }
 

@@ -248,6 +248,19 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         </div>
       )}
 
+      {stage === 'finalizing' && (
+        <div className="mt-2 mb-8 rounded-2xl p-5 max-w-[640px] text-left" style={{ background: 'rgba(83,58,253,0.05)', border: '1px solid rgba(83,58,253,0.2)' }}>
+          <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-heading)' }}>💳 A note on credits</p>
+          <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-body)' }}>
+            If you are seeking a new job urgently, and expect to be applying for multiple jobs, we would recommend our $25 for 10 bundle to help keep your costs to a minimum.
+          </p>
+          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-body)' }}>
+            If you are successful in securing your new role before you use all your credits, you can use these against any current{' '}
+            <a href="https://almostlegal.ai" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: 'var(--color-purple)', textDecoration: 'none' }}>Almost Legal services</a>.
+          </p>
+        </div>
+      )}
+
       {stage === 'teaser' && initialTeaser && (
         <TeaserAndGapsCard
           teaser={initialTeaser}
@@ -308,7 +321,7 @@ function stageHeadline(s: Stage, initial: Teaser | null, next: Teaser | null): s
 }
 function stageSubhead(s: Stage): string {
   if (s === 'analyzing')  return 'Five passes — job, resume, role match, recruiter verdict, ATS. No payment, just the real numbers.';
-  if (s === 'teaser')     return 'Before you go further — confirm any experience we flagged as a gap. We’ll rescore in seconds.';
+  if (s === 'teaser')     return "Before you go further — confirm any experience we flagged as a gap. We'll rescore in seconds.";
   if (s === 'rescoring')  return 'Re-running the scoring with the experience you just confirmed.';
   if (s === 'new-scores') return 'These are your new numbers after confirming your experience. Still free.';
   if (s === 'finalizing') return 'Producing your rewritten resume, tailored cover letter, and final ATS check.';
@@ -349,16 +362,16 @@ function TeaserAndGapsCard({
       {teaser.gaps.length === 0 ? (
         <div className="card-elevated p-7">
           <h3 className="sub-heading mb-2">No gaps flagged</h3>
-          <p className="body mb-4">Your resume already covers the role’s stated requirements. Ready for the rewrite?</p>
+          <p className="body mb-4">Your resume already covers the role's stated requirements. Ready for the rewrite?</p>
           <div className="flex gap-3 flex-wrap">
             <button onClick={onSkip} className="btn btn-primary">Unlock the full debrief + rewrite</button>
           </div>
         </div>
       ) : (
         <div className="card-elevated p-7">
-          <h3 className="sub-heading mb-2">Here are the gaps we found between your resume and the job description</h3>
+          <h3 className="sub-heading mb-2">A few quick questions before we rescore</h3>
           <p className="body mb-5" style={{ color: 'var(--color-body)' }}>
-            Can you confirm if you have this experience? Anything you say <strong>Yes</strong> to, we’ll weave naturally into the rewrite — no inventing numbers or clients, just surfacing what you have. This will rescore in seconds.
+            These are gaps between your resume and the job. Answer honestly — anything you say <strong>Yes</strong> to, we'll weave naturally into the rewrite. No inventing. No inflating. Just surfacing experience that wasn't on the page.
           </p>
 
           <div
@@ -382,7 +395,7 @@ function TeaserAndGapsCard({
                 color: 'var(--color-body)',
               }}
             >
-              <span>Gap</span>
+              <span>Question</span>
               <span style={{ textAlign: 'center' }}>Yes</span>
               <span style={{ textAlign: 'center' }}>No</span>
             </div>
@@ -543,7 +556,7 @@ const STEP_BLUEPRINT: { title: string; active: string; done: string; blurb: stri
   { title: 'Your resume',             active: 'Analysing your resume',                   done: 'Resume analysed',                 blurb: 'Mapping your demonstrated strengths, gaps, and presentation quality.' },
   { title: 'Role match score',    active: 'Scoring the role match',              done: 'Role match scored',           blurb: 'Measuring how your experience lines up against what this role actually needs.' },
   { title: 'Recruiter verdict',   active: 'Running the recruiter verdict',       done: 'Recruiter verdict reached',   blurb: 'Simulating a recruiter shortlisting you against 50 others.' },
-  { title: 'Rewrite + cover',     active: 'Rewriting your resume and cover letter',  done: 'Rewrite complete',            blurb: 'Mirroring the role’s language where your experience supports it — no invention.' },
+  { title: 'Rewrite + cover',     active: 'Rewriting your resume and cover letter',  done: 'Rewrite complete',            blurb: "Mirroring the role's language where your experience supports it — no invention." },
   { title: 'ATS confidence',      active: 'Running the ATS confidence check',    done: 'ATS confidence checked',      blurb: 'Checking your rewrite against how ATS platforms parse and rank resumes.' },
 ];
 
@@ -696,7 +709,7 @@ function ResultView({ rewriteId }: { rewriteId: string }) {
       .catch((e) => setErr((e as Error).message));
   }, [rewriteId]);
 
-  if (err) return <div className="caption" style={{ color: 'var(--color-ruby)' }}>Couldn’t load full result: {err}</div>;
+  if (err) return <div className="caption" style={{ color: 'var(--color-ruby)' }}>Couldn't load full result: {err}</div>;
   if (!data) return <div className="caption">Loading result…</div>;
 
   return (
@@ -741,7 +754,7 @@ function RoleMatchCard({ data }: { data: RoleMatch }) {
       <div className="flex items-start justify-between mb-5 flex-wrap gap-4">
         <div>
           <h3 className="sub-heading mb-1">Role match score</h3>
-          <p className="caption">How well your resume aligns with this role’s stated requirements.</p>
+          <p className="caption">How well your resume aligns with this role's stated requirements.</p>
         </div>
         <ScoreRing score={data.overallScore} />
       </div>
@@ -833,7 +846,7 @@ function WhatToChangeCard({ data }: { data: RecruiterVerdict }) {
       <h3 className="sub-heading mb-1">{heading}</h3>
       <p className="caption mb-4">
         {data.decision === 'YES'
-          ? 'Already a yes — but here’s how to push it from strong to undeniable.'
+          ? "Already a yes — but here's how to push it from strong to undeniable."
           : 'Specific changes that would move the verdict toward YES.'}
       </p>
       <ul className="bullets">
@@ -912,7 +925,7 @@ function AtsConfidenceCard({ data }: { data: ATSConfidence }) {
       {data.whatsWorking.length > 0 && (
         <>
           <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
-            What’s working for ATS
+            What's working for ATS
           </div>
           <ul className="bullets mb-5">
             {data.whatsWorking.map((s, i) => <li key={i}>{s}</li>)}
