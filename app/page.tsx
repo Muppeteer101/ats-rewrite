@@ -163,6 +163,12 @@ export default async function HomePage() {
               <div className="tile-price-sub">1 rewrite</div>
               <div className="tile-price-each">Top up anytime</div>
             </div>
+            <div className="tile-price-card">
+              <div className="tile-price-tier">3-pack</div>
+              <div className="tile-price-big">£9.99</div>
+              <div className="tile-price-sub">3 rewrites</div>
+              <div className="tile-price-each">£3.33 each</div>
+            </div>
             <div className="tile-price-card highlight">
               <div className="tile-price-tier">10-pack · best value</div>
               <div className="tile-price-big">£25</div>
