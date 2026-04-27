@@ -21,7 +21,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How much does it cost?',
-    a: 'Your first rewrite is free, plus one free rewrite every calendar month. Beyond that you can top up: 3-pack at £9.99 (£3.33 per rewrite) or 10-pack at £19.99 (£2 per rewrite). No subscription. Credits never expire. Multi-currency: GBP, USD, EUR, AUD, CAD, NZD.',
+    a: 'Your first rewrite is free, plus one free rewrite every calendar month. Beyond that you can top up: 1 rewrite at £4.99, 3-pack at £9.99 (£3.33 per rewrite) or 10-pack at £25 (£2.50 per rewrite). No subscription. Credits never expire. Multi-currency: GBP, USD, EUR, AUD, CAD, NZD.',
   },
   {
     q: 'What output do I get?',
