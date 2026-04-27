@@ -248,18 +248,6 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         </div>
       )}
 
-      {stage === 'finalizing' && (
-        <div className="mt-2 mb-8 rounded-2xl p-5 max-w-[640px] text-left" style={{ background: 'rgba(83,58,253,0.05)', border: '1px solid rgba(83,58,253,0.2)' }}>
-          <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-heading)' }}>💳 A note on credits</p>
-          <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-body)' }}>
-            If you are seeking a new job urgently, and expect to be applying for multiple jobs, we would recommend our $25 for 10 bundle to help keep your costs to a minimum.
-          </p>
-          <p className="text-sm leading-relaxed" style={{ color: 'var(--color-body)' }}>
-            If you are successful in securing your new role before you use all your credits, you can use these against any current{' '}
-            <a href="https://almostlegal.ai" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: 'var(--color-purple)', textDecoration: 'none' }}>Almost Legal services</a>.
-          </p>
-        </div>
-      )}
 
       {stage === 'teaser' && initialTeaser && (
         <TeaserAndGapsCard
@@ -476,6 +464,15 @@ function NewScoresAndUnlockCard({
           <li>A changes-log explaining every edit, so you can learn from it.</li>
           <li>A final ATS confidence rating on the rewritten resume.</li>
         </ul>
+
+        <div className="rounded-2xl p-5 mb-5" style={{ background: 'rgba(83,58,253,0.05)', border: '1px solid rgba(83,58,253,0.2)' }}>
+          <p className="text-sm font-bold mb-2" style={{ color: 'var(--color-heading)' }}>💳 A note on credits</p>
+          <p className="text-sm leading-relaxed mb-2" style={{ color: 'var(--color-body)' }}>
+            Applying to multiple roles? Our $25 for 10 bundle keeps costs down — and any unused credits work across all{' '}
+            <a href="https://almostlegal.ai" target="_blank" rel="noopener noreferrer" className="font-semibold" style={{ color: 'var(--color-purple)', textDecoration: 'none' }}>Almost Legal services</a>.
+          </p>
+        </div>
+
         <div className="flex gap-3 flex-wrap">
           <button onClick={onUnlock} className="btn btn-primary">Unlock the full debrief + rewrite</button>
           <Link href="/new" className="btn btn-neutral">Try a different role</Link>
