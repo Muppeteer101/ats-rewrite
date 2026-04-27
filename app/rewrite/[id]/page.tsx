@@ -12,7 +12,7 @@ export default async function RewritePage({ params }: { params: Promise<{ id: st
     <main className="min-h-screen">
       <nav className="max-w-6xl mx-auto px-6 py-5 flex items-center justify-between">
         <Link href="/">
-          <Image src="/logo.png" alt="ImproveMyResume.ai" width={48} height={48} priority style={{ objectFit: 'contain' }} />
+          <Image src="/logo.png" alt="ImproveMyResume.ai" width={90} height={90} priority style={{ objectFit: 'contain' }} />
         </Link>
         <Link
           href="/dashboard"
