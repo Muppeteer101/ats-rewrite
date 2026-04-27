@@ -130,6 +130,52 @@ body {
 }
 .body { font-size: 1rem; font-weight: 300; line-height: 1.5; color: var(--color-body); }
 .caption { font-size: 0.8125rem; color: var(--color-body); }
+
+/* ── Result cards — readable body text & list items ─────────────── */
+/* .result-body: darker, heavier than .body — for debrief/verdict content */
+.result-body {
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.65;
+  color: var(--color-label);        /* #273951 — much darker than --color-body */
+}
+/* .result-label: section label above a content block */
+.result-label {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-heading);      /* dark navy, not muted grey */
+  margin-bottom: 10px;
+  margin-top: 20px;
+}
+/* .bullets: spaced list with visible markers */
+.bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.bullets li {
+  position: relative;
+  padding-left: 1.25rem;
+  font-size: 0.9375rem;
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--color-label);
+}
+.bullets li::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-purple-light);
+}
 .tabular { font-feature-settings: "tnum"; letter-spacing: -0.01em; }
 
 /* ── Cards & elevation (funnel) ─────────────────────────────────── */

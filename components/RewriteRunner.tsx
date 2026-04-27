@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import type {
@@ -231,7 +231,7 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   const isStreaming = stage === 'analyzing' || stage === 'rescoring' || stage === 'finalizing';
 
   return (
-    <div className="max-w-[1080px] mx-auto px-6 py-10">
+    <div className={stage === 'done' ? '' : 'max-w-[1080px] mx-auto px-6 py-10'}>
       {stage !== 'done' && stage !== 'error' && (
         <>
           <span className="badge badge-purple mb-4">{stageLabel(stage)}</span>
@@ -714,32 +714,113 @@ function ResultView({ rewriteId }: { rewriteId: string }) {
   if (!data) return <div className="caption">Loading result…</div>;
 
   return (
-    <div className="space-y-6">
-      {/* 1. Role Match Score */}
+    <div>
       <RoleMatchCard data={data.roleMatch} />
-
-      {/* 2. Recruiter Verdict */}
       <VerdictCard data={data.recruiterVerdict} />
-
-      {/* 3. What Needs to Change */}
       <WhatToChangeCard data={data.recruiterVerdict} />
-
-      {/* 4 + 5. Rewritten resume download (covers both screen preview + PDF) */}
       <TemplatePicker rewriteId={rewriteId} />
-
-      {/* Cover Letter card — on-screen preview + PDF download */}
       <CoverLetterCard rewriteId={rewriteId} letter={data.coverLetter} />
-
-      {/* 6. Changes Made */}
       <ChangesMadeCard items={data.changesMade} />
-
-      {/* 7. ATS Confidence */}
       <AtsConfidenceCard data={data.atsConfidence} />
     </div>
   );
 }
 
 /* ────────────────────── Cards ────────────────────── */
+
+function ReportSection({ dark, children }: { dark?: boolean; children: React.ReactNode }) {
+  return (
+    <section style={{
+      background: dark ? 'var(--color-surface-dark)' : 'var(--color-surface-soft)',
+      padding: '64px 24px',
+    }}>
+      <div style={{ maxWidth: 860, margin: '0 auto' }}>
+        {children}
+      </div>
+    </section>
+  );
+}
+
+function SectionLabel({ dark, children }: { dark?: boolean; children: React.ReactNode }) {
+  return (
+    <p style={{
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: '0.14em',
+      textTransform: 'uppercase',
+      color: dark ? 'rgba(255,255,255,0.5)' : 'var(--color-body)',
+      marginBottom: 12,
+    }}>{children}</p>
+  );
+}
+
+function SectionHeading({ dark, children }: { dark?: boolean; children: React.ReactNode }) {
+  return (
+    <h2 style={{
+      fontSize: 'clamp(1.75rem, 4vw, 2.5rem)',
+      fontWeight: 600,
+      letterSpacing: '-0.02em',
+      lineHeight: 1.1,
+      color: dark ? '#f4f0ff' : 'var(--color-heading)',
+      marginBottom: 24,
+    }}>{children}</h2>
+  );
+}
+
+function BodyText({ dark, children, style }: { dark?: boolean; children: React.ReactNode; style?: React.CSSProperties }) {
+  return (
+    <p style={{
+      fontSize: '1rem',
+      fontWeight: 400,
+      lineHeight: 1.7,
+      color: dark ? 'rgba(255,255,255,0.82)' : 'var(--color-label)',
+      ...style,
+    }}>{children}</p>
+  );
+}
+
+function BulletList({ dark, items }: { dark?: boolean; items: string[] }) {
+  return (
+    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 12 }}>
+      {items.map((s, i) => (
+        <li key={i} style={{
+          paddingLeft: '1.5rem',
+          position: 'relative',
+          fontSize: '0.9375rem',
+          fontWeight: 400,
+          lineHeight: 1.65,
+          color: dark ? 'rgba(255,255,255,0.82)' : 'var(--color-label)',
+        }}>
+          <span style={{
+            position: 'absolute',
+            left: 0,
+            top: '0.6em',
+            width: 6,
+            height: 6,
+            borderRadius: '50%',
+            background: dark ? 'rgba(184,163,255,0.7)' : 'var(--color-purple-light)',
+            display: 'inline-block',
+          }} />
+          {s}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function SubLabel({ dark, children }: { dark?: boolean; children: React.ReactNode }) {
+  return (
+    <p style={{
+      fontSize: 11,
+      fontWeight: 700,
+      letterSpacing: '0.12em',
+      textTransform: 'uppercase',
+      color: dark ? 'rgba(255,255,255,0.45)' : 'var(--color-body)',
+      marginBottom: 12,
+      marginTop: 32,
+    }}>{children}</p>
+  );
+}
 
 function RoleMatchCard({ data }: { data: RoleMatch }) {
   const cats: Array<[string, { score: number; reasoning: string }]> = [
@@ -751,18 +832,16 @@ function RoleMatchCard({ data }: { data: RoleMatch }) {
   ];
 
   return (
-    <div className="card-elevated p-7">
-      <div className="flex items-start justify-between mb-5 flex-wrap gap-4">
-        <div>
-          <h3 className="sub-heading mb-1">Role match score</h3>
-          <p className="caption">How well your resume aligns with this role's stated requirements.</p>
-        </div>
-        <ScoreRing score={data.overallScore} />
+    <ReportSection>
+      <SectionLabel>Role match</SectionLabel>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap', marginBottom: 24 }}>
+        <SectionHeading>How well does your resume fit this role?</SectionHeading>
+        <ScoreRing score={data.overallScore} size={110} />
       </div>
 
-      <p className="body mb-5">{data.summary}</p>
+      <BodyText style={{ marginBottom: 32 }}>{data.summary}</BodyText>
 
-      <div className="space-y-2 mb-5">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
         {cats.map(([label, v]) => (
           <ScoreBar key={label} label={label} score={v.score} reasoning={v.reasoning} />
         ))}
@@ -770,126 +849,98 @@ function RoleMatchCard({ data }: { data: RoleMatch }) {
 
       {data.strengths.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mt-5 mb-2" style={{ color: 'var(--color-body)' }}>
-            Strengths for this role
-          </div>
-          <ul className="bullets">
-            {data.strengths.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel>Strengths for this role</SubLabel>
+          <BulletList items={data.strengths} />
         </>
       )}
       {data.gaps.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mt-5 mb-2" style={{ color: 'var(--color-body)' }}>
-            Gaps for this role
-          </div>
-          <ul className="bullets">
-            {data.gaps.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel>Gaps for this role</SubLabel>
+          <BulletList items={data.gaps} />
         </>
       )}
 
-      <div className="mt-5 p-4 rounded-[6px]" style={{ background: 'var(--color-surface-soft)' }}>
-        <div className="text-[11px] uppercase tracking-[0.14em] mb-1" style={{ color: 'var(--color-body)' }}>
-          Honest assessment · {data.pilePosition} pile
-        </div>
-        <p className="body" style={{ fontStyle: 'italic' }}>{data.honestAssessment}</p>
+      <div style={{ marginTop: 40, padding: '20px 24px', background: 'white', borderRadius: 8, border: '1px solid var(--color-border)' }}>
+        <SubLabel>{data.pilePosition} pile · honest assessment</SubLabel>
+        <BodyText style={{ fontStyle: 'italic', marginTop: -8 }}>{data.honestAssessment}</BodyText>
       </div>
-    </div>
+    </ReportSection>
   );
 }
 
 function VerdictCard({ data }: { data: RecruiterVerdict }) {
   return (
-    <div className="card-elevated p-7">
-      <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h3 className="sub-heading mb-1">Recruiter verdict</h3>
-          <p className="caption">What a recruiter would say to the hiring manager.</p>
-        </div>
+    <ReportSection dark>
+      <SectionLabel dark>Recruiter verdict</SectionLabel>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap', marginBottom: 24 }}>
+        <SectionHeading dark>What would the recruiter say?</SectionHeading>
         <VerdictPill value={data.decision} big />
       </div>
 
-      <p className="body mb-5"><strong>{data.oneSentenceReason}</strong></p>
+      <BodyText dark style={{ fontWeight: 600, fontSize: '1.125rem', marginBottom: 32 }}>{data.oneSentenceReason}</BodyText>
 
       {data.inFavour.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
-            What works in their favour
-          </div>
-          <ul className="bullets mb-5">
-            {data.inFavour.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel dark>What works in their favour</SubLabel>
+          <BulletList dark items={data.inFavour} />
         </>
       )}
 
       {data.against.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
-            What works against them
-          </div>
-          <ul className="bullets">
-            {data.against.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel dark>What works against them</SubLabel>
+          <BulletList dark items={data.against} />
         </>
       )}
 
-      <p className="caption mt-5" style={{ fontStyle: 'italic' }}>{data.disclaimer}</p>
-    </div>
+      <p style={{ marginTop: 32, fontSize: '0.8125rem', color: 'rgba(255,255,255,0.35)', fontStyle: 'italic' }}>{data.disclaimer}</p>
+    </ReportSection>
   );
 }
 
 function WhatToChangeCard({ data }: { data: RecruiterVerdict }) {
   if (data.whatWouldChangeIt.length === 0) return null;
-  const heading = data.decision === 'YES' ? 'What would make it even stronger' : 'What would change the decision';
+  const isYes = data.decision === 'YES';
   return (
-    <div className="card-elevated p-7">
-      <h3 className="sub-heading mb-1">{heading}</h3>
-      <p className="caption mb-4">
-        {data.decision === 'YES'
-          ? "Already a yes — but here's how to push it from strong to undeniable."
-          : 'Specific changes that would move the verdict toward YES.'}
-      </p>
-      <ul className="bullets">
-        {data.whatWouldChangeIt.map((s, i) => <li key={i}>{s}</li>)}
-      </ul>
-    </div>
+    <ReportSection>
+      <SectionLabel>{isYes ? 'Making it undeniable' : 'What would change the decision'}</SectionLabel>
+      <SectionHeading>{isYes ? 'How to push it from strong to undeniable' : 'Specific changes that would move the verdict to YES'}</SectionHeading>
+      <BulletList items={data.whatWouldChangeIt} />
+    </ReportSection>
   );
 }
 
 function CoverLetterCard({ rewriteId, letter }: { rewriteId: string; letter: CoverLetter }) {
   const downloadHref = `/api/pdf/${rewriteId}?template=cover-letter&download=1`;
   return (
-    <div className="card-elevated p-7">
-      <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
+    <ReportSection dark>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap', marginBottom: 32 }}>
         <div>
-          <h3 className="sub-heading mb-1">Cover letter</h3>
-          <p className="caption">Tailored to the JD. Download the PDF or copy below.</p>
+          <SectionLabel dark>Cover letter</SectionLabel>
+          <SectionHeading dark>Tailored to the role.</SectionHeading>
         </div>
-        <a href={downloadHref} className="btn btn-sm btn-primary">Download PDF</a>
+        <a href={downloadHref} className="btn btn-primary">Download PDF</a>
       </div>
-      <div className="p-5 rounded-[6px]" style={{ background: 'var(--color-surface-soft)', border: '1px solid var(--color-border)' }}>
-        <p className="body mb-3">{letter.greeting}</p>
+      <div style={{ background: 'rgba(255,255,255,0.06)', borderRadius: 8, padding: '28px 32px', border: '1px solid rgba(255,255,255,0.1)' }}>
+        <BodyText dark style={{ marginBottom: 16 }}>{letter.greeting}</BodyText>
         {letter.paragraphs.map((p, i) => (
-          <p key={i} className="body mb-3">{p}</p>
+          <BodyText dark key={i} style={{ marginBottom: 16 }}>{p}</BodyText>
         ))}
-        <p className="body mt-4">{letter.signoff}</p>
-        <p className="body">{letter.signature}</p>
+        <BodyText dark style={{ marginTop: 24 }}>{letter.signoff}</BodyText>
+        <BodyText dark>{letter.signature}</BodyText>
       </div>
-    </div>
+    </ReportSection>
   );
 }
 
 function ChangesMadeCard({ items }: { items: string[] }) {
   if (items.length === 0) return null;
   return (
-    <div className="card-elevated p-7">
-      <h3 className="sub-heading mb-1">Changes made</h3>
-      <p className="caption mb-4">What changed from your original to the rewrite, and why — so you can learn from it.</p>
-      <ul className="bullets">
-        {items.map((s, i) => <li key={i}>{s}</li>)}
-      </ul>
-    </div>
+    <ReportSection>
+      <SectionLabel>What we changed</SectionLabel>
+      <SectionHeading>Every edit explained — so you can learn from it.</SectionHeading>
+      <BulletList items={items} />
+    </ReportSection>
   );
 }
 
@@ -903,52 +954,42 @@ function AtsConfidenceCard({ data }: { data: ATSConfidence }) {
     ['Seniority signal', data.scoring.seniorityAlignment],
   ];
   return (
-    <div className="card-elevated p-7">
-      <div className="flex items-start justify-between mb-5 flex-wrap gap-4">
-        <div>
-          <h3 className="sub-heading mb-1">ATS confidence rating</h3>
-          <p className="caption">Likelihood of passing initial automated screening for this role.</p>
-        </div>
-        <div className="flex items-center gap-4">
+    <ReportSection dark>
+      <SectionLabel dark>ATS confidence</SectionLabel>
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 24, flexWrap: 'wrap', marginBottom: 24 }}>
+        <SectionHeading dark>Will the bots let it through?</SectionHeading>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
           <AtsPill value={data.rating} big />
           <ScoreRing score={data.percentage} label="pass likelihood" />
         </div>
       </div>
 
-      <p className="body mb-5">{data.summary}</p>
+      <BodyText dark style={{ marginBottom: 32 }}>{data.summary}</BodyText>
 
-      <div className="space-y-2 mb-5">
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 32 }}>
         {cats.map(([label, v]) => (
-          <ScoreBar key={label} label={label} score={v.score} reasoning={v.reasoning} />
+          <ScoreBar key={label} label={label} score={v.score} reasoning={v.reasoning} dark />
         ))}
       </div>
 
       {data.whatsWorking.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
-            What's working for ATS
-          </div>
-          <ul className="bullets mb-5">
-            {data.whatsWorking.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel dark>What&apos;s working for ATS</SubLabel>
+          <BulletList dark items={data.whatsWorking} />
         </>
       )}
 
       {data.remainingRisks.length > 0 && (
         <>
-          <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
-            Remaining risks
-          </div>
-          <ul className="bullets mb-5">
-            {data.remainingRisks.map((s, i) => <li key={i}>{s}</li>)}
-          </ul>
+          <SubLabel dark>Remaining risks</SubLabel>
+          <BulletList dark items={data.remainingRisks} />
         </>
       )}
 
-      <div className="p-4 rounded-[6px]" style={{ background: 'var(--color-surface-soft)' }}>
-        <p className="body" style={{ fontStyle: 'italic' }}>{data.finalStatement}</p>
+      <div style={{ marginTop: 40, padding: '20px 24px', background: 'rgba(255,255,255,0.06)', borderRadius: 8, border: '1px solid rgba(255,255,255,0.1)' }}>
+        <BodyText dark style={{ fontStyle: 'italic' }}>{data.finalStatement}</BodyText>
       </div>
-    </div>
+    </ReportSection>
   );
 }
 
@@ -988,19 +1029,19 @@ function ScoreRing({ score, label, size = 84 }: { score: number; label?: string;
   );
 }
 
-function ScoreBar({ label, score, reasoning }: { label: string; score: number; reasoning: string }) {
+function ScoreBar({ label, score, reasoning, dark }: { label: string; score: number; reasoning: string; dark?: boolean }) {
   const clamped = Math.max(0, Math.min(100, score));
-  const colour = clamped >= 75 ? 'var(--color-success-text, #108c3d)' : clamped >= 50 ? 'var(--color-purple)' : 'var(--color-ruby, #ea2261)';
+  const colour = clamped >= 75 ? '#15be53' : clamped >= 50 ? 'var(--color-purple)' : '#ea2261';
   return (
     <div>
       <div className="flex items-baseline justify-between mb-1">
-        <span className="text-sm" style={{ color: 'var(--color-heading)' }}>{label}</span>
-        <span className="tabular text-sm" style={{ color: 'var(--color-body)' }}>{clamped}/100</span>
+        <span style={{ fontSize: '0.875rem', fontWeight: 500, color: dark ? 'rgba(255,255,255,0.85)' : 'var(--color-heading)' }}>{label}</span>
+        <span style={{ fontSize: '0.875rem', fontVariantNumeric: 'tabular-nums', color: dark ? 'rgba(255,255,255,0.45)' : 'var(--color-body)' }}>{clamped}/100</span>
       </div>
-      <div style={{ height: 6, background: 'var(--color-border)', borderRadius: 3, overflow: 'hidden' }}>
+      <div style={{ height: 6, background: dark ? 'rgba(255,255,255,0.1)' : 'var(--color-border)', borderRadius: 3, overflow: 'hidden' }}>
         <div style={{ width: `${clamped}%`, height: '100%', background: colour, transition: 'width 0.6s ease' }} />
       </div>
-      {reasoning && <p className="caption mt-1">{reasoning}</p>}
+      {reasoning && <p style={{ fontSize: '0.8125rem', color: dark ? 'rgba(255,255,255,0.45)' : 'var(--color-body)', marginTop: 4, lineHeight: 1.5 }}>{reasoning}</p>}
     </div>
   );
 }
