@@ -52,6 +52,12 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <ClerkProvider
+      appearance={{
+        layout: {
+          logoImageUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://improvemyresume.ai'}/logo.png`,
+          logoLinkUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://improvemyresume.ai',
+        },
+      }}
       localization={{
         signIn: {
           start: { title: 'Sign in to ImproveMyResume.ai', subtitle: 'Welcome back — your rewrites are waiting.' },
