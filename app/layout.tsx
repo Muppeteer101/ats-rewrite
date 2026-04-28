@@ -1,8 +1,6 @@
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
-import { ClerkProvider } from '@clerk/nextjs';
-import { deDE, esES, frFR, enUS } from '@clerk/localizations';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 import Script from 'next/script';
@@ -10,13 +8,6 @@ import { RefTracker } from '@/components/RefTracker';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import './globals.css';
-
-const CLERK_LOCALES: Record<string, typeof enUS> = {
-  de: deDE,
-  es: esES,
-  fr: frFR,
-  en: enUS,
-};
 
 // Inter @ weights 300/400 mirrors the sohne-var weight 300 signature from
 // DESIGN.md — never bold for headlines on funnel pages.
@@ -50,7 +41,7 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'ImproveMyResume — AI Resume Rewriter',
     description:
-      'A resume rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you\u2019re applying to.',
+      'A resume rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you’re applying to.',
   },
 };
 
@@ -58,61 +49,25 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const messages = await getMessages();
 
-  // Deep-merge so we get the full locale translations (field labels, errors, etc.)
-  // but keep our brand title/subtitle in English regardless of language.
-  const baseLocale = CLERK_LOCALES[locale] ?? enUS;
-  const clerkLocalization = {
-    ...baseLocale,
-    signIn: {
-      ...(baseLocale.signIn as Record<string, unknown>),
-      start: {
-        ...((baseLocale.signIn as Record<string, unknown>)?.start as Record<string, unknown>),
-        title: 'Sign in to ImproveMyResume.ai',
-        titleCombined: 'Sign in to ImproveMyResume.ai',
-        subtitle: 'Welcome back — your rewrites are waiting.',
-      },
-    },
-    signUp: {
-      ...(baseLocale.signUp as Record<string, unknown>),
-      start: {
-        ...((baseLocale.signUp as Record<string, unknown>)?.start as Record<string, unknown>),
-        title: 'Create your ImproveMyResume.ai account',
-        subtitle: 'First rewrite is free. No card required.',
-      },
-    },
-  };
-
   return (
-    <ClerkProvider
-      appearance={{
-        layout: {
-          logoImageUrl: `${process.env.NEXT_PUBLIC_SITE_URL ?? 'https://improvemyresume.ai'}/logo.png`,
-          logoLinkUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://improvemyresume.ai',
-        },
-      }}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      localization={clerkLocalization as any}
-    >
-      <html lang={locale} className={`${inter.variable} ${mono.variable}`}>
-        <body>
-          <NextIntlClientProvider locale={locale} messages={messages}>
-            <Suspense fallback={null}>
-              <RefTracker />
-            </Suspense>
-            <Navbar locale={locale} />
-            {children}
-            <Footer />
-          </NextIntlClientProvider>
-          <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8V75M6PD2P" strategy="afterInteractive" />
-          <Script id="gtag-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-8V75M6PD2P');`}</Script>
-          {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
-            <Script id="clarity" strategy="afterInteractive">{`
-              (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}");
-            `}</Script>
-          )}
-        </body>
-      </html>
-    </ClerkProvider>
+    <html lang={locale} className={`${inter.variable} ${mono.variable}`}>
+      <body>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Suspense fallback={null}>
+            <RefTracker />
+          </Suspense>
+          <Navbar locale={locale} />
+          {children}
+          <Footer />
+        </NextIntlClientProvider>
+        <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8V75M6PD2P" strategy="afterInteractive" />
+        <Script id="gtag-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-8V75M6PD2P');`}</Script>
+        {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
+          <Script id="clarity" strategy="afterInteractive">{`
+            (function(c,l,a,r,i,t,y){c[a]=c[a]||function(){(c[a].q=c[a].q||[]).push(arguments)};t=l.createElement(r);t.async=1;t.src="https://www.clarity.ms/tag/"+i;y=l.getElementsByTagName(r)[0];y.parentNode.insertBefore(t,y);})(window,document,"clarity","script","${process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID}");
+          `}</Script>
+        )}
+      </body>
+    </html>
   );
 }
-

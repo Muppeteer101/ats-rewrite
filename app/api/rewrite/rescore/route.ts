@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { runRescore, type AnalysisSnapshot } from '@/src/engine';
 import type { NarrationEvent } from '@/src/engine/schemas';
 import { redis, k } from '@/lib/redis';
@@ -12,11 +11,11 @@ export const maxDuration = 300;
  *
  * Body: { analysisId, confirmedGaps: string[] }
  * Response: SSE stream; terminates with { type: 'result', id }.
+ *
+ * No auth — this stage is free. Ownership is implicit: analysisIds are
+ * crypto-random 24-byte hex (k.analysis), not enumerable.
  */
 export async function POST(req: NextRequest): Promise<Response> {
-  const { userId } = await auth();
-  if (!userId) return new Response('Unauthorized', { status: 401 });
-
   const body = (await req.json()) as {
     analysisId?: string;
     confirmedGaps?: string[];
@@ -25,11 +24,8 @@ export async function POST(req: NextRequest): Promise<Response> {
     return new Response('Missing analysisId or confirmedGaps', { status: 400 });
   }
 
-  const stored = await redis.get<AnalysisSnapshot & { userId?: string }>(k.analysis(body.analysisId));
+  const stored = await redis.get<AnalysisSnapshot>(k.analysis(body.analysisId));
   if (!stored) return new Response('Analysis not found or expired', { status: 404 });
-  if (stored.userId && stored.userId !== userId) {
-    return new Response('Forbidden', { status: 403 });
-  }
 
   // Restrict the confirmedGaps to those that were actually in the gap list —
   // prevent arbitrary strings from being injected.
@@ -57,7 +53,7 @@ export async function POST(req: NextRequest): Promise<Response> {
 
         await redis.set(
           k.analysis(body.analysisId!),
-          { ...updated, userId },
+          updated,
           { ex: 24 * 60 * 60 },
         );
 

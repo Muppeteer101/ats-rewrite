@@ -1,14 +1,13 @@
-'use client';
-
 import Link from 'next/link';
 import Image from 'next/image';
-import { useUser, useClerk } from '@clerk/nextjs';
 import { useTranslations } from 'next-intl';
 import { LocaleSwitcher } from './LocaleSwitcher';
 
+/**
+ * Auth lives entirely on almostlegal.ai. The "Sign in" link redirects there.
+ * No client-side Clerk hooks here — IMR has no Clerk SDK.
+ */
 export function Navbar({ locale }: { locale: string }) {
-  const { isSignedIn, isLoaded } = useUser();
-  const { signOut } = useClerk();
   const t = useTranslations('nav');
 
   return (
@@ -21,30 +20,10 @@ export function Navbar({ locale }: { locale: string }) {
         <Link href="/#how">{t('howItWorks')}</Link>
         <Link href="/#pricing">{t('pricing')}</Link>
         <Link href="/#faq">{t('faq')}</Link>
-        {isLoaded && isSignedIn && <Link href="/dashboard">{t('dashboard')}</Link>}
-
-        {isLoaded && isSignedIn ? (
-          <button
-            type="button"
-            onClick={() => signOut({ redirectUrl: '/' })}
-            style={{
-              background: 'none',
-              border: 'none',
-              color: 'var(--fg-muted)',
-              font: 'inherit',
-              cursor: 'pointer',
-              padding: 0,
-              fontSize: 13,
-              fontWeight: 500,
-            }}
-          >
-            {t('signOut')}
-          </button>
-        ) : (
-          <Link href="/sign-in" className="btn-coral btn-coral-sm">
-            {t('signIn')}
-          </Link>
-        )}
+        <Link href="https://almostlegal.ai/dashboard">{t('dashboard')}</Link>
+        <Link href="https://almostlegal.ai/sign-in?redirect_url=https%3A%2F%2Fimprovemyresume.ai%2F" className="btn-coral btn-coral-sm">
+          {t('signIn')}
+        </Link>
 
         <LocaleSwitcher currentLocale={locale} />
       </div>

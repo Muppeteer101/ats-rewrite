@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import { auth } from '@clerk/nextjs/server';
 import { getTranslations } from 'next-intl/server';
 import { HomeFaq } from '@/components/HomeFaq';
 import { RewriteForm } from '@/components/RewriteForm';
@@ -7,10 +6,11 @@ import { RewriteForm } from '@/components/RewriteForm';
 export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
-  const { userId } = await auth();
   const t = await getTranslations();
 
-  const primaryHref = userId ? '#start' : '/sign-in';
+  // Anonymous landing — the form runs the free analysis immediately. The
+  // paywall only kicks in at finalize, where the user is bounced to AL.
+  const primaryHref = '#start';
 
   return (
     <main className="tile-grid">
@@ -49,7 +49,7 @@ export default async function HomePage() {
           <p className="tile-sub" style={{ marginBottom: 32 }}>
             {t('form.sectionSub')}
           </p>
-          <RewriteForm signedIn={!!userId} />
+          <RewriteForm signedIn={true} />
         </div>
       </section>
 

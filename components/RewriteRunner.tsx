@@ -72,22 +72,20 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
   const [rewriteId, setRewriteId] = useState<string>('');
   const startedRef = useRef(false);
 
-  // Fire stage 1 once on mount. Checkout resume is handled separately: if
-  // ?topup=success is on the URL we know the user just came back from Stripe
-  // — skip straight to finalize (the snapshot is still in Redis).
+  // Fire stage 1 once on mount. If we're returning from almostlegal.ai/spend
+  // with a freshly-minted spend token in the URL, jump straight to finalize.
   useEffect(() => {
     if (startedRef.current) return;
     startedRef.current = true;
 
-    const toppedUp = searchParams.get('topup') === 'success';
-    if (toppedUp && typeof window !== 'undefined') {
+    const spendToken = searchParams.get('token');
+    if (spendToken && typeof window !== 'undefined') {
+      // Stash the token in sessionStorage so a tab refresh doesn't lose it,
+      // then clean the URL so the token doesn't sit in the address bar.
+      sessionStorage.setItem(`spend-token:${draftId}`, spendToken);
       const cleanUrl = window.location.pathname;
       window.history.replaceState(null, '', cleanUrl);
-    }
-
-    if (toppedUp) {
-      // Resume at finalize with retry — webhook may still be processing.
-      void runFinalize(3);
+      void runFinalize(spendToken);
       return;
     }
 
@@ -185,14 +183,33 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
     }
   }
 
-  /* ────────────────── Stage 3: Finalize (paid) ────────────────── */
-  async function runFinalize(retriesLeft = 0) {
+  /* ────────────────── Stage 3: Finalize (paid) ──────────────────
+   * Two entry points:
+   *  - kickoffFinalize() — user clicked Unlock, no token yet → bounce to AL/spend
+   *  - runFinalize(token) — we're back from AL with a fresh token → run the work
+   */
+  function kickoffFinalize() {
+    if (typeof window === 'undefined') return;
+    // Cached token from a prior bounce in this same tab.
+    const cached = sessionStorage.getItem(`spend-token:${draftId}`);
+    if (cached) {
+      void runFinalize(cached);
+      return;
+    }
+    const returnUrl = `${window.location.origin}/rewrite/${encodeURIComponent(draftId)}`;
+    const spendUrl =
+      'https://almostlegal.ai/spend' +
+      `?product=improvemyresume&return=${encodeURIComponent(returnUrl)}`;
+    window.location.assign(spendUrl);
+  }
+
+  async function runFinalize(spendToken: string) {
     setStage('finalizing');
     setLines([]);
     try {
       const result = await streamSSE(
         '/api/rewrite/finalize',
-        { analysisId: draftId },
+        { analysisId: draftId, spendToken },
         (evt) => {
           setLines((prev) => [...prev, evt]);
           if (evt.type === 'result') {
@@ -210,14 +227,11 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
           }
         },
       );
-      if (result.status === 402) {
-        if (retriesLeft > 0) {
-          setLines((prev) => [
-            ...prev,
-            { type: 'system', line: `› Credits syncing from payment… retrying (${retriesLeft} left)` },
-          ]);
-          await new Promise((r) => setTimeout(r, 2500));
-          return runFinalize(retriesLeft - 1);
+      if (result.status === 401) {
+        // Token missing/invalid/already-redeemed — wipe the cache and bounce
+        // back through AL for a fresh token.
+        if (typeof window !== 'undefined') {
+          sessionStorage.removeItem(`spend-token:${draftId}`);
         }
         setStage('out-of-credits');
       }
@@ -266,7 +280,7 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         <NewScoresAndUnlockCard
           initial={initialTeaser}
           updated={newTeaser}
-          onUnlock={() => runFinalize(0)}
+          onUnlock={kickoffFinalize}
         />
       )}
 
@@ -283,7 +297,7 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
       )}
 
       {stage === 'out-of-credits' && (
-        <UpsellModal resumeDraftId={draftId} onClose={() => location.assign('/dashboard')} />
+        <UpsellModal resumeDraftId={draftId} onClose={() => location.assign('/')} />
       )}
     </div>
   );

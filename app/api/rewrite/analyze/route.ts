@@ -1,5 +1,4 @@
 import { NextRequest } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { runInitialAnalysis, type AnalysisSnapshot, type EngineInput } from '@/src/engine';
 import type { NarrationEvent } from '@/src/engine/schemas';
 import { redis, k } from '@/lib/redis';
@@ -13,14 +12,11 @@ export const maxDuration = 300;
  * Body: { cvText, jdText, cvSource, jdSource }
  * Response: SSE stream of NarrationEvent; terminates with { type: 'result', id }.
  *
- * Persists an AnalysisSnapshot under k.analysis(id) (24h TTL). The user is
- * NOT charged a credit at this stage — this is deliberately free to give them
- * a real number before the paywall.
+ * Persists an AnalysisSnapshot under k.analysis(id) (24h TTL). No auth —
+ * this stage is free, anonymous, and only acts as a teaser. The paid
+ * finalize step is gated by an Almost Legal spend-token (HMAC JWT).
  */
 export async function POST(req: NextRequest): Promise<Response> {
-  const { userId } = await auth();
-  if (!userId) return new Response('Unauthorized', { status: 401 });
-
   const body = (await req.json()) as {
     draftId?: string;
     cvText?: string;
@@ -61,11 +57,12 @@ export async function POST(req: NextRequest): Promise<Response> {
         }
         if (!snapshot) throw new Error('Analysis did not return a snapshot.');
 
-        // Snapshot must hold the user binding so rescore/finalize can
-        // enforce ownership.
+        // Snapshot is keyed by an unguessable analysisId — no userId binding.
+        // Rescore + finalize gate access by holding the analysisId; finalize
+        // additionally requires a fresh AL spend-token before it runs.
         await redis.set(
           k.analysis(analysisId),
-          { ...snapshot, userId },
+          snapshot,
           { ex: 24 * 60 * 60 },
         );
 

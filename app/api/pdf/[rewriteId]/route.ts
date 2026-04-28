@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { redis, k } from '@/lib/redis';
 import { renderTemplate, type TemplateId } from '@/lib/pdf-templates';
 import type { EngineResult } from '@/src/engine/schemas';
@@ -12,21 +11,14 @@ export const maxDuration = 30;
  * three templates. We cache the rendered base64 in Redis on first request
  * so subsequent template-switches or re-downloads are instant.
  *
- * Auth: the rewriteId is intentionally unguessable (timestamp + 8 random
- * chars), but we ALSO require the requester to be signed in. We don't
- * scope by userId here because emailed PDFs can be re-fetched via the
- * link in the email — that link goes through this endpoint while the
- * user clicks it from the dashboard.
+ * Auth: the rewriteId is unguessable (timestamp + 8 random chars). The
+ * page that consumes this endpoint is reached only after a successful
+ * paid finalize, and the rewriteId is not exposed in any public listing.
  */
 export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ rewriteId: string }> },
 ): Promise<Response> {
-  const { userId } = await auth();
-  if (!userId) {
-    return new NextResponse('Unauthorized', { status: 401 });
-  }
-
   const { rewriteId } = await ctx.params;
   const url = new URL(req.url);
   const rawTemplate = (url.searchParams.get('template') ?? 'ats-clean') as TemplateId;

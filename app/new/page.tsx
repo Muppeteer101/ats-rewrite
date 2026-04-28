@@ -1,15 +1,14 @@
-import { redirect } from 'next/navigation';
-import { auth } from '@clerk/nextjs/server';
 import { RewriteForm } from '@/components/RewriteForm';
 
 export const metadata = {
   title: 'New Rewrite — ImproveMyResume',
 };
 
-export default async function NewRewritePage() {
-  const { userId } = await auth();
-  if (!userId) redirect('/sign-in');
-
+/**
+ * Anonymous form. The free analyse + rescore stages run without an account.
+ * The paid finalize step bounces the user to almostlegal.ai/spend.
+ */
+export default function NewRewritePage() {
   return (
     <main className="max-w-3xl mx-auto px-6 py-16">
       <span className="badge badge-purple mb-4 inline-block">New rewrite</span>

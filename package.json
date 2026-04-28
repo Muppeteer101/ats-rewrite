@@ -11,10 +11,9 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
-    "@clerk/localizations": "^4.5.5",
-    "@clerk/nextjs": "^7.0.8",
     "@mozilla/readability": "^0.5.0",
     "@upstash/redis": "^1.37.0",
+    "jose": "^6.2.3",
     "jsdom": "^25.0.1",
     "jspdf": "^2.5.2",
     "mammoth": "^1.8.0",

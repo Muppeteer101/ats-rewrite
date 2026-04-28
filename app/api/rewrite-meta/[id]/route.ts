@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { auth } from '@clerk/nextjs/server';
 import { redis, k } from '@/lib/redis';
 import type { EngineResult } from '@/src/engine/schemas';
 
@@ -21,11 +20,6 @@ export async function GET(
   req: NextRequest,
   ctx: { params: Promise<{ id: string }> },
 ): Promise<Response> {
-  const { userId } = await auth();
-  if (!userId) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   const { id } = await ctx.params;
   const result = await redis.get<EngineResult>(k.rewrite(id));
   if (!result) {

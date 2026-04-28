@@ -1,33 +1,21 @@
-import { SignIn } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
 
+/**
+ * Sign-in lives on almostlegal.ai. This page just bounces the user there
+ * with a return URL so they come back here after signing in.
+ */
 export const metadata = {
   title: 'Sign in — ImproveMyResume.ai',
 };
 
-export default function Page() {
-  return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-surface-soft)]">
-      <SignIn
-        path="/sign-in"
-        routing="path"
-        signUpUrl="/sign-up"
-        fallbackRedirectUrl="/new"
-        appearance={{
-          variables: {
-            colorPrimary: '#533afd',
-            colorText: '#061b31',
-            colorTextSecondary: '#64748d',
-            colorBackground: '#ffffff',
-            colorInputBackground: '#ffffff',
-            colorInputText: '#061b31',
-            borderRadius: '4px',
-            fontFamily: 'var(--font-inter), sans-serif',
-          },
-          elements: {
-            card: 'shadow-none border border-[var(--color-border)]',
-          },
-        }}
-      />
-    </main>
-  );
+export default async function SignInRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect_url?: string }>;
+}) {
+  const params = await searchParams;
+  const returnUrl = params.redirect_url ?? 'https://improvemyresume.ai/';
+  const url = new URL('https://almostlegal.ai/sign-in');
+  url.searchParams.set('redirect_url', returnUrl);
+  redirect(url.toString());
 }

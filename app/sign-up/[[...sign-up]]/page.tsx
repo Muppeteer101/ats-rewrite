@@ -1,34 +1,22 @@
-import { SignUp } from '@clerk/nextjs';
+import { redirect } from 'next/navigation';
 
+/**
+ * Sign-up lives on almostlegal.ai. This page just bounces the user there
+ * with a return URL so they come back here after creating an account.
+ */
 export const metadata = {
   title: 'Sign up — ImproveMyResume.ai',
   robots: { index: false, follow: false },
 };
 
-export default function Page() {
-  return (
-    <main className="min-h-screen flex items-center justify-center p-6 bg-[var(--color-surface-soft)]">
-      <SignUp
-        path="/sign-up"
-        routing="path"
-        signInUrl="/sign-in"
-        fallbackRedirectUrl="/dashboard"
-        appearance={{
-          variables: {
-            colorPrimary: '#533afd',
-            colorText: '#061b31',
-            colorTextSecondary: '#64748d',
-            colorBackground: '#ffffff',
-            colorInputBackground: '#ffffff',
-            colorInputText: '#061b31',
-            borderRadius: '4px',
-            fontFamily: 'ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif',
-          },
-          elements: {
-            card: 'shadow-none border border-[var(--color-border)]',
-          },
-        }}
-      />
-    </main>
-  );
+export default async function SignUpRedirect({
+  searchParams,
+}: {
+  searchParams: Promise<{ redirect_url?: string }>;
+}) {
+  const params = await searchParams;
+  const returnUrl = params.redirect_url ?? 'https://improvemyresume.ai/';
+  const url = new URL('https://almostlegal.ai/sign-up');
+  url.searchParams.set('redirect_url', returnUrl);
+  redirect(url.toString());
 }
