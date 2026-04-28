@@ -68,6 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       start: {
         ...((baseLocale.signIn as Record<string, unknown>)?.start as Record<string, unknown>),
         title: 'Sign in to ImproveMyResume.ai',
+        titleCombined: 'Sign in to ImproveMyResume.ai',
         subtitle: 'Welcome back — your rewrites are waiting.',
       },
     },
