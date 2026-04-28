@@ -130,11 +130,15 @@ export async function recordRewrite(userId: string, ref: RewriteRef): Promise<vo
 
 /** Read the most recent N rewrites for the dashboard. */
 export async function listRewrites(userId: string, limit = 50): Promise<RewriteRef[]> {
-  const raw = await redis.zrange<string[]>(k.rewrites(userId), 0, limit - 1, { rev: true });
+  // Upstash auto-deserialises JSON-like strings, so members may arrive as
+  // plain objects rather than raw strings. Handle both cases defensively.
+  const raw = await redis.zrange(k.rewrites(userId), 0, limit - 1, { rev: true });
   return raw
     .map((s) => {
+      if (!s) return null;
+      if (typeof s === 'object') return s as RewriteRef;
       try {
-        return JSON.parse(s) as RewriteRef;
+        return JSON.parse(s as string) as RewriteRef;
       } catch {
         return null;
       }
