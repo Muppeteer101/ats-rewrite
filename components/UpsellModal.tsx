@@ -56,7 +56,7 @@ export function UpsellModal({
             style={{ borderColor: 'var(--color-purple)', background: 'var(--color-purple-soft)' }}
           >
             <span className="badge badge-purple" style={{ marginBottom: 6, display: 'inline-block' }}>Best value</span>
-            <div style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: 4 }}>10 credits — £25</div>
+            <div style={{ fontSize: '1.1rem', fontWeight: 500, marginBottom: 4 }}>10 credits — £24.99</div>
             <div className="caption">£2.50 per rewrite — works across all Almost Legal tools</div>
           </div>
         </div>

@@ -104,7 +104,7 @@ export default async function DashboardPage({
             <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
               Top up
             </div>
-            <div className="caption mb-3">3 for £9.99 · 10 for £25</div>
+            <div className="caption mb-3">3 for £9.99 · 10 for £24.99</div>
             <DashboardActions />
           </div>
         </div>

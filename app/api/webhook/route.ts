@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import Stripe from 'stripe';
 import { stripe } from '@/lib/stripe';
 import { redis, k } from '@/lib/redis';
-import { addPaidCredits } from '@/lib/credits';
 import { sendCreditsTopUpEmail } from '@/lib/email';
 
 export const runtime = 'nodejs';
@@ -73,8 +72,13 @@ export async function POST(req: NextRequest): Promise<Response> {
   // ──────────────────────────────────────────────────────────────────────
   // STEP 1: Credit the user. This is the only step that MUST succeed for
   // the customer to get what they paid for. Everything else is best-effort.
+  //
+  // Writes to the central `al:credits:{userId}` key — same key the rest of
+  // the Almost Legal portfolio reads from, and the same key consumeImrCredit
+  // (lib/credits-central.ts) decrements on rewrite. INCRBY is atomic, so
+  // concurrent webhook deliveries can't lose a top-up.
   // ──────────────────────────────────────────────────────────────────────
-  const newState = await addPaidCredits(clerkUserId, credits);
+  const paidCreditsNow = await redis.incrby(`al:credits:${clerkUserId}`, credits);
   await redis.set(eventKey, '1', { ex: 60 * 60 * 24 * 30 });
 
   // ──────────────────────────────────────────────────────────────────────
@@ -148,7 +152,7 @@ export async function POST(req: NextRequest): Promise<Response> {
           const rewardPromo = await stripe.promotionCodes.create({
             promotion: { coupon: 'REWARD_FREE_BASE', type: 'coupon' },
             max_redemptions: 1,
-            metadata: { earnedBy: ownerEmail, usedBy: customerEmail, site: 'TOOLYKIT' },
+            metadata: { earnedBy: ownerEmail, usedBy: customerEmail, site: 'ATSR' },
           });
           const { sendReferrerRewardEmail } = await import('@/lib/email');
           sendReferrerRewardEmail({
@@ -195,6 +199,6 @@ export async function POST(req: NextRequest): Promise<Response> {
   return NextResponse.json({
     received: true,
     creditsAdded: credits,
-    paidCreditsNow: newState.paidCredits,
+    paidCreditsNow,
   });
 }

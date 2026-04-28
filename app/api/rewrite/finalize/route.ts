@@ -99,7 +99,7 @@ export async function POST(req: NextRequest): Promise<Response> {
                 const promoCode = await stripe.promotionCodes.create({
                   promotion: { coupon: 'JO4UR95g', type: 'coupon' },
                   max_redemptions: 10,
-                  metadata: { ownerEmail: email, site: 'TOOLYKIT' },
+                  metadata: { ownerEmail: email, site: 'ATSR' },
                 });
                 shareCode = promoCode.code;
                 await redis.set(`share:owner:${promoCode.code}`, email, { ex: 60 * 60 * 24 * 365 });
