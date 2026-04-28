@@ -5,6 +5,7 @@ import { redirect } from 'next/navigation';
 import { listRewrites, nextResetDate } from '@/lib/credits';
 import { getImrCreditStatus } from '@/lib/credits-central';
 import { DashboardActions } from '@/components/DashboardActions';
+import { RewriteList } from '@/components/RewriteList';
 
 export const dynamic = 'force-dynamic';
 
@@ -117,43 +118,7 @@ export default async function DashboardPage({
             </Link>
           </div>
         ) : (
-          <div className="card-elevated divide-y divide-[var(--color-border)]">
-            {rewrites.map((r) => (
-              <Link
-                key={r.id}
-                href={`/rewrite/${r.id}`}
-                className="flex items-center gap-4 p-4 hover:bg-[var(--color-surface-soft)] transition-colors"
-              >
-                <div className="flex-1 min-w-0">
-                  <div className="text-[15px]" style={{ color: 'var(--color-heading)', fontWeight: 400 }}>
-                    {r.jobTitle}
-                  </div>
-                  <div className="caption mt-0.5">
-                    {new Date(r.date).toLocaleDateString('en-GB', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                    })}{' '}
-                    · {r.pdfTemplate}
-                  </div>
-                </div>
-                <div className="text-sm flex items-center gap-2">
-                  <span className="tabular" style={{ color: 'var(--color-body)' }}>{r.scoreBefore}</span>
-                  <span style={{ color: 'var(--color-border-soft-purple)' }}>→</span>
-                  <span className="tabular" style={{ color: 'var(--color-success-text)', fontWeight: 400 }}>
-                    {r.scoreAfter}
-                  </span>
-                </div>
-                <a
-                  href={`/api/pdf/${r.id}?template=${r.pdfTemplate}`}
-                  className="caption hover:text-[var(--color-purple)] underline decoration-dotted"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  PDF
-                </a>
-              </Link>
-            ))}
-          </div>
+          <RewriteList rewrites={rewrites} />
         )}
       </div>
     </main>
