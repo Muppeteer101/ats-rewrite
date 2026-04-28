@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
+import { deDE, esES, frFR, enUS } from '@clerk/localizations';
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages, getLocale } from 'next-intl/server';
 import Script from 'next/script';
@@ -9,6 +10,13 @@ import { RefTracker } from '@/components/RefTracker';
 import { Footer } from '@/components/Footer';
 import { Navbar } from '@/components/Navbar';
 import './globals.css';
+
+const CLERK_LOCALES: Record<string, typeof enUS> = {
+  de: deDE,
+  es: esES,
+  fr: frFR,
+  en: enUS,
+};
 
 // Inter @ weights 300/400 mirrors the sohne-var weight 300 signature from
 // DESIGN.md — never bold for headlines on funnel pages.
@@ -50,6 +58,29 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const locale = await getLocale();
   const messages = await getMessages();
 
+  // Deep-merge so we get the full locale translations (field labels, errors, etc.)
+  // but keep our brand title/subtitle in English regardless of language.
+  const baseLocale = CLERK_LOCALES[locale] ?? enUS;
+  const clerkLocalization = {
+    ...baseLocale,
+    signIn: {
+      ...(baseLocale.signIn as Record<string, unknown>),
+      start: {
+        ...((baseLocale.signIn as Record<string, unknown>)?.start as Record<string, unknown>),
+        title: 'Sign in to ImproveMyResume.ai',
+        subtitle: 'Welcome back — your rewrites are waiting.',
+      },
+    },
+    signUp: {
+      ...(baseLocale.signUp as Record<string, unknown>),
+      start: {
+        ...((baseLocale.signUp as Record<string, unknown>)?.start as Record<string, unknown>),
+        title: 'Create your ImproveMyResume.ai account',
+        subtitle: 'First rewrite is free. No card required.',
+      },
+    },
+  };
+
   return (
     <ClerkProvider
       appearance={{
@@ -58,14 +89,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           logoLinkUrl: process.env.NEXT_PUBLIC_SITE_URL ?? 'https://improvemyresume.ai',
         },
       }}
-      localization={{
-        signIn: {
-          start: { title: 'Sign in to ImproveMyResume.ai', subtitle: 'Welcome back — your rewrites are waiting.' },
-        },
-        signUp: {
-          start: { title: 'Create your ImproveMyResume.ai account', subtitle: 'First rewrite is free. No card required.' },
-        },
-      }}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      localization={clerkLocalization as any}
     >
       <html lang={locale} className={`${inter.variable} ${mono.variable}`}>
         <body>
