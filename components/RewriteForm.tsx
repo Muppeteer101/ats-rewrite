@@ -151,11 +151,12 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
             </span>
           </div>
 
-          <div
-            onClick={() => cvFileRef.current?.click()}
+          <label
+            htmlFor="cv-file-input"
             onDragOver={(e) => { e.preventDefault(); }}
             onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) void handleCvFile(f); }}
             style={{
+              display: 'block',
               border: '2px dashed ' + (cvFileName ? '#b8a3ff' : '#cfd2e0'),
               borderRadius: 10,
               padding: cvFileName ? 16 : 24,
@@ -187,13 +188,14 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               </>
             )}
             <input
+              id="cv-file-input"
               ref={cvFileRef}
               type="file"
               accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
               onChange={(e) => e.target.files?.[0] && handleCvFile(e.target.files[0])}
               style={{ display: 'none' }}
             />
-          </div>
+          </label>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b0b3c9', fontSize: 12, margin: '12px 0' }}>
             <span style={{ flex: 1, height: 1, background: '#e7e8ef' }} />
@@ -326,11 +328,12 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
           {jdMode === 'file' && (
             <>
-              <div
-                onClick={() => jdFileRef.current?.click()}
+              <label
+                htmlFor="jd-file-input"
                 onDragOver={(e) => { e.preventDefault(); }}
                 onDrop={(e) => { e.preventDefault(); const f = e.dataTransfer.files?.[0]; if (f) void handleJdFile(f); }}
                 style={{
+                  display: 'block',
                   border: '2px dashed ' + (jdFileName ? '#b8a3ff' : '#cfd2e0'),
                   borderRadius: 10,
                   padding: jdFileName ? 16 : 24,
@@ -351,13 +354,14 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                   </>
                 )}
                 <input
+                  id="jd-file-input"
                   ref={jdFileRef}
                   type="file"
                   accept=".pdf,.docx,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
                   onChange={(e) => e.target.files?.[0] && handleJdFile(e.target.files[0])}
                   style={{ display: 'none' }}
                 />
-              </div>
+              </label>
             </>
           )}
         </section>
