@@ -51,7 +51,7 @@ export const PACKS: ReadonlyArray<{
     pack: 10,
     credits: 10,
     highlight: true,
-    perCredit: { GBP: '£2.00', USD: '$2.00', EUR: '€2.00', AUD: 'A$3.00', CAD: 'C$2.60', NZD: 'NZ$3.20' },
-    total: { GBP: '£19.99', USD: '$19.99', EUR: '€19.99', AUD: 'A$30', CAD: 'C$26', NZD: 'NZ$32' },
+    perCredit: { GBP: '£2.50', USD: '$2.50', EUR: '€2.50', AUD: 'A$3.75', CAD: 'C$3.25', NZD: 'NZ$4.00' },
+    total: { GBP: '£25', USD: '$25', EUR: '€25', AUD: 'A$37.50', CAD: 'C$32.50', NZD: 'NZ$40' },
   },
 ];

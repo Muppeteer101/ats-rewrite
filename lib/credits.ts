@@ -6,7 +6,7 @@ import { redis, k, currentMonthKey } from '@/lib/redis';
  *   2. After that, ONE additional free rewrite per calendar month
  *      (monthlyFreeUsed flag, reset when monthKey rolls).
  *   3. Beyond that, paid credits are consumed (paidCredits counter).
- *      Packs are 3 for £9.99 or 10 for £19.99.
+ *      Packs are 3 for £9.99 or 10 for £25.
  *
  * State is keyed by Clerk userId so a user signed in across devices
  * sees one consistent balance.
