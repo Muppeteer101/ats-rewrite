@@ -2,13 +2,8 @@ import Link from 'next/link';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { UserButton } from '@clerk/nextjs';
 import { redirect } from 'next/navigation';
-import {
-  getCreditState,
-  listRewrites,
-  availableCount,
-  summary as creditSummary,
-  nextResetDate,
-} from '@/lib/credits';
+import { listRewrites, nextResetDate } from '@/lib/credits';
+import { getImrCreditStatus } from '@/lib/credits-central';
 import { DashboardActions } from '@/components/DashboardActions';
 
 export const dynamic = 'force-dynamic';
@@ -25,8 +20,8 @@ export default async function DashboardPage({
   const params = await searchParams;
   const justToppedUp = params.topup === 'success';
 
-  const [state, rewrites] = await Promise.all([
-    getCreditState(userId),
+  const [status, rewrites] = await Promise.all([
+    getImrCreditStatus(userId),
     listRewrites(userId, 50),
   ]);
 
@@ -81,9 +76,14 @@ export default async function DashboardPage({
               className="tabular mb-2"
               style={{ fontSize: '2.5rem', fontWeight: 300, letterSpacing: '-0.02em', color: 'var(--color-heading)' }}
             >
-              {availableCount(state)}
+              {status.total}
             </div>
-            <div className="caption">{creditSummary(state)}</div>
+            <div className="caption">
+              {status.paidCredits > 0 ? `${status.paidCredits} paid` : ''}
+              {status.paidCredits > 0 && status.hasMonthlyFree ? ' + ' : ''}
+              {status.hasMonthlyFree ? '1 free this month' : ''}
+              {status.total === 0 ? '0 credits — top up to continue' : ''}
+            </div>
           </div>
           <div className="card-elevated p-6">
             <div className="text-[11px] uppercase tracking-[0.14em] mb-2" style={{ color: 'var(--color-body)' }}>
@@ -93,10 +93,10 @@ export default async function DashboardPage({
               className="mb-2"
               style={{ fontSize: '1.5rem', fontWeight: 300, color: 'var(--color-heading)' }}
             >
-              {state.monthlyFreeUsed ? 'Used' : 'Available'}
+              {status.hasMonthlyFree ? 'Available' : 'Used'}
             </div>
             <div className="caption">
-              {state.monthlyFreeUsed ? `Resets ${nextResetDate()}` : 'One per calendar month, free'}
+              {status.hasMonthlyFree ? 'One per calendar month, free' : `Resets ${nextResetDate()}`}
             </div>
           </div>
           <div className="card-elevated p-6">

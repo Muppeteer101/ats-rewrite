@@ -2,9 +2,9 @@ import { NextRequest } from 'next/server';
 import { auth, currentUser } from '@clerk/nextjs/server';
 import { runFinalize, type AnalysisSnapshot } from '@/src/engine';
 import type { EngineResult, NarrationEvent } from '@/src/engine/schemas';
-import type { CreditState } from '@/lib/credits';
 import { redis, k } from '@/lib/redis';
-import { consumeCredit, recordRewrite } from '@/lib/credits';
+import { recordRewrite } from '@/lib/credits';
+import { consumeImrCredit } from '@/lib/credits-central';
 import { sendRewriteReadyEmail } from '@/lib/email';
 import { renderTemplate } from '@/lib/pdf-templates';
 
@@ -42,7 +42,7 @@ export async function POST(req: NextRequest): Promise<Response> {
   const sendEmail = body.sendEmail !== false;
 
   // Charge a credit BEFORE the rewrite — the expensive LLM calls are here.
-  const source = await consumeCredit(userId);
+  const source = await consumeImrCredit(userId);
   if (!source) {
     return new Response(JSON.stringify({ error: 'out_of_credits' }), {
       status: 402,
@@ -132,21 +132,11 @@ export async function POST(req: NextRequest): Promise<Response> {
       } catch (e) {
         // Refund the credit on engine failure.
         try {
-          const state = await redis.get<CreditState>(k.user(userId));
-          if (state) {
-            if (source === 'paid') {
-              await redis.set(k.user(userId), {
-                ...state,
-                paidCredits: (state.paidCredits ?? 0) + 1,
-                updatedAt: Date.now(),
-              });
-            } else if (source === 'monthly-free') {
-              await redis.set(k.user(userId), {
-                ...state,
-                monthlyFreeUsed: false,
-                updatedAt: Date.now(),
-              });
-            }
+          if (source === 'paid') {
+            await redis.incrby(`al:credits:${userId}`, 1);
+          } else if (source === 'monthly-free') {
+            // Clear the free-use timestamp so it can be used again this month.
+            await redis.del(`al:free:${userId}:improve-my-resume`);
           }
         } catch {
           /* refund failure non-fatal */

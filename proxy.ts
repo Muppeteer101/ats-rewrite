@@ -4,14 +4,12 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 // /rewrite/:id is gated because every rewrite is tied to a user (consumes a credit).
 // /dashboard is the user-facing history + credits page.
 // /api/rewrite is the SSE engine endpoint — caller must be signed in (we charge the credit).
-// /api/checkout creates Stripe sessions for credit-pack purchases (must be a real user).
+// /api/pdf is authenticated so PDF downloads can't be hotlinked.
 const isProtectedRoute = createRouteMatcher([
   '/dashboard(.*)',
   '/rewrite/(.*)',
-  '/api/rewrite',
-  '/api/checkout',
+  '/api/rewrite(.*)',
   '/api/pdf/(.*)',
-  '/api/track-credit',
 ]);
 
 export default clerkMiddleware(async (auth, req) => {
