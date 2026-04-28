@@ -1,4 +1,7 @@
 import type { NextConfig } from 'next';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 const nextConfig: NextConfig = {
   // Server-only packages that must NOT be bundled for the edge / client.
@@ -6,4 +9,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ['unpdf', 'mammoth', 'jsdom', '@mozilla/readability', 'jspdf'],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

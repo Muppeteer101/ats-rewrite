@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { Inter, JetBrains_Mono } from 'next/font/google';
 import { ClerkProvider } from '@clerk/nextjs';
+import { NextIntlClientProvider } from 'next-intl';
+import { getMessages, getLocale } from 'next-intl/server';
 import Script from 'next/script';
 import { RefTracker } from '@/components/RefTracker';
 import { Footer } from '@/components/Footer';
@@ -44,17 +46,31 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <ClerkProvider>
-      <html lang="en-GB" className={`${inter.variable} ${mono.variable}`}>
+    <ClerkProvider
+      localization={{
+        signIn: {
+          start: { title: 'Sign in to ImproveMyResume.ai', subtitle: 'Welcome back — your rewrites are waiting.' },
+        },
+        signUp: {
+          start: { title: 'Create your ImproveMyResume.ai account', subtitle: 'First rewrite is free. No card required.' },
+        },
+      }}
+    >
+      <html lang={locale} className={`${inter.variable} ${mono.variable}`}>
         <body>
-          <Suspense fallback={null}>
-            <RefTracker />
-          </Suspense>
-          <Navbar />
-          {children}
-          <Footer />
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <Suspense fallback={null}>
+              <RefTracker />
+            </Suspense>
+            <Navbar locale={locale} />
+            {children}
+            <Footer />
+          </NextIntlClientProvider>
           <Script async src="https://www.googletagmanager.com/gtag/js?id=G-8V75M6PD2P" strategy="afterInteractive" />
           <Script id="gtag-init" strategy="afterInteractive">{`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-8V75M6PD2P');`}</Script>
           {process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID && (
@@ -67,3 +83,4 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     </ClerkProvider>
   );
 }
+

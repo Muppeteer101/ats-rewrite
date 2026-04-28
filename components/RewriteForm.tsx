@@ -2,23 +2,14 @@
 
 import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 type Status = 'idle' | 'parsing' | 'starting' | 'redirecting' | 'error';
 type JdMode = 'paste' | 'url' | 'file';
 
-/**
- * Landing-page form — Resume + job description capture.
- *
- * No gap-confirm, no cover-letter opt-in: the six-pass engine runs the full
- * pipeline every time and always produces a cover letter as part of Pass 5.
- *
- * On submit we stash the payload in sessionStorage under a draft ID and
- * navigate to /rewrite/<draftId>, which runs the engine and renders results.
- * The draft ID survives a Stripe Checkout round-trip so a mid-rewrite top-up
- * lands the user back on the same draft page and resumes automatically.
- */
 export function RewriteForm({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
+  const t = useTranslations('form');
   const cvFileRef = useRef<HTMLInputElement>(null);
   const jdFileRef = useRef<HTMLInputElement>(null);
 
@@ -98,8 +89,8 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
   function startRewrite() {
     if (!signedIn) { router.push('/sign-in'); return; }
-    if (cvText.length < 50) { setError('Please add your resume (paste or upload a PDF/DOCX).'); return; }
-    if (jdText.length < 30) { setError('Please add the job description (paste, URL, or upload).'); return; }
+    if (cvText.length < 50) { setError(t('errorCv')); return; }
+    if (jdText.length < 30) { setError(t('errorJd')); return; }
 
     setStatus('starting');
     setError(null);
@@ -112,8 +103,6 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
       template: 'ats-clean' as const,
       sendEmail: true,
     };
-    // Base36 for predictable length so the checkout route's whitelist regex
-    // matches every ID RewriteForm produces.
     const draftId = `draft_${Date.now().toString(36)}`;
     sessionStorage.setItem(`rewrite-payload:${draftId}`, JSON.stringify(payload));
     setStatus('redirecting');
@@ -154,11 +143,11 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         <section style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18, gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>Your resume</h2>
-              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>Upload a PDF, DOCX, or paste the text.</p>
+              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>{t('cvTitle')}</h2>
+              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>{t('cvSub')}</p>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: cvReady ? '#22c55e' : '#7a7c95', whiteSpace: 'nowrap' }}>
-              ● {cvReady ? 'READY' : 'REQUIRED'}
+              ● {cvReady ? t('cvReady') : t('cvRequired')}
             </span>
           </div>
 
@@ -181,7 +170,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               <>
                 <p style={{ fontSize: 14, fontWeight: 600, color: '#0f0f1a', margin: '0 0 2px' }}>📄 {cvFileName}</p>
                 <p style={{ fontSize: 12, color: '#7a7c95', margin: 0 }}>
-                  {cvChars.toLocaleString()} chars parsed · <span style={{ color: '#7c3aed' }}>click to replace</span>
+                  {t('cvCharsParsed', { count: cvChars.toLocaleString() })} · <span style={{ color: '#7c3aed' }}>{t('cvClickReplace')}</span>
                 </p>
               </>
             ) : (
@@ -191,9 +180,9 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                   <polyline points="17 8 12 3 7 8" />
                   <line x1="12" y1="3" x2="12" y2="15" />
                 </svg>
-                <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>Drop your PDF or DOCX here</p>
+                <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>{t('cvDropTitle')}</p>
                 <p style={{ fontSize: 13, color: '#7a7c95', margin: 0 }}>
-                  or <span style={{ color: '#7c3aed', fontWeight: 600 }}>click to browse</span> · max 10&nbsp;MB
+                  or <span style={{ color: '#7c3aed', fontWeight: 600 }}>{t('cvClickBrowse')}</span> · max 10&nbsp;MB
                 </p>
               </>
             )}
@@ -208,20 +197,20 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 8, color: '#b0b3c9', fontSize: 12, margin: '12px 0' }}>
             <span style={{ flex: 1, height: 1, background: '#e7e8ef' }} />
-            <span>OR PASTE</span>
+            <span>{t('orPaste')}</span>
             <span style={{ flex: 1, height: 1, background: '#e7e8ef' }} />
           </div>
 
           <textarea
             value={cvText}
             onChange={(e) => { setCvText(e.target.value); setCvSource('text'); setCvFileName(null); }}
-            placeholder="Paste your resume text here. We'll parse roles, bullets, skills, education, and dates."
+            placeholder={t('cvPlaceholder')}
             style={{ ...textareaStyle, minHeight: 160 }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#7a7c95' }}>
-            <span>Any length is fine — the engine handles long careers.</span>
+            <span>{t('cvHint')}</span>
             <span style={{ fontVariantNumeric: 'tabular-nums', color: cvReady ? '#22c55e' : '#7a7c95' }}>
-              {cvChars.toLocaleString()} / 50 min
+              {t('cvMin', { count: cvChars.toLocaleString() })}
             </span>
           </div>
         </section>
@@ -230,11 +219,11 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         <section style={cardStyle}>
           <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 18, gap: 12 }}>
             <div>
-              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>The job description</h2>
-              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>Paste, link to a URL, or upload the posting.</p>
+              <h2 style={{ fontSize: 19, fontWeight: 600, color: '#0f0f1a', margin: 0 }}>{t('jdTitle')}</h2>
+              <p style={{ fontSize: 13, color: '#7a7c95', margin: '4px 0 0' }}>{t('jdSub')}</p>
             </div>
             <span style={{ fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: jdReady ? '#22c55e' : '#7a7c95', whiteSpace: 'nowrap' }}>
-              ● {jdReady ? 'READY' : 'REQUIRED'}
+              ● {jdReady ? t('cvReady') : t('cvRequired')}
             </span>
           </div>
 
@@ -272,7 +261,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                     transition: 'all 150ms ease',
                   }}
                 >
-                  {m === 'paste' ? 'Paste' : m === 'url' ? 'URL' : 'Upload'}
+                  {m === 'paste' ? t('jdTabPaste') : m === 'url' ? t('jdTabUrl') : t('jdTabUpload')}
                 </button>
               );
             })}
@@ -283,13 +272,13 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
               <textarea
                 value={jdText}
                 onChange={(e) => { setJdText(e.target.value); setJdSource({ kind: 'text' }); setJdFileName(null); }}
-                placeholder="Paste the full job description here — role, responsibilities, must-haves, nice-to-haves."
+                placeholder={t('jdPlaceholder')}
                 style={{ ...textareaStyle, minHeight: 220 }}
               />
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 6, fontSize: 12, color: '#7a7c95' }}>
-                <span>Longer JDs give better matches — don&apos;t trim.</span>
+                <span>{t('jdHint')}</span>
                 <span style={{ fontVariantNumeric: 'tabular-nums', color: jdReady ? '#22c55e' : '#7a7c95' }}>
-                  {jdChars.toLocaleString()} / 200 min
+                  {t('jdMin', { count: jdChars.toLocaleString() })}
                 </span>
               </div>
             </>
@@ -302,7 +291,7 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                   type="url"
                   value={jdUrl}
                   onChange={(e) => setJdUrl(e.target.value)}
-                  placeholder="https://… (LinkedIn, Indeed, company careers page)"
+                  placeholder={t('jdUrlPlaceholder')}
                   style={{ flex: 1, padding: '12px 14px', border: '1px solid #e7e8ef', borderRadius: 10, fontSize: 14, outline: 'none', background: '#fff', color: '#0f0f1a' }}
                 />
                 <button
@@ -321,12 +310,12 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                     opacity: (status === 'parsing' || !jdUrl) ? 0.5 : 1,
                   }}
                 >
-                  {status === 'parsing' ? 'Analysing…' : 'Analyse'}
+                  {status === 'parsing' ? t('jdUrlAnalysing') : t('jdUrlAnalyse')}
                 </button>
               </div>
               {jdText && (
                 <details style={{ marginTop: 14, fontSize: 12, color: '#7a7c95' }}>
-                  <summary style={{ cursor: 'pointer' }}>Preview ({jdChars.toLocaleString()} chars)</summary>
+                  <summary style={{ cursor: 'pointer' }}>{t('jdUrlPreview', { count: jdChars.toLocaleString() })}</summary>
                   <div style={{ marginTop: 8, maxHeight: 180, overflowY: 'auto', padding: 12, background: '#fafbff', borderRadius: 8, border: '1px solid #e7e8ef', fontFamily: 'monospace', fontSize: 12, lineHeight: 1.55, whiteSpace: 'pre-wrap' }}>
                     {jdText.slice(0, 1500)}{jdText.length > 1500 ? '…' : ''}
                   </div>
@@ -353,12 +342,12 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
                 {jdFileName ? (
                   <>
                     <p style={{ fontSize: 14, fontWeight: 600, color: '#0f0f1a', margin: '0 0 2px' }}>📄 {jdFileName}</p>
-                    <p style={{ fontSize: 12, color: '#7a7c95', margin: 0 }}>{jdChars.toLocaleString()} chars parsed · <span style={{ color: '#7c3aed' }}>click to replace</span></p>
+                    <p style={{ fontSize: 12, color: '#7a7c95', margin: 0 }}>{t('cvCharsParsed', { count: jdChars.toLocaleString() })} · <span style={{ color: '#7c3aed' }}>{t('cvClickReplace')}</span></p>
                   </>
                 ) : (
                   <>
-                    <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>Drop the job posting PDF/DOCX</p>
-                    <p style={{ fontSize: 13, color: '#7a7c95', margin: 0 }}>or <span style={{ color: '#7c3aed', fontWeight: 600 }}>click to browse</span></p>
+                    <p style={{ fontSize: 15, fontWeight: 600, color: '#0f0f1a', margin: '0 0 4px' }}>{t('jdDropTitle')}</p>
+                    <p style={{ fontSize: 13, color: '#7a7c95', margin: 0 }}>or <span style={{ color: '#7c3aed', fontWeight: 600 }}>{t('cvClickBrowse')}</span></p>
                   </>
                 )}
                 <input
@@ -397,10 +386,10 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
       >
         <div style={{ flex: '1 1 280px' }}>
           <h3 style={{ fontSize: 16, fontWeight: 600, color: '#f4f0ff', margin: 0 }}>
-            {cvReady && jdReady ? 'Ready when you are' : 'Add your resume and the JD to continue'}
+            {cvReady && jdReady ? t('actionReady') : t('actionNotReady')}
           </h3>
           <p style={{ fontSize: 13, color: '#b5b8d6', margin: '4px 0 0', lineHeight: 1.5 }}>
-            Match score · recruiter verdict · ATS confidence · gap confirmation · rewrite + cover letter. <strong style={{ color: '#fff' }}>First rewrite is free.</strong>
+            {t('actionSub')} <strong style={{ color: '#fff' }}>{t('actionFree')}</strong>
           </p>
         </div>
         <button
@@ -425,15 +414,15 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
           }}
         >
           {status === 'starting' || status === 'redirecting'
-            ? 'Starting engine…'
+            ? t('btnStarting')
             : signedIn
-              ? 'Run the full analysis →'
-              : 'Sign in to start (free)'}
+              ? t('btnSignedIn')
+              : t('btnSignedOut')}
         </button>
       </div>
 
       <p style={{ fontSize: 12, color: '#7a7c95', textAlign: 'center', margin: 0 }}>
-        By submitting you agree to the analysis being processed by Anthropic Claude. Your files never leave Vercel infrastructure.
+        {t('disclaimer')}
       </p>
 
       {/* Responsive two-column: desktop side-by-side, mobile stacked */}

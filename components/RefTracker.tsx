@@ -30,7 +30,7 @@ export function RefTracker() {
       if (sessionStorage.getItem(sessionKey)) return;
       sessionStorage.setItem(sessionKey, '1');
 
-      const brand = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? 'ats-rewriter.com';
+      const brand = process.env.NEXT_PUBLIC_BRAND_DOMAIN ?? 'improvemyresume.ai';
       const clickUrl =
         // CREATOR_CLICK_URL would normally come from server; we hardcode the
         // public almostlegal.ai endpoint here because it's the same value

@@ -1,13 +1,6 @@
 import Link from 'next/link';
+import { getTranslations } from 'next-intl/server';
 
-/**
- * Canonical Almost Legal site-footer — mirrors cancelmyparkingticket /
- * fightmyfines pattern. Includes the Muerto Limited (Isle of Man)
- * corporate disclosure required across the portfolio.
- *
- * Sister-site list ordered as per the AL portfolio footer; ToolyKit
- * itself is omitted (we're on it).
- */
 const SISTER_SITES = [
   { name: 'Cancel My Parking Ticket', url: 'https://cancelmyparkingticket.com' },
   { name: 'Cancel My Citation', url: 'https://cancelmycitation.com' },
@@ -19,13 +12,14 @@ const SISTER_SITES = [
   { name: 'EasyBusiness 365', url: 'https://easybusiness365.com' },
 ];
 
-export function Footer() {
+export async function Footer() {
+  const t = await getTranslations('footer');
+
   return (
     <footer className="site-footer">
       <div className="site-footer-inner">
         <p>
-          <strong>ImproveMyResume.ai</strong> &mdash; AI resume rewriter that beats the ATS. Not a recruitment agency.
-          AI-generated content should be reviewed before use.
+          <strong>ImproveMyResume.ai</strong> &mdash; {t('tagline')}
         </p>
         <p style={{ marginTop: 8 }}>
           A brand of{' '}
@@ -47,8 +41,8 @@ export function Footer() {
           <Link href="/dashboard">Dashboard</Link>
           <Link href="/#pricing">Pricing</Link>
           <Link href="/#faq">FAQ</Link>
-          <a href="https://almostlegal.ai/terms" target="_blank" rel="noopener">Terms</a>
-          <a href="https://almostlegal.ai/privacy" target="_blank" rel="noopener">Privacy</a>
+          <a href="https://almostlegal.ai/terms" target="_blank" rel="noopener">{t('terms')}</a>
+          <a href="https://almostlegal.ai/privacy" target="_blank" rel="noopener">{t('privacy')}</a>
           <a href="https://almostlegal.ai/cookies" target="_blank" rel="noopener">Cookies</a>
           <a href="mailto:hello@almostlegal.ai">Contact</a>
         </div>

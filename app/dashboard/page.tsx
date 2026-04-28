@@ -35,7 +35,7 @@ export default async function DashboardPage({
       <nav className="sticky top-0 z-40 backdrop-blur bg-white/80 border-b border-[var(--color-border)]">
         <div className="max-w-[1080px] mx-auto px-6 h-16 flex items-center justify-between">
           <Link href="/" className="text-[15px] font-medium tracking-tight" style={{ color: 'var(--color-heading)' }}>
-            <span style={{ color: 'var(--color-purple)' }}>ATS</span>·rewriter
+            ImproveMyResume<span style={{ color: 'var(--color-purple)' }}>.ai</span>
           </Link>
           <div className="flex items-center gap-3">
             <Link href="/new" className="btn btn-sm btn-neutral">

@@ -3,10 +3,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { useUser, useClerk } from '@clerk/nextjs';
+import { useTranslations } from 'next-intl';
+import { LocaleSwitcher } from './LocaleSwitcher';
 
-export function Navbar() {
+export function Navbar({ locale }: { locale: string }) {
   const { isSignedIn, isLoaded } = useUser();
   const { signOut } = useClerk();
+  const t = useTranslations('nav');
 
   return (
     <nav className="pill-nav" aria-label="Primary">
@@ -15,10 +18,10 @@ export function Navbar() {
       </Link>
 
       <div className="pill-nav-links">
-        <Link href="/#how">How it works</Link>
-        <Link href="/#pricing">Pricing</Link>
-        <Link href="/#faq">FAQ</Link>
-        {isLoaded && isSignedIn && <Link href="/dashboard">Dashboard</Link>}
+        <Link href="/#how">{t('howItWorks')}</Link>
+        <Link href="/#pricing">{t('pricing')}</Link>
+        <Link href="/#faq">{t('faq')}</Link>
+        {isLoaded && isSignedIn && <Link href="/dashboard">{t('dashboard')}</Link>}
 
         {isLoaded && isSignedIn ? (
           <button
@@ -35,13 +38,15 @@ export function Navbar() {
               fontWeight: 500,
             }}
           >
-            Sign out
+            {t('signOut')}
           </button>
         ) : (
           <Link href="/sign-in" className="btn-coral btn-coral-sm">
-            Sign in
+            {t('signIn')}
           </Link>
         )}
+
+        <LocaleSwitcher currentLocale={locale} />
       </div>
     </nav>
   );

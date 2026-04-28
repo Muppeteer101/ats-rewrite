@@ -1,19 +1,15 @@
 import Link from 'next/link';
 import { auth } from '@clerk/nextjs/server';
+import { getTranslations } from 'next-intl/server';
 import { HomeFaq } from '@/components/HomeFaq';
 import { RewriteForm } from '@/components/RewriteForm';
 
-export const metadata = {
-  title: 'ImproveMyResume — AI Resume Rewriter | Beat the ATS in 60 seconds',
-  description:
-    'Got a resume? Tailor it to any job in 60 seconds. AI rewrites your resume against the actual job description — keyword-matched, recruiter-ready, ATS-optimised.',
-};
+export const dynamic = 'force-dynamic';
 
 export default async function HomePage() {
   const { userId } = await auth();
+  const t = await getTranslations();
 
-  // Signed-in users scroll to the form. Signed-out users go to /sign-in
-  // (RewriteForm also handles this redirect when signedIn=false).
   const primaryHref = userId ? '#start' : '/sign-in';
 
   return (
@@ -23,36 +19,35 @@ export default async function HomePage() {
         <div className="tile-content">
           <div className="tile-badge">
             <span className="tile-badge-stars">★★★★★</span>
-            6-pass AI engine · streamed live
+            {t('hero.badge')}
           </div>
           <h1 className="tile-h-mega">
-            Your resume vs the ATS.<br />
-            <span className="tile-h-gradient">Win the bot fight.</span>
+            {t('hero.headline1')}<br />
+            <span className="tile-h-gradient">{t('hero.headline2')}</span>
           </h1>
           <p className="tile-sub">
-            AI rewrites your resume against the actual job description —<br />
-            keyword-matched, recruiter-ready, ATS-optimised.
+            {t('hero.sub').split('\n').map((line, i) => (
+              <span key={i}>{line}{i === 0 && <br />}</span>
+            ))}
           </p>
           <div className="cta-pair">
             <Link href={primaryHref} className="cta-fill">
-              Rewrite My Resume Free →
+              {t('hero.ctaPrimary')}
             </Link>
             <Link href="#how" className="cta-outline-tile">
-              How it works
+              {t('hero.ctaSecondary')}
             </Link>
           </div>
-          <p className="tile-meta">
-            First rewrite free · 1 free per month · Pay-as-you-go from £2.50/rewrite
-          </p>
+          <p className="tile-meta">{t('hero.meta')}</p>
         </div>
       </section>
 
       {/* ── FORM ───────────────────────────────────────────────── */}
       <section className="tile tile-full tile-light" id="start">
         <div className="tile-content" style={{ maxWidth: 760 }}>
-          <h2 className="tile-h-section">Start your rewrite.</h2>
+          <h2 className="tile-h-section">{t('form.sectionTitle')}</h2>
           <p className="tile-sub" style={{ marginBottom: 32 }}>
-            Paste the job description and your resume — the engine does the rest.
+            {t('form.sectionSub')}
           </p>
           <RewriteForm signedIn={!!userId} />
         </div>
@@ -61,10 +56,8 @@ export default async function HomePage() {
       {/* ── HOW IT WORKS ───────────────────────────────────────── */}
       <section className="tile tile-full tile-light" id="how">
         <div className="tile-content">
-          <h2 className="tile-h-section">Three steps. Sixty seconds.</h2>
-          <p className="tile-sub">
-            Paste the job description. Upload your resume. Download a resume that actually passes the bots.
-          </p>
+          <h2 className="tile-h-section">{t('how.title')}</h2>
+          <p className="tile-sub">{t('how.sub')}</p>
           <div className="tile-steps">
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -73,8 +66,8 @@ export default async function HomePage() {
                   <path d="M14 16h20" /><path d="M14 24h20" /><path d="M14 32h12" />
                 </svg>
               </div>
-              <h3>1. Paste &amp; upload</h3>
-              <p>Drop the job description in. Upload your resume (PDF or paste text). Takes 10 seconds.</p>
+              <h3>{t('how.step1Title')}</h3>
+              <p>{t('how.step1Body')}</p>
             </div>
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -85,8 +78,8 @@ export default async function HomePage() {
                   <path d="M24 8v4" /><path d="M24 36v4" />
                 </svg>
               </div>
-              <h3>2. AI does its thing</h3>
-              <p>Six passes. JD analysis, resume analysis, role match score, recruiter verdict, rewritten resume + cover letter, ATS confidence rating.</p>
+              <h3>{t('how.step2Title')}</h3>
+              <p>{t('how.step2Body')}</p>
             </div>
             <div className="tile-step">
               <div className="tile-step-icon">
@@ -98,8 +91,8 @@ export default async function HomePage() {
                   <path d="M31 34l2 2 4-4" stroke="#fff" strokeWidth="2.5" />
                 </svg>
               </div>
-              <h3>3. Download your PDF</h3>
-              <p>ATS-clean, Professional, or Modern template, plus a matching cover letter. Send and apply.</p>
+              <h3>{t('how.step3Title')}</h3>
+              <p>{t('how.step3Body')}</p>
             </div>
           </div>
         </div>
@@ -108,16 +101,16 @@ export default async function HomePage() {
       {/* ── STATS ──────────────────────────────────────────────── */}
       <section className="tile tile-half tile-dark">
         <div className="tile-content">
-          <p className="tile-h-stat">6-pass</p>
-          <h3 className="tile-h-sm">AI analysis engine</h3>
-          <p className="tile-sub-sm">Reads the JD. Reads your resume. Scores the match. Runs a recruiter verdict. Rewrites the resume + drafts a cover letter. Confidence-rates it against ATS.</p>
+          <p className="tile-h-stat">{t('stats.stat1')}</p>
+          <h3 className="tile-h-sm">{t('stats.stat1Title')}</h3>
+          <p className="tile-sub-sm">{t('stats.stat1Body')}</p>
         </div>
       </section>
       <section className="tile tile-half tile-dark">
         <div className="tile-content">
-          <p className="tile-h-stat">4</p>
-          <h3 className="tile-h-sm">PDF templates</h3>
-          <p className="tile-sub-sm">ATS-Clean, Professional, Modern — plus a voice-matched cover letter built from the same JD analysis, always included.</p>
+          <p className="tile-h-stat">{t('stats.stat2')}</p>
+          <h3 className="tile-h-sm">{t('stats.stat2Title')}</h3>
+          <p className="tile-sub-sm">{t('stats.stat2Body')}</p>
         </div>
       </section>
 
@@ -125,64 +118,55 @@ export default async function HomePage() {
       <section className="tile tile-half tile-light tile-review">
         <div className="tile-content" style={{ textAlign: 'left' }}>
           <p className="tile-stars">★★★★★</p>
-          <p className="tile-quote">
-            &ldquo;ATS rejected me 12 times for the same job. The engine rewrote my resume against the JD,
-            scored it 94/100. <strong>Got the interview.</strong>&rdquo;
-          </p>
-          <p className="tile-cite">Sarah M., London</p>
+          <p className="tile-quote">{t('reviews.review1')}</p>
+          <p className="tile-cite">{t('reviews.review1Cite')}</p>
         </div>
       </section>
       <section className="tile tile-half tile-light tile-review">
         <div className="tile-content" style={{ textAlign: 'left' }}>
           <p className="tile-stars">★★★★★</p>
-          <p className="tile-quote">
-            &ldquo;Senior dev role, 8 years experience, kept getting filtered out. The rewrite added the
-            keywords I&rsquo;d been missing. <strong>Hired in 3 weeks.</strong>&rdquo;
-          </p>
-          <p className="tile-cite">James T., Manchester</p>
+          <p className="tile-quote">{t('reviews.review2')}</p>
+          <p className="tile-cite">{t('reviews.review2Cite')}</p>
         </div>
       </section>
 
       {/* ── PRICING ────────────────────────────────────────────── */}
       <section className="tile tile-full tile-light" id="pricing">
         <div className="tile-content" style={{ maxWidth: 760 }}>
-          <h2 className="tile-h-section">Pay-as-you-go.<br />No subscription.</h2>
-          <p className="tile-sub">
-            First rewrite is free. You get one free rewrite every calendar month. Top up only when you need more — credits never expire.
-          </p>
+          <h2 className="tile-h-section">{t('pricing.title')}<br />{t('pricing.titleLine2')}</h2>
+          <p className="tile-sub">{t('pricing.sub')}</p>
           <div className="tile-price-grid">
             <div className="tile-price-card">
-              <div className="tile-price-tier">Free</div>
-              <div className="tile-price-big">£0</div>
-              <div className="tile-price-sub">first rewrite + 1 / month</div>
-              <div className="tile-price-each">No card required</div>
+              <div className="tile-price-tier">{t('pricing.tierFree')}</div>
+              <div className="tile-price-big">{t('pricing.priceFree')}</div>
+              <div className="tile-price-sub">{t('pricing.subFree')}</div>
+              <div className="tile-price-each">{t('pricing.eachFree')}</div>
             </div>
             <div className="tile-price-card">
-              <div className="tile-price-tier">1 rewrite</div>
-              <div className="tile-price-big">£4.99</div>
-              <div className="tile-price-sub">1 rewrite</div>
-              <div className="tile-price-each">Top up anytime</div>
+              <div className="tile-price-tier">{t('pricing.tier1')}</div>
+              <div className="tile-price-big">{t('pricing.price1')}</div>
+              <div className="tile-price-sub">{t('pricing.sub1')}</div>
+              <div className="tile-price-each">{t('pricing.each1')}</div>
             </div>
             <div className="tile-price-card">
-              <div className="tile-price-tier">3-pack</div>
-              <div className="tile-price-big">£9.99</div>
-              <div className="tile-price-sub">3 rewrites</div>
-              <div className="tile-price-each">£3.33 each</div>
+              <div className="tile-price-tier">{t('pricing.tier3')}</div>
+              <div className="tile-price-big">{t('pricing.price3')}</div>
+              <div className="tile-price-sub">{t('pricing.sub3')}</div>
+              <div className="tile-price-each">{t('pricing.each3')}</div>
             </div>
             <div className="tile-price-card highlight">
-              <div className="tile-price-tier">10-pack · best value</div>
-              <div className="tile-price-big">£25</div>
-              <div className="tile-price-sub">10 rewrites</div>
-              <div className="tile-price-each">£2.50 each</div>
+              <div className="tile-price-tier">{t('pricing.tier10')}</div>
+              <div className="tile-price-big">{t('pricing.price10')}</div>
+              <div className="tile-price-sub">{t('pricing.sub10')}</div>
+              <div className="tile-price-each">{t('pricing.each10')}</div>
             </div>
           </div>
           <p style={{ fontSize: 13, color: '#86868b', marginBottom: 28 }}>
-            Multi-currency: <strong style={{ color: '#1d1d1f' }}>£ · $ · € · A$ · C$ · NZ$</strong>.
-            Secure payment via Stripe.
+            {t('pricing.currency', { currencies: t('pricing.currencies') })}
           </p>
           <div className="cta-pair">
             <Link href={primaryHref} className="cta-fill">
-              Start Free →
+              {t('pricing.ctaStart')}
             </Link>
           </div>
         </div>
@@ -191,7 +175,7 @@ export default async function HomePage() {
       {/* ── FAQ ────────────────────────────────────────────────── */}
       <section className="tile tile-full tile-light" id="faq" style={{ minHeight: 'auto', padding: '60px 40px' }}>
         <div className="tile-content" style={{ maxWidth: 720 }}>
-          <h2 className="tile-h-section" style={{ marginBottom: 32 }}>Straight answers.</h2>
+          <h2 className="tile-h-section" style={{ marginBottom: 32 }}>{t('faq.title')}</h2>
           <HomeFaq />
         </div>
       </section>
@@ -199,13 +183,11 @@ export default async function HomePage() {
       {/* ── FINAL CTA ──────────────────────────────────────────── */}
       <section className="tile tile-full tile-dark tile-hero">
         <div className="tile-content">
-          <h2 className="tile-h-mega">Win the bot fight.</h2>
-          <p className="tile-sub">
-            First rewrite free. 60 seconds. No subscription.
-          </p>
+          <h2 className="tile-h-mega">{t('finalCta.headline')}</h2>
+          <p className="tile-sub">{t('finalCta.sub')}</p>
           <div className="cta-pair">
             <Link href={primaryHref} className="cta-fill" style={{ padding: '16px 40px', fontSize: 18 }}>
-              Rewrite My Resume Free →
+              {t('finalCta.btn')}
             </Link>
           </div>
         </div>
