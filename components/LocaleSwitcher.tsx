@@ -57,7 +57,7 @@ export function LocaleSwitcher({ currentLocale }: { currentLocale: string }) {
       >
         {LOCALES.map(l => (
           <option key={l.code} value={l.code} style={{ color: '#0f0f1a', background: '#fff' }}>
-            {l.flag} {l.label}
+            {l.label}
           </option>
         ))}
       </select>
