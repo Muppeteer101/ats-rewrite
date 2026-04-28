@@ -729,3 +729,11 @@ body { padding-top: 80px; }
    above, they sit just beneath the pill-nav. Bump them flush so there's
    no visible gap of body background between the two strips. */
 nav.sticky.top-0 { top: 0 !important; }
+
+/* RewriteForm two-column grid (desktop only).
+   Moved here from an inline <style> tag in RewriteForm.tsx — React 19
+   hoists inline <style> elements to <head> via CSSStyleSheet.replaceSync()
+   which can throw SyntaxError during hydration and blank the /new page. */
+@media (min-width: 900px) {
+  .rf-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+}

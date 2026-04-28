@@ -429,12 +429,6 @@ export function RewriteForm({ signedIn }: { signedIn: boolean }) {
         {t('disclaimer')}
       </p>
 
-      {/* Responsive two-column: desktop side-by-side, mobile stacked */}
-      <style>{`
-        @media (min-width: 900px) {
-          .rf-grid { grid-template-columns: minmax(0,1fr) minmax(0,1fr); }
-        }
-      `}</style>
     </div>
   );
 }
