@@ -169,17 +169,42 @@ export async function* runInitialAnalysis(
 
 /* ────────────────────── Stage 2 — Rescore with confirmed gaps ────────────────────── */
 
+/** Convert a gap question (e.g. "Do you have Salesforce experience?") into
+ *  a positive evidence claim (e.g. "Has Salesforce experience.") so it can
+ *  be folded into cvAnalysis as part of the candidate's record. The four
+ *  shapes below mirror what PROMPT_3_MATCH instructs the model to emit. */
+function gapQuestionToEvidence(gap: string): string {
+  const trimmed = gap.replace(/\?+\s*$/, '').trim();
+  let m = trimmed.match(/^Do you have\s+(.+)$/i);
+  if (m) return `Has ${m[1]}.`;
+  m = trimmed.match(/^Have you\s+(.+)$/i);
+  if (m) return `Has ${m[1]}.`;
+  m = trimmed.match(/^Can you evidence\s+(.+)$/i);
+  if (m) return `Can evidence ${m[1]}.`;
+  return `Confirmed: ${trimmed}.`;
+}
+
 export async function* runRescore(
   snapshot: AnalysisSnapshot,
   confirmedGaps: string[],
 ): AsyncGenerator<NarrationEvent, AnalysisSnapshot, void> {
   yield { type: 'system', line: '› Rescoring with your confirmed experience…' };
 
+  // Fold confirmed-gap answers into cvAnalysis as positive evidence so the
+  // rubric scores the augmented record using the SAME prompt. No bespoke
+  // bumps, no separate footer — same scoring mechanism, more evidence.
+  const augmentedCvAnalysis: CVAnalysis = {
+    ...snapshot.cvAnalysis,
+    confirmedAdditionalEvidence: [
+      ...(snapshot.cvAnalysis.confirmedAdditionalEvidence ?? []),
+      ...confirmedGaps.map(gapQuestionToEvidence),
+    ],
+  };
+
   yield { type: 'pass', pass: 3, line: '[Pass 3] Rescoring role match…' };
   const roleMatch = await runRoleMatch({
     jobAnalysis: snapshot.jobAnalysis,
-    cvAnalysis: snapshot.cvAnalysis,
-    confirmedGaps,
+    cvAnalysis: augmentedCvAnalysis,
   });
   yield {
     type: 'pass-complete',
@@ -191,9 +216,8 @@ export async function* runRescore(
   yield { type: 'pass', pass: 4, line: '[Pass 4] Rerunning recruiter verdict…' };
   const recruiterVerdict = await runRecruiterVerdict({
     jobAnalysis: snapshot.jobAnalysis,
-    cvAnalysis: snapshot.cvAnalysis,
+    cvAnalysis: augmentedCvAnalysis,
     roleMatch,
-    confirmedGaps,
   });
   yield {
     type: 'pass-complete',

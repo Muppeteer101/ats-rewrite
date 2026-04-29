@@ -14,14 +14,17 @@ function todayLine(): string {
   return `Today's date: ${d.getUTCDate()} ${month} ${d.getUTCFullYear()}. When a role end date is "Present" / "Current", treat it as today's date.`;
 }
 
-/** Pass 4 — Recruiter Verdict. Sonnet @ temp 0.3 (voice matters). */
+/** Pass 4 — Recruiter Verdict. Sonnet @ temp 0.3 (voice matters).
+ *
+ * Confirmed-gap evidence (from rescore) is folded into `cvAnalysis.confirmedAdditionalEvidence`
+ * by the caller, not passed separately — the verdict reasons over augmented
+ * evidence using the same prompt. */
 export async function runRecruiterVerdict(opts: {
   jobAnalysis: JobAnalysis;
   cvAnalysis: CVAnalysis;
   roleMatch: RoleMatch;
-  confirmedGaps?: string[];
 }): Promise<RecruiterVerdict> {
-  const parts = [
+  const user = [
     todayLine(),
     '',
     'JOB ANALYSIS:',
@@ -32,15 +35,7 @@ export async function runRecruiterVerdict(opts: {
     '',
     'ROLE MATCH SCORE:',
     JSON.stringify(opts.roleMatch, null, 2),
-  ];
-  if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
-    parts.push(
-      '',
-      'RESOLVED GAPS — the candidate has confirmed they DO have the relevant experience for each of these previously-flagged items. Treat each underlying requirement as FULLY MET. Do NOT cite these as negatives in your verdict. They are confirmed strengths:',
-    );
-    for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
-  }
-  const user = parts.join('\n');
+  ].join('\n');
 
   return callJson({
     model: MODELS.sonnet,
