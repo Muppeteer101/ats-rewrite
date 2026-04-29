@@ -158,7 +158,7 @@ Be honest — the candidate needs to know what is actually on the page, not what
 
 /* ────────────────────── PASS 3 — Role Match Score ────────────────────── */
 
-export const PROMPT_3_MATCH = `You are an expert recruitment analyst. You will be given two structured analyses: a job description analysis and a CV analysis. You may also be given a list of CONFIRMED-GAP EXPERIENCE — items the candidate has explicitly told us they DO have, even if not stated in the CV text. Treat those as EVIDENCED when scoring and gap-identifying.
+export const PROMPT_3_MATCH = `You are an expert recruitment analyst. You will be given two structured analyses: a job description analysis and a CV analysis. The CV analysis may include a \`confirmedAdditionalEvidence\` array — items the candidate has explicitly confirmed (in response to follow-up questions) they DO have, even if not stated in the original CV text. Treat every entry in that array as part of the canonical CV record — fully evidenced — when scoring and identifying gaps.
 
 Your task is to produce an honest role match assessment. This is not a prediction of what any specific recruiter will do — individual recruiters and companies vary. This is an evidence-based assessment of how well this candidate's documented experience and skills align with the stated requirements of this role.
 
@@ -178,7 +178,7 @@ A literal keyword-match against the JD will insult strong candidates. Apply one 
 
 5. IMPLIED EXPERIENCE. If the CV evidences outcomes that could only be produced by having a named skill (scaled ARR from £X to £Y ⇒ they've sold enterprise; led a 110-person org ⇒ they've hired, built comp plans, coached), credit the implied skill. Do not require the skill to be listed explicitly.
 
-RULE: Only mark something as a GAP if no reasonable reading of the CV or the candidate's confirmed-gap-experience list supports it. "Not using the JD's exact phrase" is NOT a gap if the substance is clearly present — flag it as a LANGUAGE/TERMINOLOGY item instead, not a domain gap.
+RULE: Only mark something as a GAP if no reasonable reading of the CV — including its \`confirmedAdditionalEvidence\` array — supports it. "Not using the JD's exact phrase" is NOT a gap if the substance is clearly present — flag it as a LANGUAGE/TERMINOLOGY item instead, not a domain gap.
 
 DATE-RANGE GAPS: The CV analysis includes a \`roles\` array — that is the canonical employment record. Never emit a "career gap (Mon YYYY–Mon YYYY)" label whose period overlaps the dates of any role in that array. If the candidate is in continuous employment across the period, there is no gap, full stop. A real employment gap can only exist between one role's end date and the next role's start date, and only if it exceeds 6 months. If you are unsure, omit the gap.
 
@@ -222,7 +222,7 @@ pilePosition must be one of "top", "middle", or "bottom".${JSON_SUFFIX}`;
 
 export const PROMPT_4_VERDICT = `You are simulating the perspective of an experienced recruiter with 10+ years of screening CVs across your industry. You have seen thousands of applications. You are direct, fair, and your job is to find the best candidates — not to be kind to weak ones or harsh to strong ones.
 
-You will be given: a job description analysis, a CV analysis, a role match score with reasoning, and optionally a list of CONFIRMED-GAP EXPERIENCE the candidate has explicitly told us they have. Treat confirmed-gap experience as real — it just wasn't written down in the CV. The rewrite step will surface it properly.
+You will be given: a job description analysis, a CV analysis, and a role match score with reasoning. The CV analysis may include a \`confirmedAdditionalEvidence\` array — items the candidate has explicitly confirmed they have, in response to follow-up questions, that weren't on the original CV. Treat every entry there as real evidence the candidate holds; the rewrite step will surface it properly.
 
 ═══════════════════════════════════════════════════════════════════════════
   APPLY CHARITABLE INFERENCE BEFORE YOU DECIDE

@@ -16,14 +16,16 @@ function todayLine(): string {
   return `Today's date: ${d.getUTCDate()} ${month} ${d.getUTCFullYear()}. When a role end date is "Present" / "Current", treat it as today's date.`;
 }
 
-/** Pass 3 — Role Match Score. Haiku @ temp 0 (rubric-driven, cheap). */
+/** Pass 3 — Role Match Score. Haiku @ temp 0 (rubric-driven, cheap).
+ *
+ * Confirmed-gap evidence (from rescore) is folded into `cvAnalysis.confirmedAdditionalEvidence`
+ * by the caller, not passed separately — the rubric scores against augmented
+ * evidence using the same prompt. */
 export async function runRoleMatch(opts: {
   jobAnalysis: JobAnalysis;
   cvAnalysis: CVAnalysis;
-  /** Gaps the candidate confirmed they DO have, even though not on the CV. */
-  confirmedGaps?: string[];
 }): Promise<RoleMatch> {
-  const parts = [
+  const user = [
     todayLine(),
     '',
     'JOB ANALYSIS:',
@@ -31,15 +33,7 @@ export async function runRoleMatch(opts: {
     '',
     'CV ANALYSIS:',
     JSON.stringify(opts.cvAnalysis, null, 2),
-  ];
-  if (opts.confirmedGaps && opts.confirmedGaps.length > 0) {
-    parts.push(
-      '',
-      'RESOLVED GAPS — these items were previously flagged as potential gaps, but the candidate has explicitly confirmed they DO have the relevant experience. Do NOT include any of these in your gaps output. Treat the underlying requirement as FULLY MET and evidenced. Each item below is now a strength, not a weakness:',
-    );
-    for (const g of opts.confirmedGaps) parts.push(`- ${g}`);
-  }
-  const user = parts.join('\n');
+  ].join('\n');
 
   const result = await callJson({
     model: MODELS.haiku,

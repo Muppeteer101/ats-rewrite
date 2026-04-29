@@ -111,6 +111,14 @@ export const cvAnalysisSchema = z.object({
     negative: z.string(),
     likelyStopPoint: z.string(),
   }),
+  /**
+   * Evidence the candidate has explicitly confirmed they hold (in response to
+   * gap questions surfaced after the initial analysis), but which is not
+   * present in the original CV text. Absent on the initial pass; populated
+   * before rescore so passes 3 and 4 see the augmented evidence as part of
+   * the canonical CV record and rescore against the same rubric.
+   */
+  confirmedAdditionalEvidence: z.array(z.string()).optional(),
 });
 export type CVAnalysis = z.infer<typeof cvAnalysisSchema>;
 

@@ -280,6 +280,7 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         <NewScoresAndUnlockCard
           initial={initialTeaser}
           updated={newTeaser}
+          confirmedCount={confirmedGaps.length}
           onUnlock={kickoffFinalize}
         />
       )}
@@ -458,15 +459,44 @@ function TeaserAndGapsCard({
 function NewScoresAndUnlockCard({
   initial,
   updated,
+  confirmedCount,
   onUnlock,
 }: {
   initial: Teaser | null;
   updated: Teaser;
+  confirmedCount: number;
   onUnlock: () => void;
 }) {
+  // If the candidate confirmed experience but the score and verdict barely
+  // moved, say so honestly — the engine had already credited that experience
+  // via charitable inference. Don't manufacture movement that isn't there.
+  const noMovement =
+    initial != null &&
+    confirmedCount > 0 &&
+    Math.abs(updated.matchScore - initial.matchScore) <= 2 &&
+    updated.verdictDecision === initial.verdictDecision;
+
   return (
     <div className="space-y-6">
       <ScoreTeaserStrip teaser={updated} initial={initial} compareMode />
+
+      {noMovement && (
+        <div
+          className="card p-5"
+          style={{
+            background: 'rgba(83,58,253,0.04)',
+            borderColor: 'rgba(83,58,253,0.2)',
+          }}
+        >
+          <p className="body" style={{ color: 'var(--color-body)' }}>
+            <strong style={{ color: 'var(--color-heading)' }}>Your confirmed answers didn&apos;t shift the score.</strong>{' '}
+            That&apos;s not a bug — the engine had already credited that experience
+            when reading your CV (charitable inference). Your answers still feed
+            into the rewrite below, where they&apos;ll be surfaced explicitly so a
+            recruiter can see them on the page.
+          </p>
+        </div>
+      )}
 
       <div className="card-elevated p-7" style={{ borderColor: 'rgba(184,163,255,0.4)' }}>
         <h3 className="sub-heading mb-2">Want the full debrief + your new resume and cover letter?</h3>
