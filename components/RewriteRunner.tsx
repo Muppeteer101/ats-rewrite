@@ -280,6 +280,7 @@ export function RewriteRunner({ draftId }: { draftId: string }) {
         <NewScoresAndUnlockCard
           initial={initialTeaser}
           updated={newTeaser}
+          confirmedGaps={confirmedGaps}
           onUnlock={kickoffFinalize}
         />
       )}
@@ -325,7 +326,7 @@ function stageSubhead(s: Stage): string {
   if (s === 'analyzing')  return 'Five passes — job, resume, role match, recruiter verdict, ATS. No payment, just the real numbers.';
   if (s === 'teaser')     return "Before you go further — confirm any experience we flagged as a gap. We'll rescore in seconds.";
   if (s === 'rescoring')  return 'Re-running the scoring with the experience you just confirmed.';
-  if (s === 'new-scores') return 'Role match and recruiter verdict updated with your confirmed experience. ATS score improves after the full rewrite.';
+  if (s === 'new-scores') return 'Match score, recruiter verdict and ATS confidence updated with your confirmed experience. The full lift comes through after the rewrite weaves it into the page.';
   if (s === 'finalizing') return 'Producing your rewritten resume, tailored cover letter, and final ATS check.';
   return '';
 }
@@ -458,15 +459,53 @@ function TeaserAndGapsCard({
 function NewScoresAndUnlockCard({
   initial,
   updated,
+  confirmedGaps,
   onUnlock,
 }: {
   initial: Teaser | null;
   updated: Teaser;
+  confirmedGaps: string[];
   onUnlock: () => void;
 }) {
+  const totalGaps = initial?.gaps.length ?? 0;
+  const confirmed = confirmedGaps.length;
+  const confirmedSet = new Set(confirmedGaps);
+  const stillUnanswered = initial
+    ? initial.gaps.filter((g) => !confirmedSet.has(g))
+    : [];
+
   return (
     <div className="space-y-6">
       <ScoreTeaserStrip teaser={updated} initial={initial} compareMode />
+
+      {totalGaps > 0 && (
+        <div
+          className="card p-5"
+          style={{
+            borderColor: 'rgba(184,163,255,0.35)',
+            background: 'rgba(184,163,255,0.06)',
+          }}
+        >
+          <p className="body" style={{ color: 'var(--color-heading)', marginBottom: stillUnanswered.length > 0 ? 12 : 0 }}>
+            <strong>You confirmed {confirmed} of {totalGaps} gap{totalGaps === 1 ? '' : 's'}.</strong>{' '}
+            {confirmed === 0
+              ? 'Nothing was added — your scores are unchanged.'
+              : stillUnanswered.length === 0
+                ? "Every gap you flagged as Yes has been credited to your scores. The full lift comes through after the rewrite weaves it into the page."
+                : `The other ${stillUnanswered.length} ${stillUnanswered.length === 1 ? 'gap is' : 'gaps are'} still counting against your score until they're addressed.`}
+          </p>
+          {stillUnanswered.length > 0 && (
+            <div>
+              <div className="caption mb-1" style={{ textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 11 }}>
+                Still unanswered
+              </div>
+              <ul className="bullets" style={{ marginTop: 4, marginBottom: 0 }}>
+                {stillUnanswered.map((g) => <li key={g}>{g}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="card-elevated p-7" style={{ borderColor: 'rgba(184,163,255,0.4)' }}>
         <h3 className="sub-heading mb-2">Want the full debrief + your new resume and cover letter?</h3>
@@ -513,12 +552,7 @@ function ScoreTeaserStrip({
   const matchDelta = compareMode && initial ? delta(teaser.matchScore, initial.matchScore) : null;
   const atsDelta = compareMode && initial ? delta(teaser.atsPercentage, initial.atsPercentage) : null;
 
-  // In compare (rescore) mode, ATS confidence is hidden — it reflects literal
-  // keyword presence in the unmodified CV text, so it doesn't move meaningfully
-  // until the paid rewrite embeds confirmed experience into the document.
-  // Showing it here just introduces noise (±5% model variance) that undermines
-  // the role match / verdict improvements that DO reflect the confirmed answers.
-  const cols = compareMode ? 2 : 3;
+  const cols = 3;
 
   return (
     <div className="card-elevated p-7">
@@ -548,15 +582,18 @@ function ScoreTeaserStrip({
             </div>
           )}
         </div>
-        {!compareMode && (
-          <div style={{ textAlign: 'center' }}>
-            <div className="caption" style={{ textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 11, marginBottom: 8 }}>ATS confidence</div>
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
-              <AtsPill value={teaser.atsRating} big />
-              <ScoreRing score={teaser.atsPercentage} size={90} label="pass likelihood" />
-            </div>
+        <div style={{ textAlign: 'center' }}>
+          <div className="caption" style={{ textTransform: 'uppercase', letterSpacing: '0.12em', fontSize: 11, marginBottom: 8 }}>ATS confidence</div>
+          <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 12 }}>
+            <AtsPill value={teaser.atsRating} big />
+            <ScoreRing score={teaser.atsPercentage} size={90} label="pass likelihood" />
           </div>
-        )}
+          {atsDelta != null && (
+            <div className="caption" style={{ marginTop: 8, color: atsDelta >= 0 ? '#108c3d' : '#ea2261', fontWeight: 600 }}>
+              {atsDelta >= 0 ? '+' : ''}{atsDelta}% vs initial
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

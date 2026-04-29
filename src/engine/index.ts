@@ -4,6 +4,7 @@ import { runRoleMatch } from './passes/pass3RoleMatch';
 import { runRecruiterVerdict } from './passes/pass4Verdict';
 import { runRewrite } from './passes/pass5Rewrite';
 import { runAtsConfidence } from './passes/pass6Ats';
+import { applyConfirmedGapsToCv } from './applyConfirmedGaps';
 import type {
   ATSConfidence,
   CVAnalysis,
@@ -169,18 +170,109 @@ export async function* runInitialAnalysis(
 
 /* ────────────────────── Stage 2 — Rescore with confirmed gaps ────────────────────── */
 
+/**
+ * Resolved-gap floor weights. Confirming a gap means "the experience exists",
+ * not "the CV already presents it well" — the rewrite (Pass 5) does that.
+ * The floor only fires when the LLM under-rewards the confirmation; if the
+ * LLM moved further on its own, the higher number wins.
+ *
+ *   floor = original + round(pctResolved * (100 - original) * weight)
+ *
+ * pctResolved = confirmedGaps.length / max(1, originallyFlaggedGaps.length).
+ * "No" / unanswered gaps stay in the denominator — they hold the score back
+ * exactly the way an unaddressed requirement should.
+ */
+const RESOLVE_GAP_WEIGHTS = {
+  roleMatch: 0.6,
+  ats: 0.5,
+  /** Lift category scores that are directly skill-driven (must-haves /
+   *  nice-to-haves) more aggressively than seniority / industry, which
+   *  confirmed-gap experience doesn't really change. */
+  mustHaveCat: 0.7,
+  niceToHaveCat: 0.5,
+} as const;
+
+const ATS_THRESHOLDS = { high: 80, medium: 60 } as const;
+
+function ratingFor(pct: number): 'HIGH' | 'MEDIUM' | 'LOW' {
+  if (pct >= ATS_THRESHOLDS.high) return 'HIGH';
+  if (pct >= ATS_THRESHOLDS.medium) return 'MEDIUM';
+  return 'LOW';
+}
+
+function liftScore(original: number, pctResolved: number, weight: number): number {
+  if (pctResolved <= 0) return original;
+  const headroom = Math.max(0, 100 - original);
+  return Math.min(100, Math.round(original + pctResolved * headroom * weight));
+}
+
+function liftVerdict(
+  decision: 'YES' | 'MAYBE' | 'NO',
+  pctResolved: number,
+  newOverall: number,
+): 'YES' | 'MAYBE' | 'NO' {
+  // Only upgrade once enough gaps are resolved AND the lifted match score
+  // genuinely supports it. Avoids a single-yes flipping NO straight to YES.
+  if (pctResolved >= 1 && newOverall >= 75 && decision !== 'YES') return 'YES';
+  if (pctResolved >= 0.5 && newOverall >= 60 && decision === 'NO') return 'MAYBE';
+  return decision;
+}
+
 export async function* runRescore(
   snapshot: AnalysisSnapshot,
   confirmedGaps: string[],
 ): AsyncGenerator<NarrationEvent, AnalysisSnapshot, void> {
   yield { type: 'system', line: '› Rescoring with your confirmed experience…' };
 
+  // Augment the structured CV analysis so Pass 3 / Pass 4 see the confirmed
+  // experience as evidenced content, not just an instruction to ignore.
+  const augmentedCv = applyConfirmedGapsToCv(
+    snapshot.cvAnalysis,
+    confirmedGaps,
+    snapshot.jobAnalysis,
+  );
+
+  const denom = Math.max(1, snapshot.gaps.length);
+  const pctResolved = confirmedGaps.length / denom;
+
   yield { type: 'pass', pass: 3, line: '[Pass 3] Rescoring role match…' };
-  const roleMatch = await runRoleMatch({
+  const roleMatchRaw = await runRoleMatch({
     jobAnalysis: snapshot.jobAnalysis,
-    cvAnalysis: snapshot.cvAnalysis,
+    cvAnalysis: augmentedCv,
     confirmedGaps,
   });
+  const roleMatch: RoleMatch = {
+    ...roleMatchRaw,
+    overallScore: Math.max(
+      roleMatchRaw.overallScore,
+      liftScore(snapshot.roleMatch.overallScore, pctResolved, RESOLVE_GAP_WEIGHTS.roleMatch),
+    ),
+    categoryScores: {
+      ...roleMatchRaw.categoryScores,
+      mustHaveSkills: {
+        ...roleMatchRaw.categoryScores.mustHaveSkills,
+        score: Math.max(
+          roleMatchRaw.categoryScores.mustHaveSkills.score,
+          liftScore(
+            snapshot.roleMatch.categoryScores.mustHaveSkills.score,
+            pctResolved,
+            RESOLVE_GAP_WEIGHTS.mustHaveCat,
+          ),
+        ),
+      },
+      niceToHaveSkills: {
+        ...roleMatchRaw.categoryScores.niceToHaveSkills,
+        score: Math.max(
+          roleMatchRaw.categoryScores.niceToHaveSkills.score,
+          liftScore(
+            snapshot.roleMatch.categoryScores.niceToHaveSkills.score,
+            pctResolved,
+            RESOLVE_GAP_WEIGHTS.niceToHaveCat,
+          ),
+        ),
+      },
+    },
+  };
   yield {
     type: 'pass-complete',
     pass: 3,
@@ -189,12 +281,16 @@ export async function* runRescore(
   };
 
   yield { type: 'pass', pass: 4, line: '[Pass 4] Rerunning recruiter verdict…' };
-  const recruiterVerdict = await runRecruiterVerdict({
+  const recruiterVerdictRaw = await runRecruiterVerdict({
     jobAnalysis: snapshot.jobAnalysis,
-    cvAnalysis: snapshot.cvAnalysis,
+    cvAnalysis: augmentedCv,
     roleMatch,
     confirmedGaps,
   });
+  const recruiterVerdict: RecruiterVerdict = {
+    ...recruiterVerdictRaw,
+    decision: liftVerdict(recruiterVerdictRaw.decision, pctResolved, roleMatch.overallScore),
+  };
   yield {
     type: 'pass-complete',
     pass: 4,
@@ -203,12 +299,21 @@ export async function* runRescore(
   };
 
   yield { type: 'pass', pass: 6, line: '[Pass 6] Rerunning ATS confidence…' };
-  const atsOriginal = await runAtsConfidence({
+  const atsOriginalRaw = await runAtsConfidence({
     mode: 'original',
     originalCv: snapshot.cvText,
     jobAnalysis: snapshot.jobAnalysis,
     confirmedGaps,
   });
+  const atsPct = Math.max(
+    atsOriginalRaw.percentage,
+    liftScore(snapshot.atsOriginal.percentage, pctResolved, RESOLVE_GAP_WEIGHTS.ats),
+  );
+  const atsOriginal: ATSConfidence = {
+    ...atsOriginalRaw,
+    percentage: atsPct,
+    rating: ratingFor(atsPct),
+  };
   yield {
     type: 'pass-complete',
     pass: 6,

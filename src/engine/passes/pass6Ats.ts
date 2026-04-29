@@ -28,7 +28,20 @@ export async function runAtsConfidence(opts: {
     parts.push('MODE: ORIGINAL CV (baseline — before any rewrite)');
     parts.push('');
     parts.push('CV (raw text):');
-    parts.push(opts.originalCv.slice(0, 16000));
+    // When the candidate has confirmed gap experience, prepend it as an
+    // explicit block ABOVE the original CV body so the keyword-match /
+    // density sub-scores actually see those tokens. Without this, Pass 6
+    // scores the unchanged text and the headline ATS percentage barely
+    // moves on rescore — see RESOLVE_GAP_WEIGHTS rationale in engine/index.
+    const confirmedBlock =
+      opts.confirmedGaps && opts.confirmedGaps.length > 0
+        ? [
+            'CONFIRMED ADDITIONAL EXPERIENCE (provided by candidate, to be woven into the rewrite — treat as documented):',
+            ...opts.confirmedGaps.map((g) => `- ${g}`),
+            '',
+          ].join('\n') + '\n'
+        : '';
+    parts.push(confirmedBlock + opts.originalCv.slice(0, 16000 - confirmedBlock.length));
   } else {
     if (!opts.rewrittenCV) throw new Error('Pass 6 rewritten mode requires rewrittenCV');
     parts.push('MODE: REWRITTEN CV (final — about to be submitted)');
