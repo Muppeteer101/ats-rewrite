@@ -87,18 +87,35 @@ async function fetchDirect(url: string): Promise<string> {
 }
 
 // Jina AI Reader proxies through residential IPs and returns clean text.
-// Free, no API key, handles LinkedIn and other bot-blocking boards.
+// Set JINA_API_KEY for the paid tier — bigger quota, separate IP pool from
+// the shared anonymous traffic, far less likely to get caught in a
+// "SecurityCompromiseError" when LinkedIn/Indeed flag the free pool.
 async function fetchViaJina(url: string): Promise<string> {
+  const apiKey = process.env.JINA_API_KEY?.trim();
+  const headers: Record<string, string> = {
+    'User-Agent': BROWSER_UA,
+    Accept: 'text/plain,text/html,*/*',
+    'X-Return-Format': 'text',
+  };
+  if (apiKey) headers.Authorization = `Bearer ${apiKey}`;
+
   const res = await fetch(`https://r.jina.ai/${url}`, {
-    headers: {
-      'User-Agent': BROWSER_UA,
-      Accept: 'text/plain,text/html,*/*',
-      'X-Return-Format': 'text',
-    },
+    headers,
     signal: AbortSignal.timeout(20_000),
     redirect: 'follow',
   });
 
+  // 451 = SecurityCompromiseError. Jina temporarily bans anonymous access
+  // when a target site (e.g. LinkedIn) flags Jina's IPs for abuse. The ban
+  // is time-limited — surface that nuance to the caller so we can show a
+  // truthful, time-boxed error instead of falsely blaming the target site.
+  if (res.status === 451) {
+    const body = await res.text().catch(() => '');
+    throw Object.assign(new Error('proxy temporarily rate-limited'), {
+      code: 'PROXY_RATE_LIMITED',
+      detail: body.slice(0, 240),
+    });
+  }
   if (!res.ok) throw new Error(`Jina returned ${res.status}`);
 
   const text = await res.text();
@@ -138,9 +155,18 @@ export async function parseUrl(url: string): Promise<string> {
 
   try {
     return await fetchViaJina(url);
-  } catch {
+  } catch (err) {
+    // PROXY_RATE_LIMITED is the SecurityCompromiseError we surface from
+    // fetchViaJina — point the finger at our proxy, not the target site,
+    // so the user knows it's a transient us-side issue.
+    const code = (err as { code?: string }).code;
+    if (code === 'PROXY_RATE_LIMITED') {
+      throw new Error(
+        `Our URL fetcher is rate-limited right now (usually clears within an hour). Paste the job description text and we'll keep going — same result.`,
+      );
+    }
     throw new Error(
-      `That page is blocking automated fetches (LinkedIn and Indeed do this). Paste the job description text and we'll keep going.`,
+      `Couldn't fetch that URL (${(err as Error).message}). Paste the job description text and we'll keep going.`,
     );
   }
 }

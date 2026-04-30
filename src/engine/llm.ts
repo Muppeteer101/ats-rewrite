@@ -29,6 +29,12 @@ export const MODELS = {
  * a strict prompt + a defensive JSON extraction step. We accept either a raw
  * JSON object or a JSON object inside a single ```json fence (the model
  * sometimes adds one despite the instruction).
+ *
+ * If the first attempt fails Zod validation we retry once with a corrective
+ * follow-up message that quotes the previous output and the missing fields.
+ * This soaks up the (rare) cases where Sonnet drops a single required field —
+ * single-shot rejection used to surface as a "Something went wrong" page
+ * for the user, which is bad UX for a one-off LLM hiccup.
  */
 export async function callJson<T>(opts: {
   model: string;
@@ -38,27 +44,72 @@ export async function callJson<T>(opts: {
   temperature?: number;
   maxTokens?: number;
 }): Promise<T> {
-  const res = await client().messages.create({
-    model: opts.model,
-    max_tokens: opts.maxTokens ?? 4096,
-    temperature: opts.temperature ?? 0.1,
-    // Prompt caching: system prompt is stable across users, so cache it
-    // for 5 min. Anthropic charges 1.25x on write, 0.1x on read — we break
-    // even at 3 uses within the window.
-    system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
-    messages: [{ role: 'user', content: opts.user }],
-  });
+  const messages: Array<{ role: 'user' | 'assistant'; content: string }> = [
+    { role: 'user', content: opts.user },
+  ];
 
-  const block = res.content.find((c) => c.type === 'text');
-  if (!block || block.type !== 'text') {
-    throw new Error('LLM returned no text block.');
-  }
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const res = await client().messages.create({
+      model: opts.model,
+      max_tokens: opts.maxTokens ?? 4096,
+      temperature: opts.temperature ?? 0.1,
+      // Prompt caching: system prompt is stable across users, so cache it
+      // for 5 min. Anthropic charges 1.25x on write, 0.1x on read — we break
+      // even at 3 uses within the window.
+      system: [{ type: 'text', text: opts.system, cache_control: { type: 'ephemeral' } }],
+      messages,
+    });
 
-  const json = extractJson(block.text);
-  const parsed = opts.schema.safeParse(json);
-  if (!parsed.success) {
-    // Surface the validation error clearly — usually means the prompt
-    // needs a tweak to enforce a missing field.
+    const block = res.content.find((c) => c.type === 'text');
+    if (!block || block.type !== 'text') {
+      throw new Error('LLM returned no text block.');
+    }
+    const rawText = block.text;
+
+    let json: unknown;
+    try {
+      json = extractJson(rawText);
+    } catch (extractErr) {
+      if (attempt === 0) {
+        // Couldn't even extract a JSON object — append the broken output and
+        // ask the model to retry with valid JSON. Keep the user message in
+        // place so the model still has the original context.
+        messages.push({ role: 'assistant', content: rawText });
+        messages.push({
+          role: 'user',
+          content:
+            "Your previous response wasn't valid JSON. Reply with ONLY the JSON object — no prose, no Markdown fences. Use the exact field names and shape specified above.",
+        });
+        continue;
+      }
+      throw extractErr;
+    }
+
+    const parsed = opts.schema.safeParse(json);
+    if (parsed.success) return parsed.data;
+
+    if (attempt === 0) {
+      // Retry once with a precise corrective hint — list the missing /
+      // wrong fields so the model knows exactly what to fix. This catches
+      // the "Sonnet occasionally drops a field" failure mode that used to
+      // crash the whole rewrite flow.
+      const issues = parsed.error.issues
+        .slice(0, 6)
+        .map((i) => `- ${i.path.join('.') || '(root)'}: ${i.message}`)
+        .join('\n');
+      messages.push({ role: 'assistant', content: rawText });
+      messages.push({
+        role: 'user',
+        content:
+          'Your previous response failed schema validation with these issues:\n' +
+          issues +
+          '\n\nReturn the SAME response but fixed: include every required field with the correct type. Reply with ONLY the JSON object — no prose, no Markdown fences.',
+      });
+      continue;
+    }
+
+    // Both attempts failed — surface the original validation error so the
+    // prompt author knows what to tighten.
     throw new Error(
       `LLM output failed schema validation: ${parsed.error.issues
         .slice(0, 3)
@@ -66,7 +117,9 @@ export async function callJson<T>(opts: {
         .join('; ')}`,
     );
   }
-  return parsed.data;
+
+  // Unreachable — the loop either returns or throws.
+  throw new Error('callJson: exhausted attempts without resolution');
 }
 
 function extractJson(s: string): unknown {
