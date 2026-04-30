@@ -43,6 +43,14 @@ export const metadata: Metadata = {
     description:
       'A resume rewrite that is measurably better than generic AI tools, with an ATS score for the exact role you’re applying to.',
   },
+  icons: {
+    icon: [
+      { url: '/favicon-16x16.png', sizes: '16x16', type: 'image/png' },
+      { url: '/favicon-32x32.png', sizes: '32x32', type: 'image/png' },
+    ],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
+    other: [{ rel: 'manifest', url: '/site.webmanifest' }],
+  },
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
